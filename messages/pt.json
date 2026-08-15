@@ -1,0 +1,329 @@
+{
+  "marca": {
+    "nome": "Renilza Miranda",
+    "assinatura": "Metodologia francesa de imagem",
+    "frasePrincipal": "Do valor invisível ao valor percebido.",
+    "fraseAncora": "Não basta ser excelente. É preciso ser percebida.",
+    "filosofia": "Tradução, não transformação."
+  },
+  "acoes": {
+    "comecar": "Começar",
+    "avancar": "Continuar",
+    "voltar": "Voltar",
+    "recomecar": "Recomeçar",
+    "confirmar": "Isso mesmo",
+    "ajustar": "Ajustar"
+  },
+  "peca": {
+    "abertura": "Peça 1 · A abertura",
+    "espelho": "Peça 2 · O espelho",
+    "q3": "Peça 3 · A única coisa",
+    "gap": "Peça 4 · A medida",
+    "futuro": "Peça 5 · O futuro",
+    "q7": "Peça 6 de 9 · O que já tentou",
+    "q8": "Peça 7 de 9 · O prazo",
+    "q9": "Peça 8 de 9 · O investimento",
+    "gate": "Peça 9 de 9 · Onde te encontro",
+    "pico": "O traçado",
+    "proposta": "O molde"
+  },
+  "retomada": {
+    "aviso": "Retomei de onde você parou. Nada se perdeu."
+  },
+  "regua": {
+    "diminuir": "Diminuir",
+    "aumentar": "Aumentar"
+  },
+  "abertura": {
+    "titulo": "Antes de tudo, uma pergunta.",
+    "corpo": "Poucas perguntas, menos de três minutos. No final, você recebe um diagnóstico feito sob medida, não um resultado genérico de quiz. Chegar até aqui já traçou a primeira peça.",
+    "nota": "Nenhuma resposta certa. Só a sua."
+  },
+  "espelho": {
+    "titulo": "Qual dessas frases é a que mais ecoa em você, agora?",
+    "sub": "Escolha a que dói mais, não a que soa melhor.",
+    "cards": {
+      "patricia": "Eu abro o armário lotado… e não acho nada pra vestir.",
+      "camila": "Eu entrego mais do que muita gente que aparece e cobra mais do que eu.",
+      "carla": "Minha clínica entrega um resultado de alto padrão. Minha imagem, nem sempre."
+    },
+    "rotulagem": "Muita gente que vive isso também sentiu vergonha de admitir. Vamos por partes.",
+    "situacaoTitulo": {
+      "patricia": "E onde isso apareceu pela última vez?",
+      "camila": "E quando foi a última vez que isso te custou algo?",
+      "carla": "E onde essa distância ficou mais evidente?"
+    },
+    "situacoes": {
+      "patricia": [
+        "Na frente do armário, atrasada, trocando de roupa três vezes",
+        "Num evento em que eu não sabia o que era apropriado",
+        "Numa foto que alguém postou sem me avisar",
+        "Num dia comum, só o cansaço de sempre parecer a mesma"
+      ],
+      "camila": [
+        "Numa reunião em que eu sabia mais e falaram com outra pessoa",
+        "Numa proposta que perdi pra alguém menos preparada",
+        "Num convite que não veio, e eu soube depois",
+        "Numa entrega em que meu trabalho brilhou e eu não"
+      ],
+      "carla": [
+        "Quando uma paciente comparou meu preço com o de quem entrega menos",
+        "Numa foto do consultório que não parecia o meu padrão",
+        "Num congresso em que colegas de resultado inferior tinham mais presença",
+        "Quando percebi que minha imagem não sustentava meu reajuste"
+      ]
+    },
+    "outraSituacao": "Foi outra coisa",
+    "outraSituacaoPlaceholder": "Me conta em uma linha."
+  },
+  "q3": {
+    "titulo": {
+      "patricia": "Se, em 30 dias, uma coisa mudasse pra sempre em você, o que seria?",
+      "camila": "Se em 30 dias uma coisa mudasse na forma como você é vista profissionalmente, o que seria?",
+      "carla": "Se em 30 dias sua imagem passasse a comunicar o nível real do seu trabalho, o que mudaria primeiro?"
+    },
+    "sub": "Escreve do seu jeito. É essa frase que eu vou te devolver no final.",
+    "placeholder": "Uma coisa só.",
+    "rotulo": "Sua resposta",
+    "recibo": "Guardei. Palavra por palavra."
+  },
+  "gap": {
+    "precificacao": {
+      "titulo": "Agora as suas medidas.",
+      "sub": "Arraste até chegar perto do real. Ninguém além de você vê estes números.",
+      "precoAtual": "Hoje, quanto você cobra pelo seu principal serviço?",
+      "precoDesejado": "E quanto ele deveria valer?",
+      "precoDesejadoNota": "Não pode ficar abaixo do que você já cobra.",
+      "volumeMensal": "Em média, quantos atendimentos assim você faz por mês?",
+      "calculoTitulo": "Com base no que você me contou:",
+      "porAtendimento": "{unidade} de diferença em cada atendimento.",
+      "porMes": "Pela sua própria agenda, {mes} por mês.",
+      "porAno": "Em doze meses, {ano}.",
+      "semGap": "Sua meta ficou igual ao que você já cobra. Arrasta a segunda medida até onde ele deveria estar.",
+      "nota": "Essa conta é sua. Foram os seus números que a fizeram. Ninguém está levando esse dinheiro. Ele só não está sendo cobrado.",
+      "aguardando": "Mexa nas três medidas para ver a sua conta."
+    },
+    "guardaRoupa": {
+      "titulo": "Agora as suas medidas.",
+      "sub": "Arraste até chegar perto do real. Ninguém além de você vê estes números.",
+      "pctUsado": "Que fatia do seu guarda-roupa você realmente usa?",
+      "valorParado": "Nos últimos 12 meses, quanto você acha que gastou em peças que ficaram penduradas?",
+      "calculoTitulo": "Com base no que você me contou:",
+      "usado": "{pct}% do seu armário trabalha por você hoje.",
+      "adormecido": "Os outros {pct}% não sumiram. Estão adormecidos.",
+      "valor": "{valor} em peças que ainda estão lá, esperando alguém dizer com o que elas combinam.",
+      "nota": "Não é sobre ter mais roupa. É sobre acordar o que já é seu.",
+      "aguardando": "Mexa nas duas medidas para ver a sua conta."
+    }
+  },
+  "futuro": {
+    "sub": {
+      "patricia": "Feche os olhos. Você entra numa sala. Como as pessoas te veem?",
+      "camila": "Você entra na reunião. Antes de falar uma palavra, o que sua presença já comunicou?",
+      "carla": "Uma paciente nova chega. Sua imagem já confirmou o preço que você cobra?"
+    },
+    "titulo": "Daqui a 6 meses, quando você sai de uma sala, como quer ser descrita?",
+    "instrucao": "Escolha de 2 a 3 palavras.",
+    "restante": "{n, plural, =0 {Nenhuma escolha restante} one {Mais uma, se quiser} other {Mais # palavras}}",
+    "trocar": "Três marcadas. Toque numa delas pra trocar.",
+    "palavras": {
+      "elegante": "elegante",
+      "autoridade": "autoridade",
+      "memoravel": "memorável",
+      "cara": "cara",
+      "inevitavel": "inevitável",
+      "referencia": "referência",
+      "confiavel": "confiável",
+      "desejada": "desejada",
+      "admirada": "admirada",
+      "segura": "segura"
+    }
+  },
+  "q7": {
+    "titulo": "O que você já tentou pra resolver isso?",
+    "opcoes": [
+      "Comprei roupas e coisas novas por conta própria",
+      "Segui dicas prontas de influenciadoras",
+      "Já pensei em terapia ou trabalhar autoestima",
+      "Nunca tentei nada estruturado"
+    ],
+    "outro": "Outro",
+    "outroPlaceholder": "O que foi?"
+  },
+  "q8": {
+    "titulo": "Pra quando você quer isso resolvido?",
+    "opcoes": [
+      "Essa semana, se possível",
+      "Nas próximas 2 a 4 semanas",
+      "Esse trimestre",
+      "Sem pressa, só juntando informação por enquanto"
+    ]
+  },
+  "q9": {
+    "titulo": {
+      "precificacao": "Com base no que você me contou, essa diferença soma {ano} em doze meses. Qual faixa de investimento faz sentido pra você começar a mudar isso?",
+      "guardaRoupa": "Com base no que você me contou, há {valor} adormecidos no seu armário. Qual faixa de investimento faz sentido pra que isso pare de se repetir?"
+    },
+    "tituloSemGap": "Qual faixa de investimento faz sentido pra você começar a mudar isso?",
+    "sub": "Não é o meu preço. É o seu teto de abertura.",
+    "opcoes": {
+      "ate3500": "Até R$ 3.500",
+      "de3500a7k": "R$ 3.500 a 7.000",
+      "de7a10k": "R$ 7.000 a 10.000",
+      "acima10k": "Acima de R$ 10.000",
+      "naoDizer": "Prefiro não dizer agora"
+    }
+  },
+  "gate": {
+    "titulo": "Seu diagnóstico e o mapa da sua virada chegam aí.",
+    "nome": "Como você se chama?",
+    "nomePlaceholder": "Seu primeiro nome",
+    "whatsapp": "Seu WhatsApp",
+    "whatsappPlaceholder": "DDD e número",
+    "email": "Seu e-mail (opcional)",
+    "emailPlaceholder": "seu@email.com",
+    "cta": "Quero ver meu mapa",
+    "enviando1": "Lendo o que você escreveu…",
+    "enviando2": "Medindo o que você declarou…",
+    "enviando3": "Traçando o seu molde…",
+    "nota": "Você recebe o link na hora. Se preferir, também mando pelo seu WhatsApp.",
+    "privacidade": "Seus dados são usados só para montar e te enviar este diagnóstico. Sem spam, sem compartilhamento com terceiros. É só me pedir e eu apago.",
+    "erroNome": "Preciso do seu nome pra escrever isso pra você.",
+    "erroWhatsapp": "Confere o número? Preciso dele pra te mandar o link.",
+    "erroEmail": "Confere o e-mail? Parece incompleto.",
+    "erroGeral": "Não consegui salvar agora. Tenta de novo em alguns segundos."
+  },
+  "pico": {
+    "titulo": "Aqui está o mapa entre quem você é hoje e quem você decidiu ser.",
+    "hoje": "Hoje",
+    "futuro": "Futuro",
+    "instrucao": "Arraste para atravessar.",
+    "cta": "Ver minha proposta completa"
+  },
+  "audio": {
+    "convite": "Prefere me contar por áudio?",
+    "consentimento": "Seu áudio vira texto só pra montar seu diagnóstico. Depois de transcrito, não guardamos o arquivo. Ok pra gravar?",
+    "gravar": "Gravar áudio",
+    "parar": "Terminei",
+    "digitar": "prefiro digitar",
+    "transcrevendo": "Transcrevendo…",
+    "gravando": "Ouvindo você",
+    "consentir": "Pode gravar",
+    "erro": "Não consegui gravar agora. Você pode digitar."
+  },
+  "confirmacao": {
+    "titulo": "Oi, {nome}. Recebi seu áudio.",
+    "corpo": "Só preciso confirmar o que entendi. Leva 30 segundos, não 3 minutos.",
+    "cta": "Confirmar minhas respostas",
+    "ouvi": "Foi isso que eu ouvi:",
+    "confirma": "confirma?",
+    "rodape": "Você já me contou boa parte disso. Só confirma o que entendi certo. Leva 30 segundos.",
+    "linkInvalido": "Esse link não está mais valendo. Sem problema, dá pra responder por aqui do mesmo jeito."
+  },
+  "proposta": {
+    "b1": {
+      "titulo": "{nome}, aqui está o que eu ouvi, e o que eu vejo.",
+      "epigrafe": "Não basta ser excelente. É preciso ser percebida."
+    },
+    "b2": {
+      "notacao": "O diagnóstico"
+    },
+    "b3": {
+      "notacao": "Hoje e depois",
+      "titulo": "As duas metades da mesma pessoa.",
+      "hoje": "Hoje",
+      "futuro": "Futuro"
+    },
+    "b4": {
+      "notacao": "A fita métrica da virada",
+      "titulo": "Três estações, medidas na sua régua.",
+      "fecho": "Não é um produto; é o mapa entre quem você é e quem você decidiu ser.",
+      "hojeMarca": "Você está aqui",
+      "metaMarca": "Sua meta",
+      "estacoes": {
+        "percebida": "A Percebida",
+        "referencia": "A Referência",
+        "inevitavel": "A Inevitável"
+      },
+      "pontes": {
+        "percebida": "Jornada Valor Percebido",
+        "referencia": "Dossiê de Imagem",
+        "inevitavel": "Método Prisma"
+      },
+      "copy": {
+        "patricia": {
+          "percebida": "Você para de se vestir no piloto automático. Cápsula certa, cores certas, o básico que ninguém te ensinou.",
+          "referencia": "Sua imagem passa a contar a sua história, em vez de escondê-la. As pessoas notam antes de você falar.",
+          "inevitavel": "Você entra em qualquer sala sabendo que pertence ali. Para de se perguntar o que vestir. Só vive."
+        },
+        "camila": {
+          "percebida": "Sua competência ganha uma vitrine. Você para de ser a melhor que ninguém vê.",
+          "referencia": "Você passa a ser convidada pras salas certas antes de precisar se explicar.",
+          "inevitavel": "Seu nome vira sinônimo do que você faz. A percepção finalmente alcança o mérito."
+        },
+        "carla": {
+          "percebida": "Sua imagem passa a comunicar o preço que você já cobra.",
+          "referencia": "Pacientes chegam pré-convencidas do seu nível, a conversa começa antes da consulta.",
+          "inevitavel": "Sua clínica vira referência. Preço deixa de ser a primeira objeção."
+        }
+      }
+    },
+    "b5": {
+      "notacao": "O método",
+      "titulo": "Tradução, não transformação.",
+      "corpo": "Consultoria de estilo genérica troca você por outra pessoa: um arquétipo, uma paleta, um manual. A metodologia francesa faz o contrário. Ela lê o que já está ali e traduz. Você não vira outra. Você passa a ser lida como quem você já é.",
+      "corpo2": "Por isso o trabalho começa medindo, não comprando. Primeiro a leitura, depois a linguagem, e só então a peça."
+    },
+    "b6": {
+      "notacao": "A prova",
+      "titulo": "Antes de você.",
+      "corpo": "Antes de você, outras {numero} mulheres já atravessaram isso.",
+      "placeholder": "Espaço reservado para depoimentos e credenciais. Nada aqui foi inventado: não existe material real disponível até a Renilza entregar o dela."
+    },
+    "b7": {
+      "notacao": "O investimento",
+      "titulo": "O que isso custa.",
+      "investimento": "{valor}",
+      "pix": "Pix à vista",
+      "pixBonus": "No Pix à vista, você garante {bonus} de bônus.",
+      "cartao": "Cartão em até 12x",
+      "ctaPrimario": "Garantir minha vaga",
+      "ctaSecundario": "Prefiro falar com a Renilza",
+      "seguranca": "Pagamento processado com segurança. Dúvidas? Fale com a gente antes de decidir.",
+      "mockAviso": "Checkout de demonstração, nenhuma cobrança é processada nesta versão.",
+      "produto": "{nome}",
+      "parcelamentoNota": "Em até {parcelas}x no cartão. Os juros do parcelamento entram na parcela. No Pix à vista você não paga nenhum.",
+      "ctaAbrindo": "Abrindo o pagamento…",
+      "erroAviso": "Não consegui abrir o pagamento agora. Tenta de novo, ou me chama no WhatsApp que eu resolvo por lá.",
+      "expiradaAviso": "Esta proposta venceu, então o pagamento também. Me chama no WhatsApp e eu monto a próxima com você."
+    },
+    "validade": {
+      "ativa": "Esta proposta foi escrita para você e vale até {data}.",
+      "expirada": "Esta proposta expirou.",
+      "expiradaCorpo": "Ela foi escrita para um momento específico e a validade acabou. Fale com a Renilza e ela monta a próxima com você.",
+      "expiradaCta": "Falar com a Renilza"
+    },
+    "naoEncontrada": {
+      "titulo": "Não encontrei esta proposta.",
+      "corpo": "O link pode ter sido digitado errado ou pertencer a outra pessoa.",
+      "cta": "Fazer meu diagnóstico"
+    },
+    "crossSell": {
+      "titulo": "Se agora não é a hora.",
+      "nota": "Nem todo mês é o mês. Estes dois começam pequeno e continuam te levando. Você entra hoje e sobe quando fizer sentido.",
+      "itens": {
+        "circulo": {
+          "nome": "O Círculo",
+          "descricao": "Pertencimento contínuo · gratuito"
+        },
+        "jornada": {
+          "nome": "Jornada Valor Percebido",
+          "descricao": "A base do método · assinatura mensal"
+        }
+      }
+    }
+  },
+  "whatsapp": {
+    "mensagem": "Oi Renilza! Terminei o diagnóstico e quero falar sobre os próximos passos."
+  }
+}

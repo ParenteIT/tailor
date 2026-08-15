@@ -1,0 +1,6 @@
+{
+  "_traducao": {
+    "status": "TODO — nenhuma string traduzida ainda. Toda chave ausente cai no pt-BR (ver src/i18n/request.ts).",
+    "bloqueio": "Antes de traduzir os textos de preço, a Renilza precisa decidir em qual moeda a calculadora do Gap aparece para um lead em EN/FR — BRL fixo, ou EUR/USD conforme o locale. Pendência aberta em tailor-spec.md §5."
+  }
+}

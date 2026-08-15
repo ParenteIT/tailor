@@ -30,8 +30,10 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files
 .env*
+# o exemplo e versionado de proposito: e o contrato de quais variaveis existem.
+!.env.example
 
 # vercel
 .vercel
@@ -39,3 +41,18 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# banco local de desenvolvimento (backend de arquivo do store)
+.tailor-dev/
+
+# artefatos efemeros da skill impeccable (paginas de decisao, cache do hook)
+.impeccable/questions/
+.impeccable/live/
+.impeccable/hook.cache.json
+.impeccable/hook.pending.json
+
+# Netlify — estado local do link de site (contém só o site id, mas é ambiente)
+.netlify/
+
+# Gerado pelo edge-bundler do Netlify durante o deploy
+deno.lock

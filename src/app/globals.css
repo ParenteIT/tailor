@@ -1,1 +1,471 @@
 @import "tailwindcss";
+
+/* ============================================================================
+   TAILOR — sistema de tokens
+   Paleta e tipografia vêm de BRAND-VISUAL.md v1.1 (08/08/2026), documento de
+   governança com protocolo de mudança no §10. Nada aqui é escolha de gosto:
+   mudança de forma passa por aquele arquivo primeiro.
+   ========================================================================= */
+
+@theme {
+  /* --- núcleo (§2.1) --------------------------------------------------- */
+  --color-noir: #141009;
+  --color-ivory: #f6efe1;
+  --color-gold: #c9a24c;
+  --color-terra: #9b6a4f;
+
+  /* --- derivados (§2.3) ------------------------------------------------ */
+  --color-gold-hi: #e3c77e;
+  --color-ivory-2: rgb(246 239 225 / 0.72);
+  /* O §2.3 propõe 0.48; medido sobre --noir isso dá ~4,5:1, exatamente em cima
+     do mínimo — e a notação vive em 12px. Subido para 0.55 (~5,4:1), que é a
+     mesma intenção visual com folga. Divergência a reconciliar no BRAND-VISUAL. */
+  --color-ivory-3: rgb(246 239 225 / 0.55);
+  --color-line: rgb(230 210 170 / 0.16);
+  --color-line-2: rgb(230 210 170 / 0.3);
+  --color-line-gold: rgb(201 162 76 / 0.55);
+
+  /* --- superfícies derivadas do terra (regra 2: o calor vem do terra) --- */
+  --color-noir-2: #1a1410;
+  --color-noir-3: #221a14;
+
+  /* --- acento por persona ---------------------------------------------- *
+   * Extensão de produto, NÃO presente no BRAND-VISUAL v1.1 — entra como
+   * decisão registrada pelo protocolo do §10 (Willian, 13/08/2026).
+   *
+   * Recalibrados para a família cromática do --terra (#9B6A4F, ≈32% de
+   * saturação): os valores do brief v0.2 (#D98A93 / #C97F45 / #7E9B8A) tinham
+   * origem cromática dispersa e liam como enxerto ao lado do ouro. Agora os
+   * três compartilham a mesma faixa de saturação e luminosidade — uma tinta em
+   * três temperaturas, não três cores de sistema diferente.
+   *
+   * Mesma disciplina de área do ouro: filete, ponto, marca de giz. Nunca
+   * preenchimento.                                                          */
+  --color-patricia: #c17b83; /* rosa-argila  — vida pessoal / autoestima */
+  --color-camila: #bc7c4e; /* âmbar-terra  — carreira / percepção      */
+  --color-carla: #6f9b85; /* verde-sálvia — negócio / precificação    */
+
+  /* --- alerta ----------------------------------------------------------- *
+   * Erro de validação tem cor própria: um terra queimado fora dos três
+   * acentos. Antes o erro saía em --color-patricia — e o único erro do fluxo
+   * acontece no gate: para a Patrícia, a linha "dela" virava repreensão; para
+   * as outras, o erro chegava na cor de outra mulher. Acento de persona
+   * significa uma coisa só. Sai da banda de saturação do terra de propósito:
+   * alerta é voz de sistema, não de persona. 4,87:1 sobre noir (texto 14px). */
+  --color-alerta: #c4674e;
+
+  /* --- tipografia (§3.1) ----------------------------------------------- *
+   * O display vive atrás de UM token porque o §3.1-BIS já registra que
+   * Cormorant sinaliza tier DIY e sai em setembro. A troca é esta linha.    */
+  --font-display: var(--font-cormorant), Georgia, "Times New Roman", serif;
+  --font-rigor: var(--font-jost), "Segoe UI", system-ui, sans-serif;
+  --font-read: var(--font-hanken), -apple-system, system-ui, sans-serif;
+
+  /* --- escala tipográfica (§3.2, base 16 / razão 1.25) ------------------ */
+  --text-display: 3.8rem;
+  --text-h1: 3rem;
+  --text-h2: 2.4rem;
+  --text-h3: 1.95rem;
+  --text-lead: 1.25rem;
+  --text-body: 1.0625rem;
+  --text-apoio: 0.875rem;
+  --text-micro: 0.75rem;
+
+  /* --- espaço (§4): 8 · 16 · 24 · 40 · 64 · 104 · 168, nada fora ------- */
+  --spacing-p1: 8px;
+  --spacing-p2: 16px;
+  --spacing-p3: 24px;
+  --spacing-p4: 40px;
+  --spacing-p5: 64px;
+  --spacing-p6: 104px;
+  --spacing-p7: 168px;
+
+  /* --- forma (§4): cantos 2px, container 680 leitura / 1120 vitrine ----- */
+  --radius-sheet: 2px;
+  --container-leitura: 680px;
+  --container-vitrine: 1120px;
+}
+
+/* ============================================================================
+   BASE
+   ========================================================================= */
+
+:root {
+  --surface: var(--color-noir);
+  --ink: var(--color-ivory);
+  --ink-2: var(--color-ivory-2);
+  --ink-3: var(--color-ivory-3);
+  --rule: var(--color-line);
+  --rule-2: var(--color-line-2);
+  /* acento da persona; trocado em runtime quando ela escolhe a frase-espelho */
+  --accent: var(--color-gold);
+  color-scheme: dark;
+}
+
+/* A proposta é leitura longa — regra 4 do §2.4 manda ivory aqui.
+   A troca de fundo é o sinal de "aqui você lê", e é intencional. */
+[data-superficie="ivory"] {
+  --surface: var(--color-ivory);
+  --ink: var(--color-noir);
+  --ink-2: rgb(20 16 9 / 0.74);
+  /* Sobre ivory, 0.5 reprova em 4.5:1 — e este token carrega o aviso do
+     checkout mock e o texto de segurança, que são exatamente onde ninguém pode
+     ter dificuldade de ler. 0.64 passa com folga. */
+  --ink-3: rgb(20 16 9 / 0.64);
+  --rule: rgb(20 16 9 / 0.16);
+  --rule-2: rgb(20 16 9 / 0.28);
+
+  /* A mesma tinta, mais densa. O ouro e os acentos foram calibrados para o
+     tecido escuro; sobre o papel ivory eles desbotavam — gold-hi media 1,44:1
+     na frase-fecho da fita métrica e no foco de teclado, gold 2,10:1 na marca
+     SUA META (medido por luminância relativa, 14/08/2026). Giz sobre tecido,
+     caneta sobre papel: o matiz não muda (H41/44 no ouro, H353/25/150 nos
+     acentos), só a densidade. Todos ≥4,5:1 sobre ivory; no claro, "hi" é o
+     traço mais fundo, não o mais brilhante. */
+  --color-gold: #856828;
+  --color-gold-hi: #755c19;
+  --color-patricia: #aa505a;
+  --color-camila: #966039;
+  --color-carla: #507462;
+
+  color-scheme: light;
+}
+
+/* A candeia da confissão — Peça 3 (Dor viva), e só ela. Miwa & Hanyu (2006)
+   mediram autorrevelação sob luz BAIXA, não sob breu: o quarto com abajur
+   revela mais que o void. noir-2 é o passo derivado do terra que já existia
+   dormente — modulação dentro do noir, não um terceiro ato do arco. O corpo
+   já transiciona background em 900ms. Registro no DESIGN.md; validar pela
+   taxa de resposta da Q3 no autosave. */
+[data-penumbra] {
+  --surface: var(--color-noir-2);
+}
+
+/*
+ * @layer base — não é organização, é o bug real por trás do "botão feio".
+ * Sem camada, este reset (seletor de elemento, especificidade baixa) ainda
+ * vencia QUALQUER utilitário do Tailwind (que vive na camada `utilities`):
+ * regra sem @layer sempre supera regra em camada, não importa especificidade
+ * nem ordem no arquivo. `button { padding: 0 }` estava zerando `px-p4 py-p3`
+ * em produção — o botão nunca teve o padding pequeno, tinha padding ZERO.
+ * Descoberto medindo `getComputedStyle` no site no ar, não lendo o CSS.
+ */
+@layer base {
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: var(--font-read);
+  font-size: var(--text-body);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  transition: background 900ms cubic-bezier(0.16, 1, 0.3, 1), color 900ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 300;
+  color: var(--ink);
+  margin: 0;
+  text-wrap: balance;
+}
+
+h1 {
+  font-size: clamp(2.1rem, 7.5vw, var(--text-h1));
+  line-height: 1.12;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: clamp(1.75rem, 6vw, var(--text-h2));
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  font-weight: 400;
+}
+
+h3 {
+  font-size: clamp(1.35rem, 5vw, var(--text-h3));
+  line-height: 1.2;
+  font-weight: 400;
+}
+
+/* §3.3 — o itálico do display é o único recurso de ênfase.
+   Negrito em título está vetado. */
+h1 em,
+h2 em,
+h3 em {
+  font-style: italic;
+  color: var(--color-gold-hi);
+}
+
+p {
+  margin: 0;
+  max-width: 68ch;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+
+::selection {
+  background: var(--color-terra);
+  color: var(--color-ivory);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-gold-hi);
+  outline-offset: 3px;
+}
+} /* fim @layer base */
+
+/* ============================================================================
+   A FOLHA DE MOLDE — gramática do mundo
+   Giz de alfaiate sobre tecido escuro. Toda marca aqui é notação de molde
+   real: linha de corte, linha de costura, piquete, fio, pence, registro.
+   Nenhuma delas é decorativa — cada uma carrega um dado dela.
+   ========================================================================= */
+
+/* Marca de registro: a cruz que alinha duas folhas de molde sobrepostas. */
+.registro {
+  position: absolute;
+  width: 11px;
+  height: 11px;
+  opacity: 0.34;
+  pointer-events: none;
+}
+
+.registro::before,
+.registro::after {
+  content: "";
+  position: absolute;
+  background: var(--ink-3);
+}
+
+.registro::before {
+  left: 50%;
+  top: 0;
+  width: 1px;
+  height: 100%;
+  transform: translateX(-50%);
+}
+
+.registro::after {
+  top: 50%;
+  left: 0;
+  height: 1px;
+  width: 100%;
+  transform: translateY(-50%);
+}
+
+/* Notação: Jost, caixa alta, tracking largo. Classifica e mede — §3.1. */
+.notacao {
+  font-family: var(--font-rigor);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--ink-3);
+}
+
+/* O filete de abertura — 36×1px em ouro. Gesto-assinatura do sistema (§4).
+   Aqui ele não é enfeite: marca o início da peça, como no molde impresso. */
+.filete {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-p2);
+}
+
+.filete::before {
+  content: "";
+  width: 36px;
+  height: 1px;
+  background: var(--color-gold);
+  flex: none;
+}
+
+/* A linha de costura: tracejada, é a opção ainda não escolhida. */
+.linha-costura {
+  border: 0;
+  border-top: 1px dashed var(--rule-2);
+}
+
+/* A linha de corte: sólida, é a decisão tomada. */
+.linha-corte {
+  border: 0;
+  border-top: 1px solid var(--accent);
+}
+
+/* Piquete — o tique perpendicular que marca um ponto de encontro. */
+.piquete {
+  width: 1px;
+  height: 9px;
+  background: var(--ink-3);
+  flex: none;
+}
+
+/* O crescimento do piquete é feito por transform no componente — aqui só a
+   troca de cor, para não animar layout. */
+.piquete[data-marcado="true"] {
+  background: var(--accent);
+}
+
+/* Hachura da margem de costura: o espaço entre o que ela cobra e o que
+   deveria cobrar. O gap desenhado como o alfaiate desenha. */
+.hachura {
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 5px,
+    var(--rule-2) 5px 6px
+  );
+}
+
+/* O traçado do giz — a única animação autorada da peça (§ craft-floor).
+   Exponencial, sai de um estado já visível, e some com prefers-reduced. */
+@keyframes tracar {
+  from {
+    stroke-dashoffset: var(--traco);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes surgir {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.surgir {
+  animation: surgir 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* O ponto de "gravando" — opacidade, nunca escala: é o único sinal de que o
+   mic está ativo, e precisa continuar legível, não chamativo. */
+@keyframes respirar {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+.pulso-gravando {
+  animation: respirar 1400ms ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* A régua de medida — trilho de slider como fita métrica de verdade.
+   A altura de 44px é a faixa de toque (o trilho visível continua 1px): sem
+   ela, a área tocável do slider era a do line-height, ~20px — abaixo do
+   mínimo de alvo num aparelho de 360px, no input central da Peça 4. */
+.regua {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 44px;
+  background: transparent;
+  cursor: grab;
+}
+
+.regua:active {
+  cursor: grabbing;
+}
+
+.regua::-webkit-slider-runnable-track {
+  height: 1px;
+  background: var(--rule-2);
+}
+
+.regua::-moz-range-track {
+  height: 1px;
+  background: var(--rule-2);
+}
+
+/* O thumb é a marca de giz: um traço, não uma bolinha de app. */
+.regua::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 3px;
+  height: 26px;
+  background: var(--accent);
+  border: 0;
+  border-radius: 0;
+  margin-top: -13px;
+}
+
+.regua::-moz-range-thumb {
+  width: 3px;
+  height: 26px;
+  background: var(--accent);
+  border: 0;
+  border-radius: 0;
+}
+
+.regua:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 2px var(--surface), 0 0 0 4px var(--color-gold-hi);
+}
+
+/* Campo aberto: linha de base, como o caderno da costureira. Sem caixa. */
+.campo {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--rule-2);
+  padding: var(--spacing-p1) 0 var(--spacing-p2);
+  resize: none;
+  line-height: 1.6;
+}
+
+.campo::placeholder {
+  color: var(--ink-3);
+}
+
+.campo:focus {
+  outline: none;
+  border-bottom-color: var(--accent);
+}
+
+/* Numeral tabular onde há medida — número que muda não pode dançar. */
+.medida {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}

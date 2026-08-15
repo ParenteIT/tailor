@@ -1,0 +1,23 @@
+# Deploy do Tailor no Netlify.
+#
+# O plugin oficial do Next.js resolve App Router, route handlers e o proxy
+# (middleware) sem configuração extra. O que o app precisa de ambiente está
+# em .env.example — no Netlify, em Site settings → Environment variables.
+#
+# Sem SUPABASE_URL + SUPABASE_SERVICE_ROLE o app sobe, mas qualquer gravação
+# (autosave, gerar proposta) falha de propósito: o backend de arquivo é só
+# para desenvolvimento local e se recusa a rodar em produção.
+
+[build]
+  # Webpack, não Turbopack: o empacotador de edge functions do plugin não
+  # compila o runtime do Turbopack no middleware (chunks/[turbopack]_runtime).
+  # Dev e build local seguem em Turbopack; só o deploy troca.
+  command = "npm run build:netlify"
+  publish = ".next"
+
+[build.environment]
+  # Next 16 exige Node 20.9+.
+  NODE_VERSION = "20.17.0"
+
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
