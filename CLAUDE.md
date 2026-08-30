@@ -597,3 +597,89 @@ dela, exigindo depois a Renilza faturar contra a Parente IT — dois fatos
 geradores), a recomendação registrada é: usar esta conta só em **sandbox**
 para validar a integração, e manter a recuperação da conta da Renilza como o
 caminho de produção.
+
+### 30/08/2026 — Sessão remota: link oficial, auditoria de pendências, experimento de presença visual
+
+**Link oficial validado: `https://sobmedida.renilzamiranda.com`** — sem
+hífen, `.com` (não `.com.br`). Confirmado ao vivo por `curl`: responde
+`Netlify`/`Next.js`, redireciona `/` → `/pt` → `/pt/diagnostico`, batendo com
+`middleware.ts`. **Não estava documentado em lugar nenhum do repo** — foi
+apontado direto no DNS/Netlify fora de uma sessão de código. `sob-medida`
+**com hífen não existe** (DNS não resolve) — evitar essa grafia em qualquer
+material que circule.
+
+**Ambiente remoto (Claude Code on the web) não herda `node_modules` nem
+`.claude/skills/`.** Cada sessão clona o repo do zero: `npm install` é
+necessário sempre. Mais importante — a skill `impeccable` usada na auditoria
+de 14/08 (`DESIGN.md` linha 138+) **nunca foi commitada**: só o script
+existiu na máquina local do Willian, e `.claude/` no repo só tem
+`launch.json`. Uma sessão remota não consegue rodar `impeccable` nem achar
+"frontend designer" (não existe esse plugin no catálogo da conta — o mais
+próximo é o plugin genérico "Design", voltado a Figma/Notion, não instalado).
+Se a auditoria mecânica for para continuar valendo em sessão remota, o
+script precisa entrar no repo em `.claude/skills/impeccable/`.
+
+**Auditoria de pendências, PM-style.** Conferido por git, não só pelo log:
+um único commit consolidado (`23ab0db`, 15/08/2026) reúne tudo até o
+`whatsapp-direto`; zero commits e zero PRs desde então. Os bloqueios seguem
+sendo **conta, credencial e decisão**, não código: preços reais nas envs
+(`config.ts` ainda mostra `◆` em tudo), `SUPABASE_SERVICE_ROLE` e
+`ANTHROPIC_API_KEY` no Netlify, recuperação da conta Asaas de produção,
+webhook do Asaas (pronto, desativado de propósito), conta WhatsApp Cloud
+API, conta Upstash, e nota fiscal. Nenhum item novo além do que já estava
+registrado nas seções anteriores deste log — a auditoria só confirmou que
+nada mudou desde 15/08.
+
+**Experimento — `src/components/atmosfera.tsx`, commit `5285fe9`.** Pedido
+do Willian: "o layout está muito simples e apagado", com autorização
+explícita para testar além do §8 do BRAND-VISUAL. Camada de fundo fixa
+(`z-index:-1`, `pointer-events:none`), visível só a partir de 900px de
+largura (no celular a coluna de leitura já ocupa a tela inteira — screenshot
+confirmou que nada muda lá). Desenha a tese do mundo que até aqui só existia
+em prosa (`DESIGN.md` linha 11-14 — "várias curvas de tamanho sobrepostas e
+só uma é a sua"): curvas de molde, cruzes de registro maiores, um fio de
+grainline (marca "sentido do tecido" de peça de molde real, nunca usada no
+sistema) e grão de tecido via `feTurbulence`. Só linha, nunca preenchimento;
+nenhuma cor nova — lê `--rule`/`--ink-3`/`--color-gold`, que já trocam
+sozinhos entre noir e ivory. Verificado ao vivo (Playwright, screenshots
+antes/depois enviadas ao Willian) no quiz; no lado ivory da proposta
+(`Superficie` em `p/[token]`) está conectado pelo mesmo mecanismo mas **não
+foi visto ao vivo** — a automação não conseguiu completar o funil inteiro a
+tempo (cartão-espelho resiste a clique programático). `tsc`/`eslint` limpos.
+**Isto é proposta para avaliação, não adoção do contrato** — se ficar,
+precisa entrar no `BRAND-VISUAL.md` pelo protocolo §10, senão a próxima
+sessão volta a tratar como divergência a reconciliar.
+
+**Pesquisa: o que retém até o fim de um formulário.** Fontes são blog de
+produto/growth de 2026, não peer-review — direção, não verdade travada.
+
+- Formulário multi-etapa converte mais que formulário único, mas abandono é
+  alto (Formstack 2026: 82,4% abandona; acima de 4 passos, conclusão cai a
+  9,7%). O Tailor já mitiga isso: C1 trava em 9 telas por teste.
+- Barra de progresso animada reduz abandono 20-25% vs. estática;
+  *endowed progress* (começar com progresso já feito) aumenta conclusão —
+  **já implementado**: o trilho de giz nasce em 15%, e o rótulo "de 9" só
+  aparece a partir da Peça 6 (goal-gradient, registrado em `DESIGN.md`).
+- Micro-interação (transição fluida entre perguntas) reforça sensação de
+  avanço — **já implementado**: `surgir`, o traçado do giz, o tique de
+  vibração.
+- Cor de destaque/contraste: heatmaps mostram +23% de clique em elementos de
+  alto contraste; recomendação de mercado é ~10% da página em cor de
+  acento, concentrada no CTA. **Aqui está a tensão real**: isso é bem mais
+  área de cor do que o teto de 3% do BRAND-VISUAL §8. A pesquisa de mercado
+  geral e o contrato de marca deste produto puxam para lados opostos — não
+  dá para "pesquisar a solução" sem decidir antes até onde a marca cede.
+- Ilustração/imagem aumenta engajamento em onboarding — mas fica bloqueado
+  por **falta de material**, não por design: `PRODUCT.md`/§8 vetam imagem
+  inventada, e não existe banco de fotos real da Renilza ainda.
+- O gate de contato é onde funis de quiz historicamente perdem 30-50% de
+  quem termina — **já mitigado**: o gate ficou "sempre vivo" (CTA nunca
+  desabilitado) na rodada de retenção de 14/08.
+
+**Leitura:** a maior parte do que a pesquisa de mercado recomenda para reter
+até o fim (progresso, endowed progress, micro-interação) o Tailor já tem,
+documentado em `DESIGN.md`. O que falta para ir além — mais cor, imagem — é
+exatamente o que o contrato de marca hoje restringe. A `atmosfera` acima é
+uma primeira aposta nessa direção sem preenchimento nem imagem; decidir se
+vale abrir mais espaço de cor/imagem é decisão do Willian/Renilza, não algo
+que pesquisa de mercado resolve sozinha.
