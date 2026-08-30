@@ -4,6 +4,7 @@ import { CONTATO, PRECOS } from "@/content/config";
 import { PALAVRAS_IDENTIDADE, PERSONAS } from "@/content/personas";
 import { Comparador } from "@/components/comparador";
 import { Seta } from "@/components/molde";
+import { Atmosfera } from "@/components/atmosfera";
 import { FitaMetrica, type CopyEstacao } from "@/components/fita-metrica";
 import { Oferta, RegistrarAbertura } from "@/components/oferta";
 import { CrossSell } from "@/components/cross-sell";
@@ -261,6 +262,7 @@ function Superficie({
         } as React.CSSProperties
       }
     >
+      <Atmosfera />
       {children}
     </div>
   );
