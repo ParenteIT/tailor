@@ -37,24 +37,42 @@ export function Atmosfera() {
       <rect width="1440" height="900" filter="url(#atmosfera-grao)" opacity="0.025" />
 
       {/* Curvas sobrepostas do molde-mestre — a tese do mundo, desenhada.
-          Só fio, nunca preenchimento, como toda marca do sistema. */}
+          Só fio, nunca preenchimento, como toda marca do sistema.
+
+          O traçado usa `@keyframes tracar` de globals.css — definida na
+          auditoria de craft-floor de 14/08 para o trilho de progresso, mas
+          nunca chamada por nenhum componente até agora. `pathLength="1"`
+          (SVG2) normaliza o comprimento de cada curva para 1, então
+          `stroke-dasharray`/`--traco` não precisam medir nada: a curva se
+          desenha como giz tocando o tecido pela primeira vez, uma única vez
+          por carregamento, escalonada por curva. `prefers-reduced-motion`
+          já zera a duração global — a curva aparece inteira, sem o gesto. */}
       <path
+        className="atmosfera-tracar"
         d="M -80 620 C 220 460, 480 760, 780 520 S 1260 300, 1560 480"
         fill="none"
         stroke="var(--rule-2)"
         strokeWidth="1"
+        pathLength="1"
+        style={{ "--traco": 1, animationDelay: "0ms" } as React.CSSProperties}
       />
       <path
+        className="atmosfera-tracar"
         d="M -60 180 C 260 340, 560 40, 860 260 S 1320 120, 1540 260"
         fill="none"
         stroke="var(--rule)"
         strokeWidth="1"
+        pathLength="1"
+        style={{ "--traco": 1, animationDelay: "260ms" } as React.CSSProperties}
       />
       <path
+        className="atmosfera-tracar"
         d="M 1560 700 C 1260 540, 1040 820, 760 640 S 300 420, -40 600"
         fill="none"
         stroke="var(--rule)"
         strokeWidth="1"
+        pathLength="1"
+        style={{ "--traco": 1, animationDelay: "520ms" } as React.CSSProperties}
       />
 
       {/* Fio de grainline — a marca "sentido do tecido" de toda peça de

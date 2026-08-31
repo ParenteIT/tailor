@@ -502,3 +502,10 @@ textarea {
     display: inline;
   }
 }
+
+/* O traçado do giz aplicado às curvas de fundo — ver atmosfera.tsx.
+   `both`: mantém o estado final (dashoffset 0) depois que a animação acaba,
+   em vez de voltar ao dashoffset inicial. */
+.atmosfera-tracar {
+  animation: tracar 2400ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
