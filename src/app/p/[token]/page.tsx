@@ -116,7 +116,9 @@ export default async function PaginaProposta({
           </p>
         </Bloco>
 
-        {/* B3 — Hoje / Futuro, agora fixo: a prova já foi feita. */}
+        {/* B3 — Hoje / Futuro. O cartão virou empilhado em 08/09/2026 e não
+            arrasta mais em lugar nenhum, então o `fixo` que existia só aqui
+            deixou de fazer sentido. */}
         <Bloco notacao={t("proposta.b3.notacao")} titulo={t("proposta.b3.titulo")}>
           <Comparador
             verbatim={c.analise.verbatimQ3 || ""}
@@ -125,7 +127,6 @@ export default async function PaginaProposta({
             rotuloHoje={t("proposta.b3.hoje")}
             rotuloFuturo={t("proposta.b3.futuro")}
             moeda={c.moeda ?? "BRL"}
-            fixo={50}
           />
         </Bloco>
 

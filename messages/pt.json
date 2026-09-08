@@ -172,6 +172,13 @@
       "de7a10k": "R$ 7.000 a 10.000",
       "acima10k": "Acima de R$ 10.000",
       "naoDizer": "Prefiro não dizer agora"
+    },
+    "balao": {
+      "ate3500": "Dá pra começar por aqui. Começar já é o que destrava o resto.",
+      "de3500a7k": "Essa faixa abre mais caminho do que o primeiro passo.",
+      "de7a10k": "Com essa margem, dá pra ir fundo de uma vez.",
+      "acima10k": "Aqui cabe o percurso inteiro, sem cortar caminho.",
+      "naoDizer": "Tudo bem. A proposta não depende disso pra existir."
     }
   },
   "gate": {
@@ -197,8 +204,19 @@
     "titulo": "Aqui está o mapa entre quem você é hoje e quem você decidiu ser.",
     "hoje": "Hoje",
     "futuro": "Futuro",
-    "instrucao": "Arraste para atravessar.",
-    "cta": "Ver minha proposta completa"
+    "cta": "Ver minha proposta completa",
+    "leitura": {
+      "abertura": "Você começou pela frase “{frase}”, e me contou que isso apareceu {situacao}.",
+      "aberturaSemSituacao": "Você começou pela frase “{frase}”.",
+      "numerosPreco": "Nas suas contas, você cobra {preco} hoje e atende {volume} vezes por mês.",
+      "numerosGuardaRoupa": "Nas suas contas, {pct}% do armário trabalha por você hoje.",
+      "tentou": "E antes de chegar aqui você já tinha tentado resolver sozinha: “{tentou}”.",
+      "palavras": "Daqui a seis meses, você quer sair de uma sala e ser lembrada como {palavras}.",
+      "metaPreco": "Você disse que seu trabalho deveria valer {meta}, e pela sua própria conta isso dá {ano} em doze meses.",
+      "metaSemGap": "Você disse que seu trabalho deveria valer {meta}.",
+      "adormecido": "Os {valor} que estão parados continuam sendo seus. Não sumiram, só estão esperando alguém dizer com o que combinam.",
+      "prazo": "Sobre quando: você marcou {prazo}."
+    }
   },
   "audio": {
     "convite": "Prefere me contar por áudio?",

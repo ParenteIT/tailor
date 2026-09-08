@@ -49,6 +49,16 @@ import {
 import { guardarMolde, lerMolde, limparMolde } from "@/lib/retomada";
 import { useGravador } from "@/lib/gravador";
 import { Comparador } from "@/components/comparador";
+import { indiceOpcao } from "@/lib/cenas";
+import {
+  BalaoInvestimento,
+  CenaAgenda,
+  CenaArmarioCartoon as CenaArmario,
+  CenaEscalaPreco,
+  CenaEtiquetas,
+  CenaMarcoPrazo,
+  ComposicaoPalavras,
+} from "@/components/cenas";
 
 const MARCAS_TRILHO = ETAPAS.map((e) => PROGRESSO[e]);
 
@@ -811,22 +821,46 @@ function TelaGap({
             rotuloMais={t("regua.aumentar")}
             onChange={(v) => atualizar({ precoDesejado: v })}
           />
-          <ReguaMedida
-            rotulo={t("gap.precificacao.volumeMensal")}
-            valor={r.volumeMensal ?? FAIXAS.volumeMensal.padrao}
-            latente={r.volumeMensal === null}
-            min={FAIXAS.volumeMensal.min}
-            max={FAIXAS.volumeMensal.max}
-            step={FAIXAS.volumeMensal.step}
-            graduacoes={[1, 30, 60]}
-            formatar={(v) => String(v)}
-            rotuloMenos={t("regua.diminuir")}
-            rotuloMais={t("regua.aumentar")}
-            onChange={(v) => atualizar({ volumeMensal: v })}
-          />
+          {/* Escala comum das duas medidas acima — nunca duas normalizações
+              independentes, ver src/components/cenas/escala-preco.tsx. */}
+          <div className="mb-p4">
+            <CenaEscalaPreco
+              atual={r.precoAtual}
+              desejado={r.precoDesejado}
+              escalaMax={FAIXAS.precoDesejado.max}
+              latenteAtual={r.precoAtual === null}
+              latenteDesejado={r.precoDesejado === null}
+            />
+          </div>
+          <div className="sm:flex sm:items-start sm:gap-p4">
+            <div className="sm:min-w-0 sm:flex-1">
+              <ReguaMedida
+                rotulo={t("gap.precificacao.volumeMensal")}
+                valor={r.volumeMensal ?? FAIXAS.volumeMensal.padrao}
+                latente={r.volumeMensal === null}
+                min={FAIXAS.volumeMensal.min}
+                max={FAIXAS.volumeMensal.max}
+                step={FAIXAS.volumeMensal.step}
+                graduacoes={[1, 30, 60]}
+                formatar={(v) => String(v)}
+                rotuloMenos={t("regua.diminuir")}
+                rotuloMais={t("regua.aumentar")}
+                onChange={(v) => atualizar({ volumeMensal: v })}
+              />
+            </div>
+            <div className="mb-p4 sm:mb-0 sm:w-36 sm:flex-none">
+              <CenaAgenda volume={r.volumeMensal} latente={r.volumeMensal === null} />
+            </div>
+          </div>
         </>
       ) : (
         <>
+          {/* PROTÓTIPO 07/09/2026: cena maior, acima da régua, em vez do
+              lado — a ilustração cartoon é o protagonista aqui, não um
+              acompanhamento pequeno. Só nesta pergunta, pra avaliação. */}
+          <div className="mb-p3 sm:max-w-72">
+            <CenaArmario pct={r.pctUsado} latente={r.pctUsado === null} />
+          </div>
           <ReguaMedida
             rotulo={t("gap.guardaRoupa.pctUsado")}
             valor={r.pctUsado ?? FAIXAS.pctUsado.padrao}
@@ -840,19 +874,34 @@ function TelaGap({
             rotuloMais={t("regua.aumentar")}
             onChange={(v) => atualizar({ pctUsado: v })}
           />
-          <ReguaMedida
-            rotulo={t("gap.guardaRoupa.valorParado")}
-            valor={r.valorParado ?? FAIXAS.valorParado.padrao}
-            latente={r.valorParado === null}
-            min={FAIXAS.valorParado.min}
-            max={FAIXAS.valorParado.max}
-            step={FAIXAS.valorParado.step}
-            graduacoes={[500, 20000, 40000]}
-            formatar={(v) => fmt(v)}
-            rotuloMenos={t("regua.diminuir")}
-            rotuloMais={t("regua.aumentar")}
-            onChange={(v) => atualizar({ valorParado: v })}
-          />
+          <div className="sm:flex sm:items-start sm:gap-p4">
+            <div className="sm:min-w-0 sm:flex-1">
+              <ReguaMedida
+                rotulo={t("gap.guardaRoupa.valorParado")}
+                valor={r.valorParado ?? FAIXAS.valorParado.padrao}
+                latente={r.valorParado === null}
+                min={FAIXAS.valorParado.min}
+                max={FAIXAS.valorParado.max}
+                step={FAIXAS.valorParado.step}
+                graduacoes={[500, 20000, 40000]}
+                formatar={(v) => fmt(v)}
+                rotuloMenos={t("regua.diminuir")}
+                rotuloMais={t("regua.aumentar")}
+                onChange={(v) => atualizar({ valorParado: v })}
+              />
+            </div>
+            <div className="mb-p4 sm:mb-0 sm:w-36 sm:flex-none">
+              <CenaEtiquetas
+                valor={r.valorParado}
+                min={FAIXAS.valorParado.min}
+                max={FAIXAS.valorParado.max}
+                latente={r.valorParado === null}
+                // A cifra segue a moeda que o idioma dela definiu — nada de
+                // "R$" cravado numa cena que também roda em USD.
+                simbolo={moeda === "BRL" ? "R$" : "$"}
+              />
+            </div>
+          </div>
         </>
       )}
 
@@ -1022,7 +1071,18 @@ function Futuro({
               style={{ minHeight: 44, opacity: bloqueada ? 0.3 : 1 }}
             >
               <span className="flex items-center gap-p1">
-                <span className="piquete" data-marcado={sel} />
+                {/* O piquete CRESCE ao marcar (scaleY), a mesma gramática de
+                    `LinhaOpcao` — a seleção nunca depende só da cor: o
+                    sublinhado (borda) e o tamanho do piquete mudam junto. */}
+                <span
+                  className="piquete"
+                  data-marcado={sel}
+                  style={{
+                    transform: `scaleY(${sel ? 1.45 : 1})`,
+                    transformOrigin: "top",
+                    transition: "transform 220ms ease, background 220ms ease",
+                  }}
+                />
                 <span
                   style={{
                     fontFamily: "var(--font-display)",
@@ -1051,6 +1111,18 @@ function Futuro({
             ? t("futuro.trocar")
             : t("futuro.restante", { n: MAX_PALAVRAS - r.palavras.length })}
         </p>
+      ) : null}
+
+      {/* A pequena composição tipográfica — as mesmas palavras já legíveis
+          na grade acima, reunidas como assinatura. Decorativa aqui: o texto
+          acessível já existe nos botões. */}
+      {r.palavras.length > 0 ? (
+        <div className="mt-p4">
+          <ComposicaoPalavras
+            palavras={r.palavras.map((p) => t(`futuro.palavras.${p}`))}
+            decorativa
+          />
+        </div>
       ) : null}
     </>
   );
@@ -1105,10 +1177,11 @@ function Q8({
   atualizar: (p: Partial<Respostas>) => void;
 }) {
   const t = useTranslations();
+  const opcoes = t.raw("q8.opcoes") as string[];
   return (
     <>
       <h2 className="mb-p4">{t("q8.titulo")}</h2>
-      {(t.raw("q8.opcoes") as string[]).map((opcao) => (
+      {opcoes.map((opcao) => (
         <LinhaOpcao
           key={opcao}
           selecionada={r.q8 === opcao}
@@ -1117,6 +1190,9 @@ function Q8({
           {opcao}
         </LinhaOpcao>
       ))}
+      <div className="mt-p2">
+        <CenaMarcoPrazo total={opcoes.length} indice={indiceOpcao(opcoes, r.q8)} />
+      </div>
     </>
   );
 }
@@ -1146,10 +1222,10 @@ function Q9({
           : // Meta igual ao atual: abrir o pedido de investimento com
             // "R$ 0 em doze meses" desmontaria a tela. Pergunta direta.
             t("q9.tituloSemGap")
-        : t(`q9.titulo.${trilha === "guarda_roupa" ? "guardaRoupa" : "precificacao"}`, {
-            valor: "—",
-            ano: "—",
-          });
+        : // Sem gap calculado, a pergunta direta também serve. A versão antiga
+          // preenchia o valor com um travessão e exibia "há — adormecidos no
+          // seu armário".
+          t("q9.tituloSemGap");
 
   return (
     <>
@@ -1167,6 +1243,9 @@ function Q9({
           {t(`q9.opcoes.${faixa}`)}
         </LinhaOpcao>
       ))}
+      {/* Uma frase por faixa (07/09/2026) — a chave é a própria faixa, então
+          copy nova entra em messages/pt.json sem tocar em código. */}
+      {r.q9 ? <BalaoInvestimento texto={t(`q9.balao.${r.q9}`)} /> : null}
     </>
   );
 }
@@ -1177,6 +1256,21 @@ function Q9({
  * (entregar o WhatsApp), desistir vira desistir da frase DELA, não do
  * formulário de alguém. Material 100% dela; nada inventado.
  */
+/**
+ * As opções de lista chegam capitalizadas ("Nas próximas 2 a 4 semanas"), e
+ * elas entram no MEIO das frases de leitura do Pico. Sem isto sai "você marcou
+ * Nas próximas 2 a 4 semanas".
+ */
+function minuscula(texto: string): string {
+  return texto.charAt(0).toLowerCase() + texto.slice(1);
+}
+
+/** "elegante, autoridade e memorável" — vírgula até a última, que leva "e". */
+function listar(itens: string[]): string {
+  if (itens.length <= 1) return itens[0] ?? "";
+  return `${itens.slice(0, -1).join(", ")} e ${itens.at(-1)}`;
+}
+
 function primeiraFrase(texto: string, limite = 110): string {
   const linha = texto.trim().split(/\n+/)[0] ?? "";
   const fim = linha.search(/[.!?…]/);
@@ -1337,32 +1431,99 @@ function Pico({
   moeda: Moeda;
 }) {
   const t = useTranslations();
+  const fmt = (v: number) => dinheiro(v, moeda);
+  const palavrasLegiveis = r.palavras.map((p) => t(`futuro.palavras.${p}`));
+
+  /**
+   * A leitura do que ela contou, em prosa, dentro do próprio cartão.
+   *
+   * Não é o texto das perguntas repetido de volta: é a devolutiva de quem
+   * ouviu. Cada frase só existe se o dado por trás dela existe (o `filter` no
+   * fim não é defesa contra `undefined`, é o Princípio 2 do PRODUCT.md escrito
+   * em código). Por isso os dois lados são assimétricos de propósito: não há
+   * "% de armário desejado" nem faturamento projetado, porque ela nunca
+   * declarou nenhum dos dois.
+   */
+  const situacaoDita = r.situacao === "outro" ? r.situacaoOutro : r.situacao;
+  const leituraHoje = [
+    r.persona &&
+      (situacaoDita
+        ? t("pico.leitura.abertura", {
+            frase: t(`espelho.cards.${r.persona}`),
+            situacao: minuscula(situacaoDita),
+          })
+        : t("pico.leitura.aberturaSemSituacao", {
+            frase: t(`espelho.cards.${r.persona}`),
+          })),
+    gap?.trilha === "precificacao" &&
+      t("pico.leitura.numerosPreco", {
+        preco: fmt(gap.precoAtual),
+        volume: gap.volumeMensal,
+      }),
+    gap?.trilha === "guarda_roupa" &&
+      t("pico.leitura.numerosGuardaRoupa", { pct: gap.pctUsado }),
+    // A resposta da Q7 é escrita em primeira pessoa ("Comprei roupas..."), então
+    // ela entra entre aspas: embutida na frase sem isso, a pessoa do verbo
+    // quebrava ("você já tinha tentado: comprei roupas").
+    r.q7 &&
+      t("pico.leitura.tentou", {
+        tentou: r.q7 === "outro" ? r.q7Outro : r.q7,
+      }),
+  ].filter((frase): frase is string => Boolean(frase));
+
+  const leituraFuturo = [
+    palavrasLegiveis.length > 0 &&
+      t("pico.leitura.palavras", { palavras: listar(palavrasLegiveis) }),
+    // A diferença por ano é aritmética dela sobre números dela: não é projeção
+    // de faturamento nem promessa de ganho (C2), é a subtração que ela mesma
+    // montou arrastando as réguas.
+    gap?.trilha === "precificacao" &&
+      (gap.ano > 0
+        ? t("pico.leitura.metaPreco", {
+            meta: fmt(gap.precoDesejado),
+            ano: fmt(gap.ano),
+          })
+        : t("pico.leitura.metaSemGap", { meta: fmt(gap.precoDesejado) })),
+    gap?.trilha === "guarda_roupa" &&
+      t("pico.leitura.adormecido", { valor: fmt(gap.valorParado) }),
+    r.q8 && t("pico.leitura.prazo", { prazo: minuscula(r.q8) }),
+  ].filter((frase): frase is string => Boolean(frase));
+
   return (
     <>
       <Notacao>{t("peca.pico")}</Notacao>
       <h2 className="mb-p4">{t("pico.titulo")}</h2>
       <Comparador
         verbatim={r.q3}
-        // A chave crua vinha sem acento — "memoravel", "inevitavel" a 2rem no
+        // A chave crua vinha sem acento ("memoravel", "inevitavel") a 2rem no
         // reveal de uma marca que vende percepção. O texto exibível mora nas
         // messages, como todo texto.
-        palavras={r.palavras.map((p) => t(`futuro.palavras.${p}`))}
+        palavras={palavrasLegiveis}
         gap={gap}
         moeda={moeda}
         rotuloHoje={t("pico.hoje")}
         rotuloFuturo={t("pico.futuro")}
-        instrucao={t("pico.instrucao")}
+        leituraHoje={leituraHoje}
+        leituraFuturo={leituraFuturo}
       />
       {url ? (
         <div className="mt-p5">
+          {/* Experimento 07/09/2026: unificado com o CTA padrão (Acao) —
+              mesmo preenchimento --color-cta e canto de 10px. Antes este era
+              o único botão com borda dourada ("a casa entrega com a linha
+              dela" — DESIGN.md, gramática das duas tintas); a unificação
+              troca aquele momento sutil por reconhecimento consistente do
+              botão ao longo de todo o funil. Registrado, não perdido: se
+              quiser o gesto de volta, é só devolver `border`/`borderRadius`
+              aos valores antigos aqui. */}
           <a
             href={url}
             className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
             style={{
-              background: "var(--ink)",
-              color: "var(--surface)",
-              border: "1px solid var(--color-gold)",
-              borderRadius: 2,
+              background: "var(--color-cta)",
+              color: "var(--color-cta-ink)",
+              border: "1px solid var(--color-cta)",
+              borderRadius: "var(--radius-cta)",
               minHeight: 56,
               textDecoration: "none",
             }}

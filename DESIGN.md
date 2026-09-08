@@ -367,3 +367,313 @@ autosave; reverter é apagar uma regra de CSS.**
    etapa já dá o número.
 8. `/favicon.ico` responde 404 (pré-existente, visto no percurso de
    verificação) — o webview do Instagram pede esse arquivo.
+
+## Ilustrações reativas — 07/09/2026
+
+Pedido do Willian: tornar as perguntas do Bloco "A medida" (Etapa 3) e
+vizinhas mais compreensíveis e envolventes com ilustrações que reagem ao que
+ela responde, sem sair do mundo da Folha de Molde nem do §8. Implementado
+localmente (não commitado nesta rodada — autorização do pedido era só de
+edição local), em `src/components/cenas/` + `src/lib/cenas.ts`.
+
+**A regra que organiza tudo:** a ilustração nunca é a fonte do dado. O texto
+formatado (`ReguaMedida`) sempre mostra o valor exato; a cena ao lado é
+esquemática — segmentos fixos que acendem em fração, nunca crescem em
+quantidade. `null` (ela ainda não tocou a régua) é um estado visual PRÓPRIO
+(`latente`, mesma palavra e mesma gramática tracejada que `ReguaMedida` já
+usava) — nunca "zero aceso", que pareceria resposta declarada.
+
+**As seis cenas:**
+- `CenaArmario` (`pctUsado`) — 10 peças fixas na cabideira, a fração acesa
+  cresce com o percentual.
+- `CenaEtiquetas` (`valorParado`) — 5 etiquetas fixas, cresce dentro dos
+  limites reais do campo (`min`/`max` da faixa vigente).
+- `CenaEscalaPreco` (`precoAtual`/`precoDesejado`) — uma REGUA COMUM aos dois
+  valores (mesmo `escalaMax`, nunca duas normalizações independentes); "Hoje"
+  e "Sua meta" ficam em raias verticais separadas e usam formas diferentes
+  (círculo × losango) para nunca depender só de cor.
+- `CenaAgenda` (`volumeMensal`) — 12 marcadores fixos (teto visual, a faixa
+  real vai a 60), com "+" além do teto.
+- `CenaMarcoPrazo` (Q8) — um piquete por opção, o marcado ganha traço sólido;
+  nenhuma semântica de tempo real, nenhum countdown.
+- `ComposicaoPalavras` (Q6 e reaproveitada no painel Futuro do Comparador) —
+  as 2–3 palavras escolhidas como pequena assinatura tipográfica.
+- `BalaoInvestimento` (Q9) — mesmo tamanho e tom em qualquer faixa, inclusive
+  "prefiro não dizer"; texto novo em `messages/pt.json` (`q9.balaoPadrao`,
+  `q9.balaoNaoDizer`).
+
+**Só traço, nunca preenchimento** — a mesma disciplina do resto do sistema.
+Nenhuma cor nova: tudo lê `--rule`/`--rule-2`/`--ink-3`/`--accent`, que já
+trocam sozinhos entre noir e ivory. O estado aceso muda DOIS sinais ao mesmo
+tempo (cor E traço sólido↔tracejado) — nunca só cor, para quem não distingue
+`--accent` de `--ink-3`.
+
+**Performance:** as cinco cenas em SVG entram por `next/dynamic`
+(`src/components/cenas/index.tsx`) — só a pergunta alcançada baixa o próprio
+chunk. As duas sem SVG (composição de palavras, balão) são leves demais para
+valer o code-splitting e entram diretas. Toda cena vive num contêiner de
+altura fixa (`Reservado`/`CenaContainer`), então o carregamento não desloca
+layout.
+
+**Responsivo:** no mobile, cada cena é uma faixa compacta (≤72px) logo abaixo
+da régua — nunca empurra pergunta/valor/controle pra longe. A partir de
+`sm:` (640px), régua e cena dividem uma linha (`sm:flex`), a cena ficando ao
+lado.
+
+**Bug real achado e corrigido durante a verificação visual:** a primeira
+versão de `ComposicaoPalavras` usava `flex flex-wrap` — que ignora
+`text-align` herdado. No painel "Futuro" do Comparador (alinhado à direita
+via `style={{ textAlign: alinhamento }}`), isso fazia as palavras vazarem
+para a esquerda e sobrepor o texto de "Hoje", ilegível. Corrigido trocando
+por fluxo inline (`<span style={{ display: "inline-block" }}>` dentro de um
+`<p>`), que respeita o alinhamento do container-pai como qualquer texto do
+sistema. Achado só porque o funil foi dirigido de ponta a ponta com
+Playwright, não só lido no código — screenshot antes/depois confirmou.
+
+**Correção de conteúdo no Comparador (item 8 do pedido):** o painel "Futuro"
+do guarda-roupa mostrava um "100%" fixo — uma meta que ela nunca declarou
+(a trilha guarda-roupa não tem "percentual desejado", só o que já usa hoje).
+Isso é exatamente o tipo de número que o Princípio 2 do `PRODUCT.md` proíbe
+("nenhum número exibido pode ser promessa, projeção ou exemplo"). Removido;
+as palavras-identidade carregam o painel Futuro sozinhas agora. Também
+adicionado um resumo textual sempre visível (`HOJE 70% · FUTURO elegante ·
+autoridade`) abaixo do cartão arrastável — antes, o valor "Hoje" podia ficar
+parcialmente cortado pelo `clip-path` até ela arrastar, o que o pedido
+proibia explicitamente ("não exigir arrastar para acessar informação
+essencial").
+
+**Verificado ao vivo, três personas, Playwright:** funil completo
+(abertura → gate) em 390×844 (mobile) e 1440×900 (desktop), estado latente
+antes de tocar qualquer régua, `prefers-reduced-motion: reduce`, e ordem de
+tab por teclado (o foco pula direto para o controle real — as cenas são
+`aria-hidden` e não interceptam nada). `npx tsc --noEmit`, `eslint` nos
+arquivos tocados e `vitest run` (131/131, 20 novos em `src/lib/cenas.test.ts`)
+limpos. **Não verificado**: EN/FR (mensagens ainda caem no pt.json por
+sobreposição parcial, comportamento herdado, não testado aqui
+especificamente para os textos novos do balão) e o modo confirmação/áudio
+(a mudança não toca nesses caminhos, mas não foi percorrida ao vivo).
+
+**Pendência de design:** esta rodada usa só os tokens de cor já existentes —
+o "terra escuro" (#78513B) proposto no pedido não foi necessário porque
+nenhuma cena usa preenchimento sólido atrás de texto (só traço), então o
+problema de contraste ivory-sobre-terra que motivou a proposta não chega a
+acontecer aqui. Registrado para não represar como pendência: se uma cena
+futura precisar de preenchimento, ESSE é o momento de trazer o token novo,
+não antes.
+
+## Fundo ameixa, botão pôr-do-sol e animação nas cenas — 07/09/2026
+
+Segunda rodada do mesmo pedido: "não gostei do marrom", "quero algo que
+conecte mais e chame mais atenção". Três decisões do Willian, cada uma
+validada com comparação real antes de aplicar (nunca só descrita em texto) e
+com contraste WCAG reconferido, não só olhado:
+
+**Fundo — de `--color-noir` #141009 pra #181022 (ameixa).** Rastreei de onde
+vinha a queixa de "marrom": não eram as cenas, era o `--color-noir` em si
+(a base de toda tela) e o acento da Camila (`#BC7C4E`, literalmente
+"âmbar-terra" no comentário do token). Só o fundo foi trocado nesta rodada —
+o acento da Camila e `--color-terra` continuam como estavam, por decisão
+explícita de escopo do Willian ("o fundo", não os acentos de persona).
+Três fundos foram desenhados e comparados lado a lado no app real (carvão
+neutro, ameixa, petróleo) antes da escolha. Confirmado ameixa. Reconferido
+por script o contraste de TODOS os tokens de texto/acento contra o novo
+fundo — só `--color-terra` como texto direto cairia abaixo de 4,5:1, e ele
+nunca é usado como texto (só tinta de 14% e `::selection`). `--color-line`/
+`--color-line-2` tingidas de frio junto (eram um bege quente que brigava com
+o novo fundo). Valor anterior documentado no comentário do token, pra
+reverter em uma linha se for o caso.
+
+**Botão — formato e cor.** Pesquisa real antes de propor: cantos
+arredondados recebem 17–55% mais clique que cantos retos (*contour bias* —
+Biswas, Abell & Chacko), e o ganho de "amigável" já aparece com qualquer
+arredondamento visível, não precisa de pílula total. Quatro variantes
+comparadas lado a lado sobre o fundo ameixa já confirmado (atual 2px ivory ·
+suave 10px ivory · pílula 28px ivory · suave 10px preenchido em pôr do sol).
+Escolhida a última: `--color-cta` #E8935B, `--radius-cta` 10px, texto em
+`--color-cta-ink` #1A1015 (contraste 7,76:1, passa até o AAA de 7:1 — a
+combinação errada, texto ivory sobre o mesmo preenchimento, dava 2,10:1 e
+foi descartada antes de entrar em qualquer tela). Aplicado nos dois lugares
+que tinham CTA preenchido: `Acao` (`molde.tsx`, usado em todo o quiz) e o
+CTA final do Pico, que antes era o único botão com borda dourada ("a casa
+entrega com a linha dela", gramática das duas tintas registrada acima nesta
+mesma página). Essa unificação troca aquele gesto sutil por reconhecimento
+consistente do botão ao longo do funil inteiro — decisão deliberada, não
+perda por descuido; documentada no comentário do próprio JSX pra reverter se
+o Willian preferir o gesto de volta. `acentuada` (o prop que fazia a borda
+do CTA virar a cor da persona) ficou sem efeito — tipo mantido, comentado,
+pronto pra religar se o acento por persona voltar ao botão.
+
+**Paleta da ilustração — "pôr do sol".** Quatro paletas comparadas lado a
+lado no guarda-roupa cartoon (a rosa/ouro/sálvia original, pôr do sol,
+"joia fria" e monocromático de ouro). Confirmado pôr do sol
+(`#E8935B`/`#F0C24A`/`#D9707A`), substituindo a paleta da rodada anterior em
+`armario-cartoon.tsx`.
+
+**Animação em todas as 6 cenas.** Pedido explícito: "todas devem ter
+animações". `@keyframes cena-pop` (novo, `globals.css`) — um pop curto
+(320ms, scale 0.6→1.08→1 com opacidade) no instante em que um segmento vira
+aceso, nunca em loop contínuo. Aplicado nas seis: guarda-roupa, etiquetas,
+agenda e marco-prazo (no elemento que acende/marca), e escala-preco (nas
+duas marcas, que já só existem no DOM depois que ela toca a régua — o pop
+toca no primeiro aparecimento). `prefers-reduced-motion` zera a duração
+pela regra global já existente, como todo o resto do sistema — não precisou
+de tratamento novo.
+
+**Um bug de SVG evitado, não só achado:** em `escala-preco.tsx`, a marca
+"Sua meta" já usava um atributo XML `transform="translate(...)"` pra
+posição. Aplicar `.cena-pop` (que anima a propriedade CSS `transform`) no
+MESMO elemento faria a marca pular pra origem (0,0) toda vez que a animação
+disparasse — CSS `transform` sobrescreve o atributo `transform` de SVG no
+mesmo nó, sempre. Resolvido com um `<g>` filho, dedicado só à escala,
+dentro do `<g>` que carrega a posição. As outras cinco cenas não tinham esse
+atributo nos elementos animados, então não precisaram do mesmo ajuste —
+conferido um por um antes de aplicar a classe, não assumido.
+
+`npx tsc --noEmit`, `eslint` nos arquivos tocados (2 erros pré-existentes em
+`quiz.tsx`, fora do diff desta rodada, mesmos de sempre) e `vitest run`
+(131/131) limpos depois de cada mudança. Verificado ao vivo nas 3 personas,
+mobile 390px e desktop, com o funil completo rodado via Playwright.
+
+**Ainda fora do escopo confirmado, registrado pra não esquecer:** as outras
+5 cenas continuam no traço esquemático hairline, sem preenchimento colorido
+— só o guarda-roupa recebeu ilustração cartoon completa. Estender esse
+tratamento às outras cinco é decisão em aberto, não recusada.
+
+### Quarta rodada, mesmo dia — cédulas, agenda, balão por faixa e o mapa
+
+Quatro ajustes pedidos depois de ver a terceira rodada rodando:
+
+**`valorParado` virou maço de cédulas.** As cinco etiquetas penduradas
+saíram; entrou uma pilha de notas com a cifra da moeda, que vão APARECENDO
+conforme o valor sobe. C3 continua valendo ao pé da letra — nada some, nada
+queima, nada é desperdício: nota parada é dinheiro dela adormecido. A cifra
+vem por prop (`simbolo`), não cravada, porque a moeda vem do idioma. Dois
+detalhes que só apareceram desenhando: (1) em SVG quem é desenhado depois
+fica por cima, então sem inverter a ordem as notas AINDA APAGADAS cobriam as
+acesas e o maço parecia vazio com valor declarado; (2) nota apagada precisou
+de preenchimento `var(--surface)` em vez de transparente, senão a pilha vira
+um emaranhado de contornos em vez de camadas de papel.
+
+**`volumeMensal` virou folha de agenda.** A grade de 12 bolinhas saiu;
+entrou uma folha com espiral e blocos de horário que preenchem conforme os
+atendimentos. Mesma disciplina de antes: 12 blocos são o teto VISUAL (o
+campo vai a 60), o número exato mora no texto ao lado e o "+" avisa quando
+ela declarou mais do que a folha desenha.
+
+**Q9 — frase por faixa, em balão de PENSAMENTO.** Antes eram duas frases
+(uma genérica, uma pra "prefiro não dizer"); agora são cinco, uma por faixa,
+com a chave sendo a própria faixa (`q9.balao.<faixa>`), então copy nova entra
+em `messages/pt.json` sem tocar em código. O balão virou nuvem com duas
+bolhas: quem pensa é ela, não a Renilza.
+
+O pedido era "frases que incentivem a pessoa a investir mais". O que foi
+escrito fala da PROFUNDIDADE do percurso que cada faixa abre — a esteira é
+uma escada real e documentada (Jornada → Dossiê → Prisma). O que
+deliberadamente NÃO foi escrito, e por quê:
+- **escopo/entregável por faixa** ("nessa faixa cabe o método inteiro"): o
+  escopo de cada produto não está documentado em lugar nenhum deste repo.
+  Escrever seria fabricar oferta.
+- **retorno financeiro** ("esse investimento se paga em X meses"): C2.
+- **faixa maior = mais coragem/merecimento**: a tela anterior é uma
+  confissão, e a crença documentada da Patrícia no `PRODUCT.md` é
+  literalmente "não mereço investir em mim". Usar isso pra empurrar faixa
+  converte hoje e queima a marca depois. Ficou registrado como escolha
+  consciente, não esquecimento — se a decisão mudar, muda com o custo à
+  vista.
+
+**O mapa item por item (`resumo-mapeado.tsx`).** O Comparador é o gesto; o
+resumo abaixo dele é a leitura completa em texto, com tudo que ela declarou
+no funil dividido entre Hoje e Futuro. As duas colunas são assimétricas de
+propósito: a coluna Futuro só tem linha onde ela DECLAROU algo sobre o
+depois (meta de preço, a diferença anual que a própria aritmética dela
+montou, as palavras, o prazo, a faixa). Não existe "% de armário desejado"
+nem faturamento projetado porque ela nunca declarou nenhum dos dois —
+inventar o par simétrico seria a promessa que C2 proíbe. O filtro no fim da
+montagem não é defesa contra `undefined`: é a regra do Princípio 2 escrita
+em código.
+
+`tsc`, `eslint` (fora os 2 erros pré-existentes de sempre em `quiz.tsx`) e
+`vitest` 131/131 limpos. Verificado ao vivo nas 3 personas em 390px.
+
+## O Comparador virou vertical, e a leitura entrou nele — 08/09/2026
+
+**A decisão de UX, e por que não foi o arrasto.** O pedido era pôr o resumo
+Hoje × Futuro dentro do próprio cartão deslizante (arrastar tudo pra um lado
+pra ler um lado inteiro), com a alternativa de empilhar na vertical se não
+coubesse. Não cabe, e por quatro motivos que não são de gosto:
+
+1. `clip-path` corta a PINTURA, não o layout. Com uma linha por lado dava
+   certo; com parágrafo, o texto era fatiado no meio da palavra na posição do
+   corte. Esse bug exato já tinha acontecido nesta mesma sessão com a
+   composição de palavras.
+2. Para "ler tudo do Hoje" ela teria que arrastar até 100%, o que esconde o
+   Futuro inteiro. A comparação, que é a razão de o cartão existir, some
+   justamente quando passa a haver conteúdo pra comparar.
+3. Prendia informação atrás de um gesto que teclado e leitor de tela não
+   executam, contra a regra de "não exigir arrastar para acessar informação
+   essencial" que este mesmo cartão já tinha recebido.
+4. Arrasto horizontal no celular disputa o scroll vertical: o código precisava
+   de `touch-action: pan-y` só pra não roubar a rolagem da página.
+
+Empilhado resolve os quatro e a metáfora sobrevive: a peça segue dobrada sobre
+si mesma, a dobra só passou a ser horizontal, o que é até mais fiel a um molde
+dobrado no fio. `fixo` e `instrucao` ("Arraste para atravessar") saíram junto,
+por terem virado código morto; `ResumoMapeado`, criado na rodada anterior,
+foi removido porque o conteúdo dele mora agora dentro do cartão.
+
+**A leitura substituiu a tabela.** Antes o resumo era rótulo + valor ("Onde
+apareceu: Na frente do armário, atrasada"), ou seja, o texto das perguntas
+devolvido cru. Agora são frases de quem ouviu: "Você começou pela frase '…', e
+me contou que isso apareceu na frente do armário, atrasada, trocando de roupa
+três vezes." Cada frase só existe se o dado existe, montada em
+`pico.leitura.*` com os valores dela como parâmetros. Nada é gerado por
+modelo no cliente e nada é inventado: continua valendo que a coluna Futuro só
+fala do que ela declarou.
+
+Duas armadilhas de português que o código precisou tratar:
+- as opções de lista chegam capitalizadas e entram no meio da frase, então
+  `minuscula()` evita "você marcou Nas próximas 2 a 4 semanas";
+- a resposta da Q7 é escrita em primeira pessoa ("Comprei roupas..."), então
+  ela entra entre aspas como fala dela. Embutida direto, a pessoa do verbo
+  quebrava ("você já tinha tentado: comprei roupas").
+
+**O número solto virou condicional.** Com a prosa dizendo "você cobra R$ 900
+hoje", repetir "R$ 900" embaixo era eco. Mas a proposta (`p/[token]`) monta o
+mesmo cartão SEM leitura, e lá o número é a única medida da tela: ele agora
+aparece só quando não há prosa naquele lado.
+
+**Travessões removidos da copy visível**, a pedido: sobrou zero em
+`messages/pt.json`, e o par de "—" que a Q9 usava como valor de fallback
+quando não havia gap deu lugar à pergunta direta que já existia
+(`q9.tituloSemGap`) — antes a tela podia exibir "há — adormecidos no seu
+armário". Os "·" da notação (`Peça 4 · A medida`) ficaram: são separadores do
+sistema de notação do copy deck, não travessões.
+
+`tsc`, `eslint` e `vitest` 131/131 limpos. Verificado ao vivo em 390px e
+desktop. **Não verificado ao vivo:** o cartão na página da proposta, que exige
+token válido e esbarrou no rate limit local; a lógica do número condicional
+está conferida por leitura de código e tipos, não por screenshot.
+
+## Revelação em sequência no Comparador — 08/09/2026
+
+Pedido: uma animação para a tela do Pico. Em vez de um efeito solto, o
+cartão Hoje/Futuro passou a se revelar em três tempos, reaproveitando a
+gramática de "decisão riscada" que já existe em `TracoDecisao`/`TrilhoDeGiz`
+— nunca inventando um gesto novo:
+
+1. **Hoje** aparece (`.surgir`, 620ms — a peça como ela chegou);
+2. a **linha de corte** se risca (`.traco-corte`, `scaleX` 0→1, 420ms, atraso
+   de 480ms — a virada);
+3. **Futuro** aparece por último (`.surgir`, atraso de 760ms — a decisão).
+
+`.traco-corte` é keyframe novo em `globals.css`; `.surgir` já existia. Os dois
+só animam `transform`/`opacity` (nunca `height`/`width`, regra do
+`CLAUDE.md`), correm uma vez (sem loop) e `prefers-reduced-motion` zera tudo
+pela regra global — o conteúdo aparece completo, sem o gesto.
+
+Verificado capturando três instantes reais (não só o estado de repouso):
+logo que a tela aparece, no meio do escalonamento e no final — a captura do
+meio mostrou exatamente o estado pretendido, Hoje completo e a linha já
+riscada com o Futuro ainda oculto, provando que o atraso está fazendo o que
+deveria, não só que o CSS não quebrou. `tsc`, `eslint` e `vitest` 131/131
+limpos.
