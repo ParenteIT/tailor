@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { getLocale } from "next-intl/server";
+import { Atmosfera } from "@/components/atmosfera";
 import "./globals.css";
 
 /* O display vive atrás de --font-display (globals.css). BRAND-VISUAL §3.1-BIS
@@ -78,6 +79,7 @@ export default async function RootLayout({
         1d77bb43.
         FINISH: unreviewed and undocumented is unfinished; this build ends with
         the finish review, the verdict, and DESIGN.md */}
+        <Atmosfera />
         {children}
       </body>
     </html>

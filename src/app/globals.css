@@ -9,7 +9,17 @@
 
 @theme {
   /* --- núcleo (§2.1) --------------------------------------------------- */
-  --color-noir: #141009;
+  /* EXPERIMENTO 07/09/2026, decisão do Willian: o noir original (#141009)
+     lia como "marrom" e não conectava. Trocado para uma base ameixa —
+     mantém a mesma função (escuro o bastante pra reduzir a vergonha de
+     confessar, Miwa & Hanyu 2006) mas com identidade própria. Contraste de
+     TODOS os tokens de texto/acento reconferido contra o novo fundo (só
+     --color-terra como texto direto cairia abaixo de 4,5:1, e ele nunca é
+     usado como texto — só como tinta de 14% no painel Futuro do Comparador e
+     no ::selection). Fora do §8 do BRAND-VISUAL por pedido explícito — entra
+     pelo protocolo §10 se for adotado como padrão; registrado no DESIGN.md.
+     Valor anterior, pra reverter: #141009. */
+  --color-noir: #181022;
   --color-ivory: #f6efe1;
   --color-gold: #c9a24c;
   --color-terra: #9b6a4f;
@@ -21,13 +31,24 @@
      do mínimo — e a notação vive em 12px. Subido para 0.55 (~5,4:1), que é a
      mesma intenção visual com folga. Divergência a reconciliar no BRAND-VISUAL. */
   --color-ivory-3: rgb(246 239 225 / 0.55);
-  --color-line: rgb(230 210 170 / 0.16);
-  --color-line-2: rgb(230 210 170 / 0.3);
+  /* Tingidas pro frio do ameixa (eram 230 210 170, um bege quente que
+     conflitava com o novo fundo) — mesma opacidade, matiz mais próximo do
+     que a superfície pede agora. */
+  --color-line: rgb(220 200 235 / 0.16);
+  --color-line-2: rgb(220 200 235 / 0.3);
   --color-line-gold: rgb(201 162 76 / 0.55);
 
+  /* --- acento de atenção (CTA) — experimento 07/09/2026 ------------------
+     "Pôr do sol": preenchimento do botão primário, decisão do Willian após
+     comparar 4 variantes de forma/cor. Contraste do texto escuro sobre esta
+     cor: 7,76:1 (conferido, passa até o AAA de 7:1). */
+  --color-cta: #e8935b;
+  --color-cta-ink: #1a1015;
+  --radius-cta: 10px;
+
   /* --- superfícies derivadas do terra (regra 2: o calor vem do terra) --- */
-  --color-noir-2: #1a1410;
-  --color-noir-3: #221a14;
+  --color-noir-2: #1f1530;
+  --color-noir-3: #261a3d;
 
   /* --- acento por persona ---------------------------------------------- *
    * Extensão de produto, NÃO presente no BRAND-VISUAL v1.1 — entra como
@@ -367,6 +388,49 @@ textarea {
   animation: surgir 620ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }
 
+/* A linha de corte do Comparador (Pico) — a mesma gramática de decisão
+   riscada de `TracoDecisao`/`TrilhoDeGiz`, aplicada à virada da peça:
+   Hoje aparece, a linha se risca, Futuro aparece. `scaleX`, nunca `width` —
+   paint-only, como todo o resto do movimento do sistema. */
+@keyframes traco-corte {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.traco-corte {
+  transform-origin: left;
+  animation: traco-corte 420ms cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* O aceso das cenas (src/components/cenas/) — pedido do Willian, 07/09/2026:
+   "todas devem ter animação". Um pop curto quando um segmento vira aceso
+   (a régua cruzou o limiar dele), nunca em loop. `prefers-reduced-motion`
+   zera a duração como todo o resto do sistema (regra global abaixo). */
+@keyframes cena-pop {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.5;
+  }
+  60% {
+    transform: scale(1.08);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.cena-pop {
+  animation: cena-pop 320ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  transform-origin: center;
+  transform-box: fill-box;
+}
+
 /* O ponto de "gravando" — opacidade, nunca escala: é o único sinal de que o
    mic está ativo, e precisa continuar legível, não chamativo. */
 @keyframes respirar {
@@ -468,4 +532,44 @@ textarea {
 .medida {
   font-variant-numeric: tabular-nums;
   font-feature-settings: "tnum" 1;
+}
+
+/* ============================================================================
+   ATMOSFERA — experimento de 30/08/2026, ver src/components/atmosfera.tsx.
+   Fundo fixo atrás de todo o conteúdo (z-index negativo, nunca intercepta
+   toque). Some em telas curtas: é preenchimento do vazio que só existe
+   quando sobra viewport, e no celular a régua de leitura já toma a tela
+   inteira — não há vazio para desenhar.
+   ========================================================================= */
+.atmosfera {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+  display: none;
+}
+
+.atmosfera-fio {
+  display: none;
+}
+
+@media (min-width: 900px) {
+  .atmosfera {
+    display: block;
+  }
+}
+
+@media (min-width: 1280px) {
+  .atmosfera-fio {
+    display: inline;
+  }
+}
+
+/* O traçado do giz aplicado às curvas de fundo — ver atmosfera.tsx.
+   `both`: mantém o estado final (dashoffset 0) depois que a animação acaba,
+   em vez de voltar ao dashoffset inicial. */
+.atmosfera-tracar {
+  animation: tracar 2400ms cubic-bezier(0.16, 1, 0.3, 1) both;
 }

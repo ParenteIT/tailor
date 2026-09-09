@@ -4,6 +4,7 @@ import { CONTATO, PRECOS } from "@/content/config";
 import { PALAVRAS_IDENTIDADE, PERSONAS } from "@/content/personas";
 import { Comparador } from "@/components/comparador";
 import { Seta } from "@/components/molde";
+import { Atmosfera } from "@/components/atmosfera";
 import { FitaMetrica, type CopyEstacao } from "@/components/fita-metrica";
 import { Oferta, RegistrarAbertura } from "@/components/oferta";
 import { CrossSell } from "@/components/cross-sell";
@@ -115,7 +116,9 @@ export default async function PaginaProposta({
           </p>
         </Bloco>
 
-        {/* B3 — Hoje / Futuro, agora fixo: a prova já foi feita. */}
+        {/* B3 — Hoje / Futuro. O cartão virou empilhado em 08/09/2026 e não
+            arrasta mais em lugar nenhum, então o `fixo` que existia só aqui
+            deixou de fazer sentido. */}
         <Bloco notacao={t("proposta.b3.notacao")} titulo={t("proposta.b3.titulo")}>
           <Comparador
             verbatim={c.analise.verbatimQ3 || ""}
@@ -124,7 +127,6 @@ export default async function PaginaProposta({
             rotuloHoje={t("proposta.b3.hoje")}
             rotuloFuturo={t("proposta.b3.futuro")}
             moeda={c.moeda ?? "BRL"}
-            fixo={50}
           />
         </Bloco>
 
@@ -261,6 +263,7 @@ function Superficie({
         } as React.CSSProperties
       }
     >
+      <Atmosfera />
       {children}
     </div>
   );

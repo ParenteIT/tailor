@@ -645,7 +645,6 @@ export function Acao({
   desabilitada,
   tipo = "button",
   carregando,
-  acentuada,
   form,
 }: {
   children: ReactNode;
@@ -653,17 +652,23 @@ export function Acao({
   desabilitada?: boolean;
   tipo?: "button" | "submit";
   carregando?: boolean;
-  /** Depois que ela escolhe a frase-espelho, o traço passa a ser dela. */
+  /** Depois que ela escolhe a frase-espelho, o traço passa a ser dela — sem
+      efeito desde o experimento de 07/09/2026, que fixou o botão em
+      --color-cta pra toda escolha. Mantido no tipo pra não quebrar quem
+      chama; se o acento por persona voltar ao CTA, é aqui que liga de novo. */
   acentuada?: boolean;
   /** Liga o botão a um <form> pelo id — o Enter do teclado passa a enviar. */
   form?: string;
 }) {
   const ativa = !desabilitada && !carregando;
-  const corBorda = ativa
-    ? acentuada
-      ? "var(--accent)"
-      : "var(--ink)"
-    : "var(--rule-2)";
+  // Experimento 07/09/2026: preenchimento em --color-cta ("pôr do sol") e
+  // canto de 10px, decisão do Willian depois de comparar 4 variantes de
+  // forma/cor — contour bias (Biswas/Abell/Chacko: cantos arredondados
+  // recebem 17-55% mais clique que cantos retos) e contraste conferido
+  // (texto --color-cta-ink sobre --color-cta: 7,76:1). Substitui o botão
+  // ivory-chapado anterior; valor anterior pra reverter: background var(--ink),
+  // color var(--surface), borderRadius 2.
+  const corBorda = ativa ? "var(--color-cta)" : "var(--rule-2)";
   return (
     <button
       type={tipo}
@@ -672,10 +677,10 @@ export function Acao({
       disabled={desabilitada || carregando}
       className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
       style={{
-        background: ativa ? "var(--ink)" : "transparent",
-        color: ativa ? "var(--surface)" : "var(--ink-3)",
+        background: ativa ? "var(--color-cta)" : "transparent",
+        color: ativa ? "var(--color-cta-ink)" : "var(--ink-3)",
         border: `1px solid ${corBorda}`,
-        borderRadius: 2,
+        borderRadius: "var(--radius-cta)",
         cursor: ativa ? "pointer" : "not-allowed",
         minHeight: 56,
         transform: "scale(1)",
