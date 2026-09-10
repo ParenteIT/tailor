@@ -351,6 +351,45 @@ investigação, não por suposição:**
 - **Bloco 6 (prova social):** segue exatamente como está — aviso honesto de
   que não existe depoimento real ainda, sem nada inventado. Nenhuma mudança.
 
+### 15/08/2026 — Modelo de texto virou trocável (Anthropic ↔ Gemini)
+
+Achado ao testar `/api/analyze` em produção depois de colar a
+`ANTHROPIC_API_KEY`: a Anthropic devolveu erro real (`"Your credit balance
+is too low"`), não erro de config — a chave estava certa, chegando certo,
+só sem saldo. Motivo: **a API paga (Console) é conta separada da assinatura
+Max/Claude Code** — uma não cobre a outra, mesmo sendo a mesma marca.
+Decisão do Willian: colocar crédito na Anthropic (padrão) e, em paralelo,
+deixar o Gemini pronto como caminho gratuito (Google AI Studio tem tier
+grátis indefinido pra Flash/Flash-Lite, sem cartão — ao contrário da
+Anthropic, que só dá crédito inicial).
+
+**`src/lib/llm.ts`** — mesmo desenho do `transcricao.ts`: `LLM_PROVEDOR`
+escolhe (`anthropic` default, `gemini` alternativa), env inválida cai na
+Anthropic com log em vez de derrubar a geração, guarda explícita nomeando a
+env que falta antes de qualquer chamada de rede. `src/lib/claude.ts` virou
+código morto e foi removido — sua lógica (cliente, modelos, extração de
+texto, detecção de recusa) migrou pra dentro do provedor `anthropic` do
+`llm.ts`. `analise.ts` e `proposta.ts` passaram a chamar
+`extrairEstruturado`/`escreverTexto` em vez de `getClaude()` direto — zero
+mudança de comportamento no caminho Anthropic, é a mesma chamada realocada.
+
+**Gemini — dois pontos ⚠️ NÃO VERIFICADOS contra a API real** (mesmo aviso
+de sempre, sem GEMINI_API_KEY disponível nesta sessão):
+1. `SCHEMA_ANALISE` usa `additionalProperties: false`; a documentação do
+   Gemini lista isso como suportado, mas não testei contra a API. Se a
+   extração estruturada falhar especificamente no provedor Gemini, é o
+   primeiro lugar a olhar.
+2. `finishReason !== "STOP"` é tratado como recusa (cai no texto de
+   reserva). Cobre `SAFETY`/`PROHIBITED_CONTENT`/`RECITATION`, mas também
+   `MAX_TOKENS` — um diagnóstico cortado por estourar tokens vira reserva
+   em vez de texto truncado, decisão deliberada (melhor honesto e simples
+   que compridão cortada no meio), registrado aqui para não parecer bug.
+
+`vitest run` 119/119 (8 testes novos em `llm.test.ts`, espelhando
+`transcricao.test.ts`) e `tsc --noEmit` limpos. Não deployado ainda — fica
+staged, ao lado do resto da branch `whatsapp-direto`, enquanto o crédito da
+Anthropic é resolvido em paralelo.
+
 ### 14/08/2026 (branch `whatsapp-direto`) — Acionamento direto via WhatsApp
 
 Até aqui o "modo confirmação" exigia o Willian no meio: ouvir o áudio que
@@ -597,3 +636,186 @@ dela, exigindo depois a Renilza faturar contra a Parente IT — dois fatos
 geradores), a recomendação registrada é: usar esta conta só em **sandbox**
 para validar a integração, e manter a recuperação da conta da Renilza como o
 caminho de produção.
+
+### 15/08/2026 (mesma sessão) — Fallback automático Anthropic↔Gemini, subdomínio e Upstash
+
+**Fallback automático no `llm.ts` (decisão do Willian: "se falhar o pago vai
+para o gratuito automaticamente").** Distinto da escolha manual por
+`LLM_PROVEDOR`: agora, se o provedor principal falhar em tempo de execução
+(sem crédito, fora do ar, erro de rede), `comFallback` tenta o outro provedor
+sozinho, sem redeploy, antes de devolver a mão pro chamador. O que NÃO aciona
+o fallback é recusa por segurança/classificador (`recusado: true`) — é sinal
+sobre o conteúdo, não sobre o provedor, e tentar de novo com o mesmo texto não
+muda o resultado. `llmDisponivel()` passou a responder "verdadeiro" se
+QUALQUER um dos dois tiver chave, não só o principal — é o `comFallback` quem
+decide qual atende de fato. `vitest run` 118/118 e `tsc --noEmit` limpos;
+o caminho de sucesso do fallback (principal falha → outro responde) não tem
+teste, mesma razão de sempre: exige chamada de rede real, não dá pra provar
+sem credencial (ver comentário em `llm.test.ts`).
+
+**Segredos no Bitwarden Secrets Manager — feito pelo próprio Willian.** Projeto
+"Tailor" criado lá (distinto do vault de senhas usado no resto do projeto),
+com `ANTHROPIC_API_KEY` e `GEMINI_API_KEY` já preenchidas.
+
+**Subdomínio próprio: `sobmedida.renilzamiranda.com`.** Configurado no
+Domain management do Netlify como domínio primário; status "Pending DNS
+verification" — falta o registro de DNS no lado do registrador de
+`renilzamiranda.com`, ação do Willian, não algo que se resolve por aqui:
+
+```
+CNAME  sobmedida  →  tailor-renilza.netlify.app
+```
+
+**Registrador de `renilzamiranda.com`: Squarespace Domains LLC.** Achado por
+WHOIS (`who.is`), não estava documentado antes. Nameservers ainda são os
+padrão da Squarespace (`nsc1-4.squarespacedns.com`) — DNS não foi delegado a
+outro provedor, então o CNAME acima entra direto no painel de DNS da conta
+Squarespace, registrante "Parente IT". Página aberta para o Willian:
+`account.squarespace.com/domains/managed/renilzamiranda.com/dns-settings`
+(redireciona para o login da Squarespace se a sessão não estiver ativa).
+
+**Upstash — conta criada pelo Willian.** Falta colar
+`UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN` no Netlify e no
+Bitwarden.
+
+**`ANTHROPIC_API_KEY`/`GEMINI_API_KEY` — as duas no Netlify agora, crédito
+Anthropic adicionado pelo Willian.** O caminho pago volta a funcionar; o
+fallback (`comFallback` em `llm.ts`) cobre o dia em que um dos dois falhar de
+novo, sem precisar repetir esta rodada de configuração.
+
+**`GROQ_API_KEY` no Netlify segue pendente.** Uma tentativa anterior de
+preencher o campo não persistiu (sumiu de uma checagem posterior); precisa
+ser refeita do zero quando o Willian chegar nisso.
+
+### 23/08/2026 — Supabase pausado, DNS no ar, credenciais completas
+
+**Supabase pausou por inatividade.** Plano free do Supabase suspende o
+projeto depois de ~7 dias sem uso — foi o que aconteceu com o `tailor`
+(status `INACTIVE`). Restaurado via MCP (`restore_project`), confirmado
+`ACTIVE_HEALTHY`. **Isso vai se repetir** enquanto o produto não tiver uso
+constante; antes de qualquer lançamento real vale o upgrade pro plano Pro
+(US$25/mês) só para tirar esse risco de produção pausar sozinha.
+
+**Groq bloqueia e-mail `@hotmail.com` no cadastro** — achado ao tentar criar
+a `GROQ_API_KEY` (erro "hotmail.com emails are not allowed", tanto por
+e-mail direto quanto por OAuth do Google/GitHub usando esse endereço). Conta
+criada com `willian@parenteit.com`; chave `GROQ_API_KEY` gerada e salva no
+Netlify. **Achado técnico:** o `Ctrl+V` sintético do agente de navegador não
+cola de forma confiável no campo de valor do formulário "New environment
+variable" do Netlify (o texto do campo/botão não muda após o clique/paste,
+e "Create variable" fica inerte, sem erro visível) — funcionou para o mesmo
+tipo de campo no Bitwarden, então não é um problema geral de paste, é
+específico dessa combinação de campo. Quando isso acontecer de novo, pedir
+para o humano colar o valor manualmente em vez de insistir no automatismo.
+
+**DNS do subdomínio propagou.** `sobmedida.renilzamiranda.com` confirmado
+via consulta DNS direta e pelo próprio Netlify ("DNS verification was
+successful"). A primeira tentativa de emitir o certificado Let's Encrypt
+falhou logo em seguida — típico de propagação ainda não ter alcançado todos
+os pontos que a validação consulta; não é erro de configuração. Netlify
+tenta de novo sozinho; o botão "Provision certificate" em Domain management
+força uma nova tentativa manual se precisar.
+
+**Upstash completo.** Conta criada, banco `tailor-rate-limit` provisionado
+(free tier, `us-east-1`), `UPSTASH_REDIS_REST_URL` e
+`UPSTASH_REDIS_REST_TOKEN` salvos no Netlify **e** no Bitwarden — o token
+nunca foi lido pelo agente: copiado do painel do Upstash (botão de copiar
+mascarado) e colado direto no Bitwarden via `Ctrl+V`, sem passar por texto
+visível em nenhum momento.
+
+**Estado final das credenciais:** `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`,
+`GROQ_API_KEY`, `UPSTASH_REDIS_REST_URL`, `UPSTASH_REDIS_REST_TOKEN` — todas
+no Netlify. Bitwarden tem as quatro exceto `GROQ_API_KEY` (sessão do
+Bitwarden caiu no meio da tarefa; falta o Willian logar de novo para o
+agente terminar de copiar). **Falta um redeploy** para as env novas valerem
+na produção.
+
+### 24/08/2026 — Celular real, conta Asaas nova, webhook recriado, Meta travada
+
+**Quiz aberto e percorrido num celular de verdade.** A ressalva que vinha se
+repetindo desde 13/08 finalmente caiu: 9 telas, três personas, proposta
+gerada lida antes de qualquer pessoa de fora ver.
+
+**`GROQ_API_KEY` completa.** Willian colou o valor manualmente no Netlify —
+confirmado que o `Ctrl+V` sintético do agente de navegador não funciona
+nesse campo específico (achado registrado na entrada anterior). No Bitwarden
+o agente copiou do Netlify sem revelar o valor e colou direto, igual fez com
+o Upstash.
+
+**Conta Asaas nova, no CNPJ certo da Renilza, criada pelo Willian.** Resolve
+de vez o bloqueio de entidade registrado em 14/08 (a conta antiga estava no
+CNPJ da Parente IT, fora do CNAE dela — problema que travava a nota fiscal).
+Conta ainda em "Conclua seu cadastro"; falta a Renilza enviar documentação
+pro Asaas aprovar.
+
+**Webhook recriado para a conta nova.** Confirmado que era mesmo a conta
+nova antes de mexer (banner de cadastro incompleto, zero webhooks
+pré-existentes — a conta de teste do Willian já tinha um). Webhook
+`"Tailor"`: URL `tailor-renilza.netlify.app/api/webhooks/asaas`, v3,
+sequencial, token de 64 caracteres gerado pelo agente e nunca reexibido no
+chat, exatamente os 5 eventos de `STATUS_POR_EVENTO`. **Desativado de
+propósito** — mesma lógica de sempre: ativar antes da conta estar aprovada
+faria o Asaas achar que a entrega está falhando e desligar sozinho. Token
+salvo no Bitwarden pelo próprio Willian.
+
+**WhatsApp — progresso real, travado em dois pontos diferentes.**
+Confirmado via Gerenciador do WhatsApp: verificação da empresa
+`Concluída`, Phone Number ID `323863564151059`. Produto WhatsApp Business
+adicionado ao app "Renilza Analytics" (App ID `1755975625414045`) — único
+app existente no portfólio, até então só com "Login do Facebook para
+Empresas". A partir daí, três tentativas seguidas falharam do lado da
+Meta: onboarding do app à WABA (`Onboarding failure`, duas vezes) e criação
+de um Usuário do Sistema novo (`nome de usuário do sistema inválido`, três
+nomes diferentes testados, incluindo um genérico sem relação com
+"WhatsApp"). Sem padrão que aponte pra erro de configuração nosso — parece
+instabilidade da plataforma no dia. Não insistir mais por ora; tentar de
+novo mais tarde ou pelo navegador do próprio Willian.
+
+**Achado importante — número errado conectado.** O número hoje ligado ao
+Gerenciador do WhatsApp (`+55 11 95769-4257`) **não é** o número oficial
+que a Renilza usa com as leads (`+55 11 95029-1364`, gravado como
+`NEXT_PUBLIC_WHATSAPP` desde 13/08). O Willian perdeu o acesso ao primeiro.
+Pesquisado se dava para recuperá-lo: não existe serviço formal de "comprar
+número específico" no Brasil; a consulta pública da ABR Telecom
+(`consultanumero.abrtelecom.com.br`) mostra a operadora atual de um número,
+mas o site bloqueia acesso automatizado (403). **Decisão do Willian: não
+migrar o 95029-1364 agora.** Migrar um número ativo no WhatsApp Business
+App para a Cloud API tira ele do app do celular (sem o recurso de
+coexistência, rollout limitado da Meta) — risco real demais para a
+Renilza, que usa esse número em conversas ativas. Caminho combinado:
+Willian consegue um número novo, o agente conecta e valida quando estiver
+pronto.
+
+### 24/08/2026 (mesma sessão) — HTTPS resolvido, visão de SaaS separada do repo, prioridade explícita
+
+**Certificado HTTPS do subdomínio, confirmado resolvido.** A falha do
+Let's Encrypt registrada na entrada anterior era mesmo temporária:
+`sobmedida.renilzamiranda.com` abre com HTTPS válido, sem nenhum aviso,
+verificado ao vivo num navegador de verdade. Fica como decisão em aberto,
+não automática: trocar a URL canônica de `tailor-renilza.netlify.app` pro
+domínio próprio é mudança em sistema em uso — cabe ao Willian confirmar
+quando quiser.
+
+**Visão de SaaS multi-tenant consolidada, deliberadamente fora deste
+repositório.** Quinze pesquisas de mercado (cinco de posicionamento, cinco
+de pricing/growth, cinco de council/auditoria — ChatGPT, Grok, Gemini,
+Perplexity, DeepSeek) foram consolidadas sobre transformar o Tailor num
+produto que outros consultores de confiança (não só a Renilza) possam usar.
+Documentação completa em
+`OneDrive\_millionaire\ParenteMiranda\13-willian-saas\Tailor\` —
+`SaaS-Visao-Estrategica.md` (fases, pricing, growth, o que foi descartado e
+por quê), `Consolidado-Estado-Atual.md` (snapshot pronto pra rodar em
+council de LLM) e `O Ateliê do Tailor` (artefato visual explicando as
+decisões pra leigo, com a jornada de uma cliente nova). Fica fora deste
+repo de propósito, para não misturar o roadmap de produto futuro com o
+estado de engenharia de hoje.
+
+**Prioridade explícita do Willian: entregar o produto da Renilza primeiro,
+SaaS depois.** Decisão registrada aqui e no `README.md` (seção "Próximos
+passos") para qualquer sessão futura respeitar sem precisar reperguntar:
+nenhum trabalho de multi-tenant/SaaS começa antes do produto da Renilza
+estar rodando de ponta a ponta — webhook do Asaas ativo, WhatsApp
+conectado, nota fiscal saindo. `README.md` e `PRODUCT.md` também corrigidos
+nesta rodada: os dois ainda citavam Vercel como alvo de deploy (é Netlify
+desde a fatia de infraestrutura) e o `README.md` descrevia checkout como
+mock e F5/F6 como pendentes, ambos desatualizados havia mais de uma semana.

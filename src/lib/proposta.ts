@@ -11,13 +11,7 @@ import {
 import { PERSONAS, type PersonaKey } from "@/content/personas";
 import { analisarRespostas, type Analise } from "@/lib/analise";
 import { nomeExibido, precoExibido } from "@/lib/checkout";
-import {
-  MODELO_GERACAO,
-  claudeDisponivel,
-  getClaude,
-  recusou,
-  textoDe,
-} from "@/lib/claude";
+import { escreverTexto, llmDisponivel } from "@/lib/llm";
 import {
   calcularGap,
   escalaDaFita,
@@ -171,7 +165,7 @@ async function escreverDiagnostico(
   analise: Analise,
   gap: Gap | null
 ): Promise<{ texto: string; degradado: boolean }> {
-  if (!claudeDisponivel()) {
+  if (!llmDisponivel()) {
     return { texto: diagnosticoDeReserva(respostas, analise), degradado: true };
   }
 
@@ -185,29 +179,16 @@ async function escreverDiagnostico(
   ].join("\n");
 
   try {
-    const resposta = await getClaude().messages.create({
-      model: MODELO_GERACAO,
-      max_tokens: 700,
-      system: [
-        {
-          type: "text",
-          text: PROMPT_DIAGNOSTICO,
-          cache_control: { type: "ephemeral" },
-        },
-      ],
-      // Escrever quatro frases ancoradas no que ela disse é tarefa curta e
-      // escopada — o esforço baixo é a diferença entre centavos e dezenas de
-      // centavos por lead, sem custo de qualidade aqui.
-      output_config: { effort: "low" },
-      messages: [{ role: "user", content: entrada }],
+    const { texto, recusado } = await escreverTexto({
+      sistema: PROMPT_DIAGNOSTICO,
+      entrada,
+      maxTokens: 700,
     });
 
-    if (recusou(resposta)) {
+    if (recusado) {
       console.warn("[tailor] diagnóstico recusado pelos classificadores");
       return { texto: diagnosticoDeReserva(respostas, analise), degradado: true };
     }
-
-    const texto = textoDe(resposta);
     if (!texto) {
       return { texto: diagnosticoDeReserva(respostas, analise), degradado: true };
     }

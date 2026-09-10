@@ -9,14 +9,60 @@ Sucesso é ela ler o diagnóstico e pensar *"como ela sabe disso?"*.
 
 ## Estado
 
-Fatia **F1→F4** entregue: fundação, quiz frio, motor de análise/geração e página
-de proposta. Pendentes: F5 (modo confirmação), F6 (áudio), F7 (o restante de
-qualidade e segurança). Ver `CLAUDE.md` para o log da sessão.
+**F1→F6 entregues:** fundação, quiz frio, motor de análise/geração, página de
+proposta, modo confirmação (`/diagnostico/c/[token]`) e resposta por áudio
+(Groq Whisper, trocável por Deepgram). F7 (qualidade/segurança) parcial: a
+auditoria de segurança já rodou e os 2 furos reais encontrados foram
+corrigidos; o que falta de F7 é o acionamento direto via WhatsApp, pronto numa
+branch separada (`whatsapp-direto`, 118 testes verdes) aguardando só a conta
+real da Meta pra mergear. No ar em produção: `tailor-renilza.netlify.app` e o
+domínio próprio `sobmedida.renilzamiranda.com` (HTTPS confirmado funcionando).
+Ver `CLAUDE.md` para o log completo da sessão a sessão.
+
+## Próximos passos
+
+Caminho crítico pra Renilza vender de verdade, em ordem de quanto trava o
+resto — detalhe de cada um no artefato "Tailor — Quadro de Corte" (Willian
+tem o link):
+
+1. **Ativar o webhook do Asaas** — já está criado e configurado
+   (`/api/webhooks/asaas`), desativado até a Renilza enviar a documentação
+   pendente que o Asaas pede pra aprovar a conta nova. *Responsável: Renilza.*
+2. **Links de checkout da Hotmart** — produtos (O Círculo, Jornada) ainda em
+   criação lá; colar os 2 links assim que prontos. *Responsável: Willian.*
+3. **Nota fiscal** — o Asaas emite NFS-e nativa, mas trava em certificado
+   digital + migração pro Portal Nacional (o problema de entidade/CNPJ já foi
+   resolvido). *Responsável: Willian/Renilza.*
+4. **WhatsApp — número novo e reconexão** — o número hoje conectado à Meta
+   não é o oficial da Renilza; decisão tomada de não migrar o oficial agora
+   (risco de perder conversas ativas, sem o recurso de coexistência
+   garantido). Vale testar **WhatsApp Coexistence** antes de fechar essa
+   decisão em definitivo. *Responsável: Willian.*
+5. **Merge da branch `whatsapp-direto`** assim que o WhatsApp estiver
+   conectado de verdade — código já testado, só falta a conta real.
+   *Responsável: Willian.*
+6. **Decidir se troca a URL canônica** pro domínio próprio, agora que o
+   HTTPS está confirmado funcionando ao vivo. *Responsável: Willian.*
+
+### Prioridade agora
+
+**O foco é entregar o produto da Renilza** — os seis itens acima são o
+caminho crítico pra isso. A visão de transformar o Tailor num SaaS
+multi-tenant (outros profissionais usando o mesmo motor, não só a Renilza) é
+a fase seguinte, deliberadamente adiada. A documentação completa dessa visão
+— 15 pesquisas de mercado consolidadas, pricing, growth, sequência de fases —
+vive **fora deste repositório**, em
+`OneDrive\_millionaire\ParenteMiranda\13-willian-saas\Tailor\`, pra não
+misturar o roadmap de produto futuro com o estado de engenharia de hoje. Não
+iniciar trabalho de multi-tenant/SaaS antes do produto da Renilza estar
+rodando de ponta a ponta (webhook ativo, WhatsApp conectado, nota fiscal
+saindo).
 
 ## Stack
 
 Next.js 16 (App Router) · TypeScript · Tailwind v4 · next-intl (`pt` default,
-`en`/`fr` esqueletados) · Supabase · Claude API · deploy alvo Vercel.
+`en`/`fr` esqueletados) · Supabase · Anthropic/Gemini com fallback automático ·
+deploy no Netlify.
 
 **Node 20.9+ é obrigatório** (Next 16). A máquina de desenvolvimento responde
 Node 18 por padrão — use `nvm use 20.17.0` ou prefixe o PATH.
@@ -121,11 +167,15 @@ menção a Instagram/Facebook, nenhuma pergunta visual de paleta.
 - **Rate limit tem dois níveis.** `verificarLimiteDuravel` (`src/lib/rate-limit.ts`)
   usa Upstash quando `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`
   existem — teto real, compartilhado entre instâncias. Sem elas, cai no balde
-  por processo de sempre (`limite × instâncias`). Falta só colar as duas
-  variáveis para o teto durável entrar em produção.
-- **Checkout é mock.** Qual gateway real usar segue ⏳ pendente (o kickoff diz
-  Hotmart, o Notion tem Kiwify ✅ confirmado para os níveis 0–2).
-- **Nenhum preço existe.** Todo ◆ vive em `src/content/config.ts`.
+  por processo de sempre (`limite × instâncias`). As duas variáveis já estão
+  no Netlify e no Bitwarden; falta só confirmar que o redeploy mais recente
+  pegou elas.
+- **Checkout é real (Asaas), mas o webhook que confirma pagamento está
+  desativado em produção** até a Renilza terminar a aprovação da conta nova —
+  sem env de preço, a rota ainda cai no modo mock de propósito.
+- **Preço real só em parte da esteira.** Dossiê (R$3.500), Prisma Essencial
+  (R$6.997) e Prisma Completo (R$9.997) já vêm de `PRECO_*_CENTAVOS`. Jornada,
+  O Círculo e o bônus Pix continuam ◆ em `src/content/config.ts`.
 - **Nenhum depoimento existe.** O Bloco 6 diz isso na cara em vez de inventar.
 - **EN/FR caem no pt-BR** enquanto não forem traduzidos. A moeda já está
   decidida: BRL no pt-BR, USD no en/fr, **sem conversão** — cada moeda tem faixa

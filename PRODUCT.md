@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 — definido pelo brief do Willian, não delegado. Deploy alvo Vercel. Persistência em Supabase (Postgres). Geração de texto via Claude API (modelo por env). Transcrição via Groq Whisper (`whisper-large-v3-turbo`). i18n com next-intl, `pt` default, `en`/`fr` esqueletados.
+Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 — definido pelo brief do Willian, não delegado. Deploy no Netlify. Persistência em Supabase (Postgres). Geração de texto via Anthropic Claude com fallback automático para Gemini (modelo por env). Transcrição via Groq Whisper (`whisper-large-v3-turbo`), trocável por Deepgram. i18n com next-intl, `pt` default, `en`/`fr` esqueletados.
 
 Runtime local é Node 20.17.0 (via nvm), não o Node 18.20.8 que responde por padrão no PATH da máquina — Next 16 exige `>=20.9.0`.
 
