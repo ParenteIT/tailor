@@ -1,10 +1,4 @@
-import {
-  MODELO_ANALISE,
-  claudeDisponivel,
-  getClaude,
-  recusou,
-  textoDe,
-} from "@/lib/claude";
+import { extrairEstruturado, llmDisponivel } from "@/lib/llm";
 import {
   PROMPT_ANALISE,
   SCHEMA_ANALISE,
@@ -28,32 +22,20 @@ export interface Analise {
 export async function analisarRespostas(
   dados: Record<string, unknown>
 ): Promise<Analise> {
-  if (!claudeDisponivel()) return degradar(dados);
+  if (!llmDisponivel()) return degradar(dados);
 
   try {
-    const resposta = await getClaude().messages.create({
-      model: MODELO_ANALISE,
-      max_tokens: 800,
-      system: [
-        {
-          type: "text",
-          text: PROMPT_ANALISE,
-          // O prompt é estável entre leads; o cache paga a partir do segundo.
-          cache_control: { type: "ephemeral" },
-        },
-      ],
-      output_config: {
-        format: { type: "json_schema", schema: SCHEMA_ANALISE },
-      },
-      messages: [{ role: "user", content: montarEntradaAnalise(dados) }],
+    const { texto, recusado } = await extrairEstruturado({
+      sistema: PROMPT_ANALISE,
+      schema: SCHEMA_ANALISE,
+      entrada: montarEntradaAnalise(dados),
+      maxTokens: 800,
     });
 
-    if (recusou(resposta)) {
+    if (recusado) {
       console.warn("[tailor] análise recusada pelos classificadores");
       return degradar(dados);
     }
-
-    const texto = textoDe(resposta);
     if (!texto) return degradar(dados);
 
     const bruto = JSON.parse(texto) as Partial<Analise>;

@@ -683,3 +683,45 @@ exatamente o que o contrato de marca hoje restringe. A `atmosfera` acima é
 uma primeira aposta nessa direção sem preenchimento nem imagem; decidir se
 vale abrir mais espaço de cor/imagem é decisão do Willian/Renilza, não algo
 que pesquisa de mercado resolve sozinha.
+
+### 10/09/2026 — Achado: histórico órfão com fallback de LLM real, resgatado em parte
+
+Uma sessão pedida pra implementar dark/light mode devolveu, em vez disso,
+código e log de uma tarefa completamente diferente, datados de 15/08/2026:
+fallback automático Anthropic↔Gemini, mais um README com referências a um
+artefato "Quadro de Corte", uma decisão sobre "WhatsApp Coexistence" e um
+documento de visão SaaS fora deste repo — nada disso nunca apareceu em
+nenhuma versão do `CLAUDE.md` lida por esta sessão. O commit partia de
+`23ab0db` (a base real do projeto), não do `develop` que devia ser a base —
+ou seja: existe um segundo histórico, divergente, que nunca foi reconciliado
+com o que virou `whatsapp-direto`/`main`. A causa mais provável é reuso de
+ambiente/container carregando checkout de uma sessão anterior não relacionada;
+não dá pra confirmar daqui.
+
+**Resgatado, verificado e mergeado:** só `src/lib/llm.ts` + `llm.test.ts` — o
+fallback automático Anthropic↔Gemini (`LLM_PROVEDOR` escolhe o principal;
+se ele falhar em runtime, o outro tenta sozinho antes de cair no texto de
+reserva; recusa por segurança não aciona fallback, é sinal sobre o conteúdo,
+não sobre o provedor). `analise.ts`/`proposta.ts` passaram a chamar
+`extrairEstruturado`/`escreverTexto` em vez de `getClaude()` direto —
+`claude.ts` virou código morto e foi removido. Decidi salvar isto e só isto
+porque: (1) o código é autocontido e não conflitava com nada que mudou desde
+`23ab0db` — conferido por diff antes de aplicar; (2) `GEMINI_API_KEY` já
+existe nas environment variables do Netlify, então alguém real já preparou
+produção pra isto funcionar — não é especulativo. `tsc --noEmit` e
+`vitest run` (138/138, +7 da suíte nova) limpos depois de aplicado.
+⚠️ Gemini segue **não verificado contra a API real** (mesmo aviso do
+`asaas.ts`/`whatsapp.ts`: escrito contra a doc oficial, sem chave disponível
+nesta sessão para testar).
+
+**Não resgatado, de propósito:** o resto do README daquela branch (itens de
+checkout Hotmart, status do webhook Asaas, decisão de WhatsApp, link pro
+"Quadro de Corte", roadmap SaaS). Não tenho como confirmar se isso ainda é
+atual — pode já estar resolvido, revertido ou superado pelo que realmente
+aconteceu entre 15/08 e hoje na linha que virou `main`. Fica registrado aqui
+pra alguém (Willian) decidir se vale garimpar mais daquela branch
+(`feature/dark-light-mode` no GitHub, ainda existe) — eu não mexi em mais
+nada dela.
+
+**Dark/light mode em si — ainda não existe.** Era o pedido original; nada
+nesta branch órfã o implementa. Segue pendente, tarefa separada.
