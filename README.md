@@ -9,14 +9,19 @@ Sucesso é ela ler o diagnóstico e pensar *"como ela sabe disso?"*.
 
 ## Estado
 
-Fatia **F1→F4** entregue: fundação, quiz frio, motor de análise/geração e página
-de proposta. Pendentes: F5 (modo confirmação), F6 (áudio), F7 (o restante de
-qualidade e segurança). Ver `CLAUDE.md` para o log da sessão.
+**Em produção:** `https://sobmedida.renilzamiranda.com`. Fatias F1→F6 entregues
+— fundação, quiz frio, motor de análise/geração, página de proposta, modo
+confirmação por link (F5), modo áudio com transcrição trocável Groq/Deepgram
+(F6) e acionamento direto por WhatsApp (mensagem chega, vira lead, devolve link
+de confirmação). Pendente: o restante de F7 (qualidade e segurança seguem em
+auditoria contínua) e a parte que não é código — checkout real, conta
+WhatsApp Cloud API verificada, nota fiscal. Ver `CLAUDE.md` para o log
+detalhado da sessão, decisão por decisão.
 
 ## Stack
 
 Next.js 16 (App Router) · TypeScript · Tailwind v4 · next-intl (`pt` default,
-`en`/`fr` esqueletados) · Supabase · Claude API · deploy alvo Vercel.
+`en`/`fr` esqueletados) · Supabase · Claude API · deploy no Netlify.
 
 **Node 20.9+ é obrigatório** (Next 16). A máquina de desenvolvimento responde
 Node 18 por padrão — use `nvm use 20.17.0` ou prefixe o PATH.
@@ -49,8 +54,12 @@ no log quando entram em ação.
 ## Deploy
 
 O site é `tailor-renilza` no Netlify (`netlify.toml` na raiz; plugin oficial do
-Next, Node 20.17.0). O id do site vive em `.netlify/state.json` — fora do git,
-recriável com `npx netlify link`.
+Next, Node 20.17.0), domínio custom `sobmedida.renilzamiranda.com`. **Hoje o
+deploy é manual**, sem integração Git configurada no Netlify — cada
+`npm run deploy` sobe o código local da máquina de quem roda o comando, então
+produção só atualiza quando alguém lembra de rodar isso. Ligar o site ao
+GitHub para deploy automático por branch é trabalho em andamento (falta o
+GitHub App do Netlify ganhar acesso ao repo na organização).
 
 ```bash
 npx netlify login   # uma vez por máquina
@@ -121,11 +130,16 @@ menção a Instagram/Facebook, nenhuma pergunta visual de paleta.
 - **Rate limit tem dois níveis.** `verificarLimiteDuravel` (`src/lib/rate-limit.ts`)
   usa Upstash quando `UPSTASH_REDIS_REST_URL`/`UPSTASH_REDIS_REST_TOKEN`
   existem — teto real, compartilhado entre instâncias. Sem elas, cai no balde
-  por processo de sempre (`limite × instâncias`). Falta só colar as duas
-  variáveis para o teto durável entrar em produção.
-- **Checkout é mock.** Qual gateway real usar segue ⏳ pendente (o kickoff diz
-  Hotmart, o Notion tem Kiwify ✅ confirmado para os níveis 0–2).
-- **Nenhum preço existe.** Todo ◆ vive em `src/content/config.ts`.
+  por processo de sempre (`limite × instâncias`). As duas variáveis já estão
+  no Netlify.
+- **Checkout via Asaas (link de pagamento por proposta), webhook pronto e
+  desativado.** `POST /api/webhooks/asaas` fecha o ciclo (pagamento →
+  status do lead) mas segue desligado no painel do Asaas até esta branch ir
+  ao ar — ativar antes disso derruba a fila de eventos deles. Emissão de
+  nota fiscal é dívida separada, não resolvida em código.
+- **Preço vem de env, não do código.** `src/content/config.ts` mostra ◆
+  quando a variável `PRECO_*_CENTAVOS` correspondente não existe — é o
+  fallback de demonstração, nunca um número inventado.
 - **Nenhum depoimento existe.** O Bloco 6 diz isso na cara em vez de inventar.
 - **EN/FR caem no pt-BR** enquanto não forem traduzidos. A moeda já está
   decidida: BRL no pt-BR, USD no en/fr, **sem conversão** — cada moeda tem faixa

@@ -37,6 +37,8 @@
   "abertura": {
     "titulo": "Antes de tudo, uma pergunta.",
     "corpo": "Poucas perguntas, menos de três minutos. No final, você recebe um diagnóstico feito sob medida, não um resultado genérico de quiz. Chegar até aqui já traçou a primeira peça.",
+    "nome": "Como você se chama?",
+    "nomePlaceholder": "Seu primeiro nome",
     "nota": "Nenhuma resposta certa. Só a sua."
   },
   "espelho": {
@@ -47,7 +49,7 @@
       "camila": "Eu entrego mais do que muita gente que aparece e cobra mais do que eu.",
       "carla": "Minha clínica entrega um resultado de alto padrão. Minha imagem, nem sempre."
     },
-    "rotulagem": "Muita gente que vive isso também sentiu vergonha de admitir. Vamos por partes.",
+    "rotulagem": "Muita gente que vive isso também sentiu vergonha de admitir, {nome}. Vamos por partes.",
     "situacaoTitulo": {
       "patricia": "E onde isso apareceu pela última vez?",
       "camila": "E quando foi a última vez que isso te custou algo?",
@@ -82,7 +84,7 @@
       "camila": "Se em 30 dias uma coisa mudasse na forma como você é vista profissionalmente, o que seria?",
       "carla": "Se em 30 dias sua imagem passasse a comunicar o nível real do seu trabalho, o que mudaria primeiro?"
     },
-    "sub": "Escreve do seu jeito. É essa frase que eu vou te devolver no final.",
+    "sub": "Escreve do seu jeito, {nome}. É essa frase que eu vou te devolver no final.",
     "placeholder": "Uma coisa só.",
     "rotulo": "Sua resposta",
     "recibo": "Guardei. Palavra por palavra."
@@ -100,7 +102,7 @@
       "porMes": "Pela sua própria agenda, {mes} por mês.",
       "porAno": "Em doze meses, {ano}.",
       "semGap": "Sua meta ficou igual ao que você já cobra. Arrasta a segunda medida até onde ele deveria estar.",
-      "nota": "Essa conta é sua. Foram os seus números que a fizeram. Ninguém está levando esse dinheiro. Ele só não está sendo cobrado.",
+      "nota": "Essa conta é sua, {nome}. Foram os seus números que a fizeram. Ninguém está levando esse dinheiro. Ele só não está sendo cobrado.",
       "aguardando": "Mexa nas três medidas para ver a sua conta."
     },
     "guardaRoupa": {
@@ -112,7 +114,7 @@
       "usado": "{pct}% do seu armário trabalha por você hoje.",
       "adormecido": "Os outros {pct}% não sumiram. Estão adormecidos.",
       "valor": "{valor} em peças que ainda estão lá, esperando alguém dizer com o que elas combinam.",
-      "nota": "Não é sobre ter mais roupa. É sobre acordar o que já é seu.",
+      "nota": "Não é sobre ter mais roupa, {nome}. É sobre acordar o que já é seu.",
       "aguardando": "Mexa nas duas medidas para ver a sua conta."
     }
   },
@@ -153,9 +155,9 @@
   "q8": {
     "titulo": "Pra quando você quer isso resolvido?",
     "opcoes": [
-      "Essa semana, se possível",
-      "Nas próximas 2 a 4 semanas",
-      "Esse trimestre",
+      "Quero começar essa semana",
+      "Quero resolver nas próximas 2 a 4 semanas",
+      "Quero resolver esse trimestre",
       "Sem pressa, só juntando informação por enquanto"
     ]
   },
@@ -183,10 +185,8 @@
   },
   "gate": {
     "titulo": "Seu diagnóstico e o mapa da sua virada chegam aí.",
-    "nome": "Como você se chama?",
-    "nomePlaceholder": "Seu primeiro nome",
     "whatsapp": "Seu WhatsApp",
-    "whatsappPlaceholder": "DDD e número",
+    "whatsappPlaceholder": "DDD e número — se for de fora do Brasil, comece com +",
     "email": "Seu e-mail (opcional)",
     "emailPlaceholder": "seu@email.com",
     "cta": "Quero ver meu mapa",
@@ -195,13 +195,12 @@
     "enviando3": "Traçando o seu molde…",
     "nota": "Você recebe o link na hora. Se preferir, também mando pelo seu WhatsApp.",
     "privacidade": "Seus dados são usados só para montar e te enviar este diagnóstico. Sem spam, sem compartilhamento com terceiros. É só me pedir e eu apago.",
-    "erroNome": "Preciso do seu nome pra escrever isso pra você.",
     "erroWhatsapp": "Confere o número? Preciso dele pra te mandar o link.",
     "erroEmail": "Confere o e-mail? Parece incompleto.",
     "erroGeral": "Não consegui salvar agora. Tenta de novo em alguns segundos."
   },
   "pico": {
-    "titulo": "Aqui está o mapa entre quem você é hoje e quem você decidiu ser.",
+    "titulo": "{nome}, aqui está o mapa entre quem você é hoje e quem você decidiu ser.",
     "hoje": "Hoje",
     "futuro": "Futuro",
     "cta": "Ver minha proposta completa",

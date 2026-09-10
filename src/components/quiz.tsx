@@ -24,7 +24,6 @@ import {
   RESPOSTAS_VAZIAS,
   emailValido,
   etapaCompleta,
-  nomeValido,
   trilhaDe,
   whatsappValido,
   type Etapa,
@@ -63,13 +62,12 @@ import {
 const MARCAS_TRILHO = ETAPAS.map((e) => PROGRESSO[e]);
 
 interface ErrosGate {
-  nome: string | null;
   whatsapp: string | null;
   email: string | null;
   geral: string | null;
 }
 
-const SEM_ERROS: ErrosGate = { nome: null, whatsapp: null, email: null, geral: null };
+const SEM_ERROS: ErrosGate = { whatsapp: null, email: null, geral: null };
 
 export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
   const t = useTranslations();
@@ -80,7 +78,10 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
   const [indice, setIndice] = useState(0);
   const [r, setR] = useState<Respostas>(() =>
     confirmacao
-      ? { ...RESPOSTAS_VAZIAS, ...confirmacao.respostas }
+      ? // `confirmacao.nome` é campo próprio, não parte de `respostas` (que só
+        // guarda as perguntas do quiz) — sem isto a peça 1 pediria o nome de
+        // novo de quem já mandou áudio.
+        { ...RESPOSTAS_VAZIAS, ...confirmacao.respostas, nome: confirmacao.nome }
       : RESPOSTAS_VAZIAS
   );
   // No modo confirmação o lead já existe: o autosave atualiza, não cria outro.
@@ -239,13 +240,12 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
    */
   async function enviarGate() {
     if (!r.persona) return;
-    const erroNome = nomeValido(r.nome) ? null : t("gate.erroNome");
     const erroWhatsapp = whatsappValido(r.whatsapp)
       ? null
       : t("gate.erroWhatsapp");
     const erroEmail = emailValido(r.email) ? null : t("gate.erroEmail");
-    setErrosGate({ nome: erroNome, whatsapp: erroWhatsapp, email: erroEmail, geral: null });
-    if (erroNome || erroWhatsapp || erroEmail) return;
+    setErrosGate({ whatsapp: erroWhatsapp, email: erroEmail, geral: null });
+    if (erroWhatsapp || erroEmail) return;
 
     setEnviando(true);
     try {
@@ -287,7 +287,7 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
       limparMolde();
       setIndice(ETAPAS.indexOf("pico"));
     } catch {
-      setErrosGate({ nome: null, whatsapp: null, email: null, geral: t("gate.erroGeral") });
+      setErrosGate({ whatsapp: null, email: null, geral: t("gate.erroGeral") });
     } finally {
       setEnviando(false);
     }
@@ -340,7 +340,11 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
             {verbatim ? null : (
               <>
             {etapa === "abertura" ? (
-              <Abertura nome={confirmacao?.nome} />
+              <Abertura
+                nome={confirmacao?.nome}
+                valorNome={r.nome}
+                onChangeNome={(v) => atualizar({ nome: v })}
+              />
             ) : null}
             {etapa === "espelho" ? (
               <Espelho r={r} atualizar={atualizar} />
@@ -348,7 +352,7 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
             {etapa === "q3" && persona ? (
               <PerguntaAberta
                 titulo={t(`q3.titulo.${persona.key}`)}
-                sub={t("q3.sub")}
+                sub={t("q3.sub", { nome: r.nome })}
                 rotulo={t("q3.rotulo")}
                 placeholder={t("q3.placeholder")}
                 recibo={t("q3.recibo")}
@@ -470,7 +474,16 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
 
 /* ========================================================================== */
 
-function Abertura({ nome }: { nome?: string }) {
+function Abertura({
+  nome,
+  valorNome,
+  onChangeNome,
+}: {
+  nome?: string;
+  /** Só usado no modo frio — no modo confirmação o nome já é conhecido. */
+  valorNome?: string;
+  onChangeNome?: (v: string) => void;
+}) {
   const t = useTranslations();
   // Quem chegou pelo link de confirmação já mandou um áudio. Abrir com o
   // convite do quiz frio faria parecer que a mensagem dela se perdeu.
@@ -486,6 +499,21 @@ function Abertura({ nome }: { nome?: string }) {
       <p style={{ color: "var(--ink-2)" }}>
         {confirmando ? t("confirmacao.corpo") : t("abertura.corpo")}
       </p>
+      {/* Pedido do Willian (10/09/2026): nome sai do gate (peça 9) e entra
+          aqui — email e telefone continuam só no fim. No modo confirmação
+          ela não digita nada, o nome já veio do áudio. */}
+      {!confirmando && onChangeNome ? (
+        <CampoLinha
+          rotulo={t("abertura.nome")}
+          placeholder={t("abertura.nomePlaceholder")}
+          valor={valorNome ?? ""}
+          nome="name"
+          autoComplete="given-name"
+          enterKeyHint="next"
+          erro={null}
+          onChange={onChangeNome}
+        />
+      ) : null}
       {/* A nota de privacidade vale nos dois modos. */}
       <p className="notacao mt-p3">{t("abertura.nota")}</p>
     </>
@@ -625,7 +653,7 @@ function Espelho({
               lineHeight: 1.4,
             }}
           >
-            {t("espelho.rotulagem")}
+            {t("espelho.rotulagem", { nome: r.nome })}
           </p>
 
           <h3 className="mb-p3">{t(`espelho.situacaoTitulo.${escolhida}`)}</h3>
@@ -905,7 +933,7 @@ function TelaGap({
         </>
       )}
 
-      <PainelMargem gap={gap} trilha={trilha} moeda={moeda} />
+      <PainelMargem gap={gap} trilha={trilha} moeda={moeda} nome={r.nome} />
     </>
   );
 }
@@ -919,10 +947,12 @@ function PainelMargem({
   gap,
   trilha,
   moeda,
+  nome,
 }: {
   gap: ReturnType<typeof calcularGap>;
   trilha: "precificacao" | "guarda_roupa";
   moeda: Moeda;
+  nome: string;
 }) {
   const t = useTranslations();
   const fmt = (v: number) => dinheiro(v, moeda);
@@ -966,8 +996,14 @@ function PainelMargem({
           {t("gap.precificacao.semGap")}
         </p>
       ) : gap.trilha === "precificacao" ? (
-        <div style={{ fontFamily: "var(--font-display)", lineHeight: 1.25 }}>
-          <p className="medida" style={{ fontSize: "clamp(1.35rem, 5.5vw, 1.9rem)" }}>
+        // Itálico + --color-gold-hi: o mesmo par que marca "isto é a leitura
+        // do que você disse" no espelho (espelho.rotulagem). A régua acima
+        // usa serif reta em --ink porque é pergunta; aqui é resposta.
+        <div style={{ fontFamily: "var(--font-display)", fontStyle: "italic", lineHeight: 1.25 }}>
+          <p
+            className="medida"
+            style={{ fontSize: "clamp(1.35rem, 5.5vw, 1.9rem)", color: "var(--color-gold-hi)" }}
+          >
             {t("gap.precificacao.porAtendimento", { unidade: fmt(gap.unidade) })}
           </p>
           <p
@@ -984,8 +1020,11 @@ function PainelMargem({
           </p>
         </div>
       ) : (
-        <div style={{ fontFamily: "var(--font-display)", lineHeight: 1.25 }}>
-          <p className="medida" style={{ fontSize: "clamp(1.35rem, 5.5vw, 1.9rem)" }}>
+        <div style={{ fontFamily: "var(--font-display)", fontStyle: "italic", lineHeight: 1.25 }}>
+          <p
+            className="medida"
+            style={{ fontSize: "clamp(1.35rem, 5.5vw, 1.9rem)", color: "var(--color-gold-hi)" }}
+          >
             {t("gap.guardaRoupa.usado", { pct: gap.pctUsado })}
           </p>
           <p
@@ -1008,7 +1047,7 @@ function PainelMargem({
           className="mt-p3"
           style={{ color: "var(--ink-3)", fontSize: "var(--text-apoio)" }}
         >
-          {t(`${secao}.nota`)}
+          {t(`${secao}.nota`, { nome })}
         </p>
       )}
     </div>
@@ -1291,7 +1330,7 @@ function Gate({
   r: Respostas;
   atualizar: (p: Partial<Respostas>) => void;
   erros: ErrosGate;
-  limparErro: (campo: "nome" | "whatsapp" | "email") => void;
+  limparErro: (campo: "whatsapp" | "email") => void;
   onEnviar: () => void;
 }) {
   const t = useTranslations();
@@ -1324,19 +1363,6 @@ function Gate({
           onEnviar();
         }}
       >
-        <CampoLinha
-          rotulo={t("gate.nome")}
-          placeholder={t("gate.nomePlaceholder")}
-          valor={r.nome}
-          nome="name"
-          autoComplete="given-name"
-          enterKeyHint="next"
-          erro={erros.nome}
-          onChange={(v) => {
-            limparErro("nome");
-            atualizar({ nome: v });
-          }}
-        />
         <CampoLinha
           rotulo={t("gate.whatsapp")}
           placeholder={t("gate.whatsappPlaceholder")}
@@ -1492,7 +1518,7 @@ function Pico({
   return (
     <>
       <Notacao>{t("peca.pico")}</Notacao>
-      <h2 className="mb-p4">{t("pico.titulo")}</h2>
+      <h2 className="mb-p4">{t("pico.titulo", { nome: r.nome })}</h2>
       <Comparador
         verbatim={r.q3}
         // A chave crua vinha sem acento ("memoravel", "inevitavel") a 2rem no

@@ -187,9 +187,22 @@ function storeSupabase(db: SupabaseClient): Store {
       }
 
       if (id) {
-        const { error } = await db.from("leads").update(linha).eq("id", id);
+        // Mesmo achado do registrarContatoWhatsapp (revisão de 14/08/2026),
+        // que nunca tinha sido aplicado aqui: `.update()` contra um id órfão
+        // (localStorage de outra sessão ou projeto, lead apagado por LGPD)
+        // não é erro no Postgres — casa zero linhas e responde sucesso. O
+        // autosave seguinte parecia funcionar, e o gate quebrava depois com
+        // 500 genérico quando o INSERT em `respostas` batia numa foreign key
+        // pra um lead que não existe. Em vez de travar quem está preenchendo
+        // agora, um id órfão cai para criar um lead novo.
+        const { data, error } = await db
+          .from("leads")
+          .update(linha)
+          .eq("id", id)
+          .is("removido_em", null)
+          .select("id");
         if (error) throw new Error(`leads.update: ${error.message}`);
-        return id;
+        if (data && data.length > 0) return id;
       }
 
       const { data, error } = await db

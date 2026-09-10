@@ -114,7 +114,9 @@ export function trilhaDe(respostas: Respostas) {
 export function etapaCompleta(etapa: Etapa, r: Respostas): boolean {
   switch (etapa) {
     case "abertura":
-      return true;
+      // Pedido do Willian (10/09/2026): o nome sai do gate (peça 9) e entra
+      // aqui, na primeira peça — email e telefone continuam só no fim.
+      return nomeValido(r.nome);
     case "espelho":
       if (!r.persona || !r.situacao) return false;
       return r.situacao !== "outro" || r.situacaoOutro.trim().length > 1;
@@ -149,17 +151,25 @@ export function nomeValido(nome: string): boolean {
 }
 
 /**
- * Aceita o que uma brasileira digita de verdade: com ou sem DDI, com ou sem
- * parênteses, ponto, hífen ou espaço. Valida a quantidade de dígitos, não o
- * formato — o formato é problema nosso, não dela.
+ * Aceita o que ela digita de verdade: com ou sem DDI, com ou sem parênteses,
+ * ponto, hífen ou espaço. Valida a quantidade de dígitos, não o formato — o
+ * formato é problema nosso, não dela. O teto de 15 é o do E.164.
  */
 export function whatsappValido(valor: string): boolean {
   const digitos = valor.replace(/\D/g, "");
   return digitos.length >= 10 && digitos.length <= 15;
 }
 
+/**
+ * Assumir +55 sempre quebrava qualquer lead fora do Brasil (EN/FR também
+ * cobrem moeda internacional — ver MOEDA_POR_IDIOMA). Um "+" na frente é o
+ * sinal explícito de que ela já digitou o código do país; sem ele, o default
+ * continua sendo Brasil, para não quebrar quem sempre digitou só DDD+número.
+ */
 export function normalizarWhatsapp(valor: string): string {
+  const temDDI = valor.trim().startsWith("+");
   const digitos = valor.replace(/\D/g, "");
+  if (temDDI) return digitos;
   if (digitos.length <= 11) return `55${digitos}`;
   return digitos;
 }
