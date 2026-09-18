@@ -162,6 +162,73 @@
   --surface: var(--color-noir-2);
 }
 
+/* ----------------------------------------------------------------------------
+   TEMA CLARO — light mode de verdade, decisão do Willian de 12/09/2026 que
+   substitui o ajuste de contraste da rodada anterior (`[data-contraste]`,
+   removido).
+
+   REVERTE CONSCIENTEMENTE uma regra anti-registrada em DESIGN.md ("Não
+   clarear a fase noir 'para legibilidade' — o escuro é funcional, Miwa &
+   Hanyu 2006") — o pedido explícito foi "vale em tudo, sem exceção",
+   inclusive a Q3. Registrado aqui e em DESIGN.md/CLAUDE.md como decisão de
+   produto, não como bug esquecido: quem ativa o tema claro está trocando de
+   propósito a vantagem psicológica do escuro por consistência visual. Vem
+   depois de [data-penumbra] no arquivo de propósito — a preferência de tema
+   dela vence a nuance da candeia, então a Q3 não escurece quando o tema é
+   claro.
+
+   Paleta "enterprise": branco puro, tinta quase-preta (slate, não a ameixa do
+   noir), e um azul-índigo como acento — a família de cor mais comum em
+   dashboards B2B (Stripe, Linear, Vercel), no lugar do ouro. `--color-gold`/
+   `--color-gold-hi` são redefinidos em vez de duplicados porque QUALQUER
+   elemento do sistema que já lê ouro diretamente (filete, ênfase de título,
+   fio de grainline da atmosfera, foco de teclado) herda o índigo de graça —
+   é a mesma arquitetura de token que já fazia noir→ivory funcionar sem tocar
+   componente nenhum. Todos os pares conferidos ≥4,5:1 por luminância relativa
+   (script Node, 11/09/2026): ink 17,75:1, ink-2 7,61:1, ink-3 5,35:1, índigo
+   6,29:1, índigo-alto 9,93:1, texto branco sobre CTA índigo 6,29:1, alerta
+   6,47:1. Os três acentos de persona reusam os valores já calibrados para
+   ivory (§ "Tinta mais densa sobre ivory" no DESIGN.md) — ivory e branco têm
+   luminância próxima, e a conferência confirma ≥5,2:1 nos três sobre branco. */
+[data-tema="claro"] {
+  --surface: #ffffff;
+  --ink: #101828;
+  --ink-2: rgb(16 24 40 / 0.74);
+  --ink-3: rgb(16 24 40 / 0.64);
+  --rule: rgb(16 24 40 / 0.14);
+  --rule-2: rgb(16 24 40 / 0.24);
+
+  --color-gold: #4f46e5;
+  --color-gold-hi: #3730a3;
+  --color-patricia: #aa505a;
+  --color-camila: #966039;
+  --color-carla: #507462;
+  /* Alerta em vermelho: convenção de erro em app enterprise, não a família do
+     terra (que aqui já não é a identidade do tema). */
+  --color-alerta: #b91c1c;
+
+  /* O botão primário ("pôr do sol" laranja) não é redefinido por superfície
+     em lugar nenhum hoje — no tema claro ele vira o preenchimento sólido
+     índigo, o padrão de CTA de app B2B. */
+  --color-cta: #4f46e5;
+  --color-cta-ink: #ffffff;
+
+  color-scheme: light;
+}
+
+/* O ivory é um <div> (Superficie), o atributo de tema mora no <html>:
+   seletor de descendência, não de mesmo elemento. (0,2,0) vence o bloco
+   ivory (0,1,0) — a proposta também vira branco/índigo no tema claro, não
+   fica presa no ivory quente. */
+[data-tema="claro"] [data-superficie="ivory"] {
+  --surface: #ffffff;
+  --ink: #101828;
+  --ink-2: rgb(16 24 40 / 0.74);
+  --ink-3: rgb(16 24 40 / 0.64);
+  --rule: rgb(16 24 40 / 0.14);
+  --rule-2: rgb(16 24 40 / 0.24);
+}
+
 /*
  * @layer base — não é organização, é o bug real por trás do "botão feio".
  * Sem camada, este reset (seletor de elemento, especificidade baixa) ainda
@@ -454,6 +521,13 @@ textarea {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
+    /* Achado no mecanismo G (18/09/2026): zerar só a duração não bastava —
+       um reveal escalonado (título palavra por palavra, blocos da proposta)
+       ainda esperava o `animation-delay` inteiro antes de aparecer, então
+       quem pediu menos movimento via a tela vazia por até ~1,5s e tudo
+       "piscando" fora de ordem depois. Delay zerado junto: tudo aparece de
+       uma vez, sem espera e sem sequência visível. */
+    animation-delay: 0s !important;
   }
 }
 

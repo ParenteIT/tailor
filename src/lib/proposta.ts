@@ -76,6 +76,8 @@ export interface ConteudoProposta {
   oferta: { produto: ProdutoKey; nome: string; preco: string };
   /** Moeda em que ela declarou — a proposta reabre sempre igual. */
   moeda: Moeda;
+  /** Idioma em que ela respondeu — decide a língua da proposta ao reabrir. */
+  idioma: string;
   geradoEm: string;
 }
 
@@ -130,6 +132,9 @@ export async function montarProposta(
     palavras: respostas.palavras,
     q9: respostas.q9 ?? null,
     oferta: escolherOferta(respostas.q9, moeda),
+    // Gravado junto com a proposta: reabrir o link mostra a mesma língua em
+    // que ela respondeu, sem depender do Accept-Language de quem abre.
+    idioma: respostas.idioma ?? "pt",
     geradoEm: new Date().toISOString(),
   };
 }
