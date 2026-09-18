@@ -32,7 +32,8 @@
     "proposta": "The pattern"
   },
   "retomada": {
-    "aviso": "I picked up where you left off. Nothing was lost."
+    "aviso": "I picked up where you left off. Nothing was lost.",
+    "moeda": "You changed language, so the currency changed. Please redo the amounts on this piece."
   },
   "painelDesktop": {
     "rotulo": "The pieces of your pattern, taking shape as you go"

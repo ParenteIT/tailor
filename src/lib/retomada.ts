@@ -1,3 +1,4 @@
+import type { Moeda } from "@/content/config";
 import { isPersonaKey, PALAVRAS_IDENTIDADE } from "@/content/personas";
 import {
   ETAPAS,
@@ -19,10 +20,24 @@ import {
 
 const CHAVE = "tailor:molde:v1";
 
+/**
+ * Cópia do molde na ABA (sessionStorage), gravada a cada mudança. Existe por
+ * causa da troca de idioma: o quiz remonta e, sem isto, quem estava no
+ * diagnóstico final (onde o rascunho de aparelho já foi apagado) ou ainda na
+ * abertura recomeçava do zero. Morre com a aba — não é retomada entre visitas,
+ * essa continua sendo do `localStorage` acima.
+ */
+const CHAVE_SESSAO = "tailor:sessao:v1";
+
 export interface MoldeGuardado {
   indice: number;
   respostas: Respostas;
   leadId: string | null;
+  /** Moeda em que os valores foram declarados. Sem ela, um valor dado em R$
+      apareceria como US$ depois de trocar o idioma. */
+  moeda?: Moeda;
+  /** Só existe no diagnóstico final: o link da proposta já gerada. */
+  urlProposta?: string | null;
 }
 
 function armazenamento(): Storage | null {
@@ -95,26 +110,72 @@ function indiceSeguro(pedido: number, respostas: Respostas): number {
   return Math.max(0, Math.min(pedido, alcancavel, INDICE_DO_GATE));
 }
 
+function interpretar(cru: string, daAba: boolean): MoldeGuardado | null {
+  const dados = JSON.parse(cru) as Record<string, unknown>;
+  const respostas = sanearRespostas(dados.respostas);
+  const pedido = typeof dados.indice === "number" ? Math.trunc(dados.indice) : 0;
+  const url =
+    typeof dados.urlProposta === "string" && dados.urlProposta.startsWith("/p/")
+      ? dados.urlProposta
+      : null;
+
+  // O diagnóstico final só é restaurável se a proposta existe e tudo antes
+  // dele está respondido — a mesma régua do avanço ao vivo.
+  const pico = ETAPAS.indexOf("pico");
+  const noPico =
+    daAba &&
+    pedido === pico &&
+    url !== null &&
+    ETAPAS.slice(0, pico).every((etapa) => etapaCompleta(etapa, respostas));
+
+  const indice = noPico ? pico : indiceSeguro(pedido, respostas);
+  if (!daAba && indice < 1) return null;
+  return {
+    indice,
+    respostas,
+    leadId: typeof dados.leadId === "string" ? dados.leadId : null,
+    moeda: dados.moeda === "BRL" || dados.moeda === "USD" ? dados.moeda : undefined,
+    urlProposta: noPico ? url : null,
+  };
+}
+
 export function lerMolde(): MoldeGuardado | null {
   const store = armazenamento();
   if (!store) return null;
   try {
     const cru = store.getItem(CHAVE);
-    if (!cru) return null;
-    const dados = JSON.parse(cru) as Record<string, unknown>;
-    const respostas = sanearRespostas(dados.respostas);
-    const indice = indiceSeguro(
-      typeof dados.indice === "number" ? Math.trunc(dados.indice) : 0,
-      respostas
-    );
-    if (indice < 1) return null;
-    return {
-      indice,
-      respostas,
-      leadId: typeof dados.leadId === "string" ? dados.leadId : null,
-    };
+    return cru ? interpretar(cru, false) : null;
   } catch {
     return null;
+  }
+}
+
+function armazenamentoDaAba(): Storage | null {
+  try {
+    return typeof window === "undefined" ? null : window.sessionStorage;
+  } catch {
+    return null;
+  }
+}
+
+export function lerSessao(): MoldeGuardado | null {
+  const store = armazenamentoDaAba();
+  if (!store) return null;
+  try {
+    const cru = store.getItem(CHAVE_SESSAO);
+    return cru ? interpretar(cru, true) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function guardarSessao(molde: MoldeGuardado): void {
+  const store = armazenamentoDaAba();
+  if (!store) return;
+  try {
+    store.setItem(CHAVE_SESSAO, JSON.stringify(molde));
+  } catch {
+    /* melhor-esforço */
   }
 }
 

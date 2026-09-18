@@ -28,7 +28,8 @@
     "proposta": "O molde"
   },
   "retomada": {
-    "aviso": "Retomei de onde você parou. Nada se perdeu."
+    "aviso": "Retomei de onde você parou. Nada se perdeu.",
+    "moeda": "Você trocou de idioma, então a moeda mudou. Refaça os valores nesta peça."
   },
   "painelDesktop": {
     "rotulo": "As peças do seu molde, se formando conforme você avança"

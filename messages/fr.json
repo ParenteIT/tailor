@@ -32,7 +32,8 @@
     "proposta": "Le patron"
   },
   "retomada": {
-    "aviso": "J'ai repris là où vous vous étiez arrêtée. Rien n'a été perdu."
+    "aviso": "J'ai repris là où vous vous étiez arrêtée. Rien n'a été perdu.",
+    "moeda": "Vous avez changé de langue, donc la devise a changé. Refaites les montants sur cette pièce."
   },
   "painelDesktop": {
     "rotulo": "Les pièces de votre patron, prenant forme au fil de vos réponses"

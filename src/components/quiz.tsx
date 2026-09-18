@@ -45,7 +45,13 @@ import {
   rolarAte,
   tique,
 } from "@/components/molde";
-import { guardarMolde, lerMolde, limparMolde } from "@/lib/retomada";
+import {
+  guardarMolde,
+  guardarSessao,
+  lerMolde,
+  lerSessao,
+  limparMolde,
+} from "@/lib/retomada";
 import { PainelDesktop } from "@/components/painel-desktop";
 import { useGravador } from "@/lib/gravador";
 import { Comparador } from "@/components/comparador";
@@ -77,7 +83,12 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
   // O mesmo `locale` viaja no autosave e no gate para que a proposta reabra na
   // língua em que ela respondeu (a página /p/[token] lê isso do conteúdo).
   const locale = useLocale();
-  const moeda = moedaDoIdioma(locale);
+  // Trocar de idioma no meio do quiz não pode reinterpretar em outra moeda o
+  // que ela já declarou: depois de restaurar, a moeda fica presa à de origem
+  // (só no diagnóstico final; antes dele os valores são refeitos).
+  const [moedaFixada, setMoedaFixada] = useState<Moeda | null>(null);
+  const moeda = moedaFixada ?? moedaDoIdioma(locale);
+  const moedaNoMount = useRef(moedaDoIdioma(locale));
   const faixas = FAIXAS_POR_MOEDA[moeda];
   const [indice, setIndice] = useState(0);
   const [r, setR] = useState<Respostas>(() =>
@@ -101,7 +112,10 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
   // Ela voltou depois de o webview descartar a aba: o molde foi restaurado do
   // aparelho dela e a tela avisa isso uma vez, em notação.
   const [retomada, setRetomada] = useState(false);
-  const hidratado = useRef(false);
+  // Trocou de idioma com valores em outra moeda: eles foram limpos e ela
+  // precisa saber por quê.
+  const [avisoMoeda, setAvisoMoeda] = useState(false);
+  const [pronto, setPronto] = useState(false);
   const topo = useRef<HTMLDivElement>(null);
 
   const etapa = ETAPAS[indice];
@@ -136,25 +150,57 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
    * retomar: o lead já existe no servidor.
    */
   useEffect(() => {
-    hidratado.current = true;
     if (confirmacao) return;
-    const guardado = lerMolde();
-    if (!guardado) return;
-    setR(guardado.respostas);
-    setIndice(guardado.indice);
-    if (guardado.leadId) setLeadId(guardado.leadId);
-    setRetomada(true);
+    // A cópia da aba vem primeiro: é a mais nova (a troca de idioma acabou de
+    // remontar o quiz). Sem ela, vale o rascunho do aparelho.
+    const guardado = lerSessao() ?? lerMolde();
+    if (guardado) {
+      let { indice: alvo, respostas } = guardado;
+      const declarouValor =
+        respostas.precoAtual !== null ||
+        respostas.precoDesejado !== null ||
+        respostas.valorParado !== null;
+      if (
+        guardado.moeda &&
+        guardado.moeda !== moedaNoMount.current &&
+        declarouValor
+      ) {
+        if (guardado.urlProposta) {
+          setMoedaFixada(guardado.moeda);
+        } else {
+          respostas = {
+            ...respostas,
+            precoAtual: null,
+            precoDesejado: null,
+            valorParado: null,
+          };
+          alvo = Math.min(alvo, ETAPAS.indexOf("gap"));
+          setAvisoMoeda(true);
+        }
+      }
+      setR(respostas);
+      setIndice(alvo);
+      if (guardado.leadId) setLeadId(guardado.leadId);
+      if (guardado.urlProposta) setUrlProposta(guardado.urlProposta);
+      setRetomada(alvo >= 1);
+    }
+    // Só depois de restaurar é que o efeito abaixo pode gravar — antes, ele
+    // sobrescrevia a cópia com o estado vazio inicial.
+    setPronto(true);
   }, [confirmacao]);
 
   useEffect(() => {
-    if (!hidratado.current || confirmacao) return;
+    if (!pronto || confirmacao) return;
+    const molde = { indice, respostas: r, leadId, moeda, urlProposta };
+    guardarSessao(molde);
     if (etapa === "pico") {
-      // Molde entregue: o rascunho local já cumpriu o papel.
+      // Molde entregue: o rascunho do aparelho já cumpriu o papel. A cópia da
+      // aba fica, para a troca de idioma não jogar o diagnóstico fora.
       limparMolde();
       return;
     }
-    guardarMolde({ indice, respostas: r, leadId });
-  }, [confirmacao, etapa, indice, r, leadId]);
+    guardarMolde(molde);
+  }, [pronto, confirmacao, etapa, indice, r, leadId, moeda, urlProposta]);
 
   /**
    * A candeia da Q3: um passo de calor dentro do noir enquanto ela escreve a
@@ -330,7 +376,10 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
           fora da dobra. */}
       <main className="mx-auto flex min-h-svh w-full max-w-[var(--container-leitura)] flex-col justify-center px-p4 pt-p5 pb-p4 sm:px-p5 sm:py-p6">
         <div ref={topo} />
-        {retomada && etapa !== "pico" ? (
+        {avisoMoeda && etapa === "gap" ? (
+          <p className="notacao surgir mb-p3">{t("retomada.moeda")}</p>
+        ) : null}
+        {retomada && etapa !== "pico" && !avisoMoeda ? (
           <p className="notacao surgir mb-p3">{t("retomada.aviso")}</p>
         ) : null}
         <Folha>
