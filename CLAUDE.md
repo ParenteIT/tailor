@@ -1290,3 +1290,39 @@ acessibilidade dentro de um pino colapsado; o CSS do claro já era branco
   §10 se ficar.
 - Verificado ao vivo em 375px (barra numa linha só; toggle troca, grava
   `localStorage` e persiste) e em 1360px (claro/escuro). `tsc` limpo.
+
+### 19/09/2026 — Bug: trocar de idioma no quiz recomeçava do zero
+
+Achado do Willian. Reproduzido ao vivo: trocar o idioma na tela do
+diagnóstico final (Pico) devolvia à abertura. Causa: trocar `/pt` → `/en`
+remonta o `Quiz`; a retomada lia só o `localStorage`, que (a) é apagado de
+propósito ao entrar no Pico e (b) ignora `indice < 1` (abertura com nome
+digitado). Nas telas do meio a retomada já funcionava.
+
+- `src/lib/retomada.ts`: cópia do molde na **aba** (`sessionStorage`,
+  `tailor:sessao:v1`), gravada a cada mudança, incluindo abertura e Pico
+  (com `urlProposta`). Morre com a aba; a retomada entre visitas segue sendo do
+  `localStorage`, que continua apagado no Pico (minimização mantida).
+  O Pico só é restaurado com link `/p/…` válido e todas as etapas anteriores
+  completas. Testes novos em `retomada.test.ts` (6).
+- `quiz.tsx`: o efeito que grava passou a esperar a restauração (`pronto`);
+  antes ele rodava no mesmo commit e sobrescrevia a cópia com o estado vazio.
+- **Moeda:** trocar BRL↔USD com valores já declarados os reinterpretaria em
+  outra moeda (R$ 900 virava US$ 900). Cada cópia carrega a `moeda` de origem.
+  No Pico a moeda fica presa à de origem (a proposta já foi gerada nela); antes
+  do Pico os valores monetários são limpos, o quiz volta à peça 4 e um aviso
+  (`retomada.moeda`, pt/en/fr) explica. EN↔FR não muda (ambos USD).
+- Verificado ao vivo: Pico em PT → EN continua no diagnóstico, com R$ e o
+  mesmo link; peça 4 com valores em R$ aberta em EN limpa os valores e mostra o
+  aviso em inglês. `tsc` limpo, `vitest` 144/144.
+- Limitação: um F5 no Pico agora reabre o Pico (antes voltava à abertura), na
+  mesma aba. Fechar a aba descarta a cópia.
+
+**Seletor de idioma virou dropdown (19/09/2026, sugestão do Willian).** Escala
+para mais línguas sem alargar a barra — a 375px as três pílulas ocupavam quase
+toda a largura. Gatilho com bandeira + código + seta, lista com nome na própria
+língua e ✓ no atual; fecha ao escolher, clicar fora ou Esc. A lista sai de
+`routing.locales`. Armadilha corrigida: um idioma novo caía na bandeira dos
+EUA; agora `Bandeira` devolve um quadro neutro. **Para acrescentar uma língua:**
+`src/i18n/routing.ts`, `messages/<loc>.json`, `NOMES_IDIOMA` e a bandeira em
+`seletor-idioma.tsx` (e a moeda em `moedaDoIdioma`, se não for BRL/USD).

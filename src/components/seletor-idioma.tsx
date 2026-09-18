@@ -40,6 +40,17 @@ export function Bandeira({ loc }: { loc: string }) {
       </svg>
     );
   }
+  if (loc !== "en") {
+    // Idioma sem bandeira desenhada: quadro neutro, nunca a de outro país.
+    // Para acrescentar uma língua: routing.ts, messages/<loc>.json,
+    // NOMES_IDIOMA aqui e a bandeira acima.
+    return (
+      <svg {...comum}>
+        <rect width="18" height="13" fill="none" />
+        <rect width="18" height="13" {...moldura} />
+      </svg>
+    );
+  }
   // en — EUA: listras simplificadas (5, não 13) + cantão com grade de pontos
   // no lugar das 50 estrelas. Padrão reconhecível, não o pavilhão exato.
   return (
@@ -72,4 +83,3 @@ export const NOMES_IDIOMA: Record<string, string> = {
   fr: "Français",
 };
 
-export const CURTO_IDIOMA: Record<string, string> = { pt: "PT-BR", en: "EN-US", fr: "FR" };
