@@ -5,6 +5,33 @@ import type { Moeda } from "@/content/config";
 import { ComposicaoPalavras } from "@/components/cenas";
 
 /**
+ * A frase dela, devolvida palavra por palavra (mecanismos E e G, 18/09/2026).
+ * É a promessa da Q3 ("é essa frase que eu vou te devolver no final") sendo
+ * cumprida, então recebe o tratamento mais lento do fluxo. O passo encolhe em
+ * frase longa para a revelação inteira nunca passar de ~1,4s. O texto é
+ * literalmente o dela — só o ritmo de aparição é nosso. Sob
+ * `prefers-reduced-motion` a regra global zera duração e atraso.
+ */
+function FraseRevelada({ texto }: { texto: string }) {
+  const palavras = texto.split(" ");
+  const passo = Math.min(70, 1400 / palavras.length);
+  return (
+    <>
+      {palavras.map((palavra, i) => (
+        <span
+          key={i}
+          className="surgir inline-block"
+          style={{ animationDelay: `${250 + i * passo}ms` }}
+        >
+          {palavra}
+          {i < palavras.length - 1 ? " " : ""}
+        </span>
+      ))}
+    </>
+  );
+}
+
+/**
  * O comparador Hoje / Futuro.
  *
  * No mundo da folha de molde, isto é a peça dobrada sobre si mesma: os dois
@@ -78,7 +105,7 @@ export function Comparador({
               color: "var(--ink)",
             }}
           >
-            “{verbatim}”
+            “<FraseRevelada texto={verbatim} />”
           </p>
         ) : null}
         <Leitura frases={leituraHoje} />

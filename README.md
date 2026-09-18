@@ -18,10 +18,39 @@ auditoria contínua) e a parte que não é código — checkout real, conta
 WhatsApp Cloud API verificada, nota fiscal. Ver `CLAUDE.md` para o log
 detalhado da sessão, decisão por decisão.
 
+## Próximos passos
+
+Caminho crítico para a Renilza vender de ponta a ponta. Nenhum é código —
+todos dependem de conta, credencial ou decisão. Detalhe e histórico no
+`CLAUDE.md` (entradas de 24/08 e 10/09).
+
+1. **Ativar o webhook do Asaas no painel deles.** O código está pronto
+   (`src/app/api/webhooks/asaas/route.ts`) e desativado de propósito — ativar
+   antes da conta nova (CNPJ da Renilza) ser aprovada faz o Asaas desligar a
+   fila sozinho. Depende da Renilza enviar a documentação pendente ao Asaas.
+2. **Preços reais nas envs `PRECO_*_CENTAVOS`.** `src/content/config.ts` mostra
+   ◆ em tudo; só `PRECO_DOSSIE_CENTAVOS` está documentado como real. Sem env, a
+   proposta assume o aviso de demonstração — nada é inventado.
+3. **Nota fiscal.** Sair da plataforma para checkout próprio tira a emissão
+   automática. Requer contratar um serviço (NFe.io, eNotas) ou processo manual
+   com contador — custo recorrente, decisão do Willian/Renilza.
+4. **Conta WhatsApp Cloud API.** Empresa verificada; falta um número novo (o
+   oficial não migra agora — risco de perder conversas ativas, decisão de
+   24/08) e o merge do fluxo de acionamento quando o número estiver conectado.
+5. **URL canônica.** `sobmedida.renilzamiranda.com` está no ar com HTTPS
+   válido; trocar a URL canônica de `tailor-renilza.netlify.app` para ela é
+   mudança em sistema em uso — cabe ao Willian confirmar quando quiser.
+
+**Prioridade:** entregar o produto da Renilza antes de qualquer trabalho de
+SaaS multi-tenant. A visão de SaaS vive fora deste repo, em
+`OneDrive\_millionaire\ParenteMiranda\13-willian-saas\Tailor\`.
+
 ## Stack
 
 Next.js 16 (App Router) · TypeScript · Tailwind v4 · next-intl (`pt` default,
-`en`/`fr` esqueletados) · Supabase · Claude API · deploy no Netlify.
+`en`/`fr` traduzidos por completo, detecção por `Accept-Language` + seletor
+manual) · Supabase · Anthropic Claude com fallback automático para Gemini
+(`src/lib/llm.ts`) · transcrição Groq/Deepgram trocável · deploy no Netlify.
 
 **Node 20.9+ é obrigatório** (Next 16). A máquina de desenvolvimento responde
 Node 18 por padrão — use `nvm use 20.17.0` ou prefixe o PATH.
@@ -141,10 +170,16 @@ menção a Instagram/Facebook, nenhuma pergunta visual de paleta.
   quando a variável `PRECO_*_CENTAVOS` correspondente não existe — é o
   fallback de demonstração, nunca um número inventado.
 - **Nenhum depoimento existe.** O Bloco 6 diz isso na cara em vez de inventar.
-- **EN/FR caem no pt-BR** enquanto não forem traduzidos. A moeda já está
-  decidida: BRL no pt-BR, USD no en/fr, **sem conversão** — cada moeda tem faixa
-  própria de slider (`FAIXAS_POR_MOEDA`), porque converter introduziria uma taxa
-  de câmbio que ninguém declarou.
+- **EN/FR traduzidos por completo** (`messages/en.json`, `messages/fr.json` —
+  223 chaves cada, espelhando `pt.json`). O `middleware.ts` negocia por
+  `Accept-Language` e há um seletor manual no topo do quiz; a proposta reabre
+  na língua gravada no lead. A moeda: BRL no pt-BR, USD no en/fr, **sem
+  conversão** — cada moeda tem faixa própria de slider (`FAIXAS_POR_MOEDA`).
+  As tranches da Q9 em en/fr são **qualitativas de propósito**: não há preço em
+  dólar declarado para a esteira, e o produto não exibe número que ninguém
+  declarou — pendente a Renilza decidir se quer tranches reais em USD. A
+  tradução de marca foi feita nesta rodada e ainda não passou por revisão
+  nativa.
 - **A oferta do Bloco 7 vem da faixa da Q9** (`OFERTA_POR_FAIXA`). Ajustado em
   14/08/2026 para a esteira v4: degrau de entrada "até R$ 3.500" casando com o
   novo preço do Dossiê (o produto 1:1 mais barato da esteira), "R$ 3.500 a

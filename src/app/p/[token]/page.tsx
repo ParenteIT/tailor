@@ -8,6 +8,7 @@ import { Atmosfera } from "@/components/atmosfera";
 import { FitaMetrica, type CopyEstacao } from "@/components/fita-metrica";
 import { Oferta, RegistrarAbertura } from "@/components/oferta";
 import { CrossSell } from "@/components/cross-sell";
+import { ControlesTopo } from "@/components/controles-topo";
 import { crossSellHotmart, maxParcelas } from "@/lib/checkout";
 import { ESTACOES_FITA, type EstacaoFita } from "@/lib/gap";
 import { expirou, type ConteudoProposta } from "@/lib/proposta";
@@ -15,6 +16,13 @@ import { getStore } from "@/lib/store";
 import { tokenPlausivel } from "@/lib/token";
 
 export const dynamic = "force-dynamic";
+
+/** Locale do quiz → tag BCP-47 para `toLocaleDateString` da validade (C5). */
+const LOCALE_DATA: Record<string, string> = {
+  pt: "pt-BR",
+  en: "en-US",
+  fr: "fr-FR",
+};
 
 // C6 — a proposta carrega nome, WhatsApp e os números declarados de uma pessoa.
 // Fora do índice, e sem preview em lugar nenhum.
@@ -35,18 +43,25 @@ export default async function PaginaProposta({
   params: Promise<{ token: string }>;
 }) {
   const { token } = await params;
-  const t = await getTranslations({ locale: "pt" });
 
   if (!tokenPlausivel(token)) return <NaoEncontrada />;
 
   const proposta = await getStore().buscarPropostaPorToken(token);
   if (!proposta) return <NaoEncontrada />;
 
+  const c = proposta.conteudo as unknown as ConteudoProposta;
+
+  // A proposta reabre na língua em que ela respondeu — gravada no conteúdo
+  // (proposta antiga sem o campo cai em pt). O quiz é `/[locale]/…`; este
+  // caminho curto e compartilhável não carrega prefixo, então o idioma vem
+  // daqui, não da URL.
+  const locale = c.idioma ?? "pt";
+  const t = await getTranslations({ locale });
+
   // C5 — a validade é decidida aqui, no servidor, lendo a coluna. O browser
   // não participa da decisão.
-  if (expirou(proposta.expiraEm)) return <Expirada />;
+  if (expirou(proposta.expiraEm)) return <Expirada locale={locale} />;
 
-  const c = proposta.conteudo as unknown as ConteudoProposta;
   const primeiroNome = c.nome.split(/\s+/)[0] ?? c.nome;
 
   const copyEstacoes = Object.fromEntries(
@@ -60,11 +75,10 @@ export default async function PaginaProposta({
     ])
   ) as Record<EstacaoFita, CopyEstacao>;
 
-  const validade = new Date(proposta.expiraEm).toLocaleDateString("pt-BR", {
-    weekday: "long",
-    day: "2-digit",
-    month: "long",
-  });
+  const validade = new Date(proposta.expiraEm).toLocaleDateString(
+    LOCALE_DATA[locale] ?? "pt-BR",
+    { weekday: "long", day: "2-digit", month: "long" }
+  );
 
   // As palavras foram gravadas como CHAVE (sem acento); o exibível vive nas
   // messages. Chave desconhecida (proposta antiga) cai no texto cru.
@@ -77,6 +91,16 @@ export default async function PaginaProposta({
   return (
     <Superficie acento={PERSONAS[c.persona]?.acento}>
       <RegistrarAbertura token={token} />
+      {/* Só o tema: a proposta não troca de língua (decidida no quiz). */}
+      <ControlesTopo
+        mostrarIdioma={false}
+        textos={{
+          idioma: "",
+          tema: t("controles.tema"),
+          claro: t("controles.claro"),
+          escuro: t("controles.escuro"),
+        }}
+      />
 
       <article className="mx-auto w-full max-w-[var(--container-leitura)] px-p4 py-p5 sm:px-p5 sm:py-p6">
         {/* B1 — Abertura / Espelho */}
@@ -86,9 +110,9 @@ export default async function PaginaProposta({
               {t("marca.nome")} · {t("marca.assinatura")}
             </span>
           </p>
-          <h1 className="mb-p3">
-            {t("proposta.b1.titulo", { nome: primeiroNome })}
-          </h1>
+          <TituloRevelado
+            texto={t("proposta.b1.titulo", { nome: primeiroNome })}
+          />
           <p
             style={{
               fontFamily: "var(--font-display)",
@@ -103,7 +127,7 @@ export default async function PaginaProposta({
         </header>
 
         {/* B2 — Diagnóstico */}
-        <Bloco notacao={t("proposta.b2.notacao")}>
+        <Bloco notacao={t("proposta.b2.notacao")} indice={1}>
           <p
             style={{
               fontFamily: "var(--font-display)",
@@ -119,7 +143,7 @@ export default async function PaginaProposta({
         {/* B3 — Hoje / Futuro. O cartão virou empilhado em 08/09/2026 e não
             arrasta mais em lugar nenhum, então o `fixo` que existia só aqui
             deixou de fazer sentido. */}
-        <Bloco notacao={t("proposta.b3.notacao")} titulo={t("proposta.b3.titulo")}>
+        <Bloco notacao={t("proposta.b3.notacao")} titulo={t("proposta.b3.titulo")} indice={2}>
           <Comparador
             verbatim={c.analise.verbatimQ3 || ""}
             palavras={palavrasLegiveis}
@@ -135,6 +159,7 @@ export default async function PaginaProposta({
           <Bloco
             notacao={t("proposta.b4.notacao")}
             titulo={t("proposta.b4.titulo")}
+            indice={3}
           >
             <FitaMetrica
               escala={c.fita.escala}
@@ -148,7 +173,7 @@ export default async function PaginaProposta({
         ) : null}
 
         {/* B5 — O Método */}
-        <Bloco notacao={t("proposta.b5.notacao")} titulo={t("proposta.b5.titulo")}>
+        <Bloco notacao={t("proposta.b5.notacao")} titulo={t("proposta.b5.titulo")} indice={4}>
           <p className="mb-p3" style={{ color: "var(--ink-2)" }}>
             {t("proposta.b5.corpo")}
           </p>
@@ -156,7 +181,7 @@ export default async function PaginaProposta({
         </Bloco>
 
         {/* B6 — Prova. Nada aqui foi inventado; o material real ainda não existe. */}
-        <Bloco notacao={t("proposta.b6.notacao")} titulo={t("proposta.b6.titulo")}>
+        <Bloco notacao={t("proposta.b6.notacao")} titulo={t("proposta.b6.titulo")} indice={5}>
           <p className="mb-p3" style={{ color: "var(--ink-2)" }}>
             {t("proposta.b6.corpo", { numero: PRECOS.numeroDepoimentos })}
           </p>
@@ -175,7 +200,7 @@ export default async function PaginaProposta({
         </Bloco>
 
         {/* B7 — Oferta */}
-        <Bloco notacao={t("proposta.b7.notacao")} titulo={t("proposta.b7.titulo")}>
+        <Bloco notacao={t("proposta.b7.notacao")} titulo={t("proposta.b7.titulo")} indice={6}>
           <Oferta
             token={token}
             whatsapp={CONTATO.whatsapp}
@@ -269,23 +294,62 @@ function Superficie({
   );
 }
 
+/**
+ * Mecanismo G (18/09/2026): a proposta não revela mais tudo de uma vez no
+ * carregamento — cada bloco entra em sequência, `surgir` (o mesmo fade+slide
+ * de sempre) com um atraso crescente. `indice` conta a partir do Bloco 2 (o 1
+ * já teve o próprio reveal palavra a palavra no header); a base de 700ms dá
+ * tempo do véu do clímax (`VeuDeRevelacao`, quiz.tsx) e do título terminarem
+ * antes do próximo bloco começar a aparecer. `prefers-reduced-motion` zera
+ * duração E delay (globals.css) — sem sequência visível pra quem pediu menos
+ * movimento.
+ */
 function Bloco({
   notacao,
   titulo,
   children,
+  indice = 0,
 }: {
   notacao: string;
   titulo?: string;
   children: React.ReactNode;
+  indice?: number;
 }) {
   return (
-    <section className="mb-p6">
+    <section
+      className="surgir mb-p6"
+      style={{ animationDelay: `${700 + indice * 140}ms` }}
+    >
       <p className="filete notacao mb-p3">
         <span>{notacao}</span>
       </p>
       {titulo ? <h2 className="mb-p3">{titulo}</h2> : null}
       {children}
     </section>
+  );
+}
+
+/**
+ * O título do Bloco 1 revela palavra por palavra — o tratamento mais rico do
+ * fluxo (mecanismo G), reservado pra frase que é literalmente a devolutiva
+ * dela. Puro SSR: `animation-delay` por `<span>` não precisa de JS nem de
+ * client component, o navegador escalona sozinho a partir do primeiro paint.
+ */
+function TituloRevelado({ texto }: { texto: string }) {
+  const palavras = texto.split(" ");
+  return (
+    <h1 className="mb-p3">
+      {palavras.map((palavra, i) => (
+        <span
+          key={i}
+          className="surgir inline-block"
+          style={{ animationDelay: `${i * 70}ms` }}
+        >
+          {palavra}
+          {i < palavras.length - 1 ? " " : ""}
+        </span>
+      ))}
+    </h1>
   );
 }
 
@@ -309,8 +373,8 @@ async function NaoEncontrada() {
   );
 }
 
-async function Expirada() {
-  const t = await getTranslations({ locale: "pt" });
+async function Expirada({ locale = "pt" }: { locale?: string }) {
+  const t = await getTranslations({ locale });
   return (
     <Superficie>
       <main className="mx-auto w-full max-w-[var(--container-leitura)] px-p4 py-p6">

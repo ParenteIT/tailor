@@ -725,3 +725,568 @@ nada dela.
 
 **Dark/light mode em si — ainda não existe.** Era o pedido original; nada
 nesta branch órfã o implementa. Segue pendente, tarefa separada.
+
+### 10/09/2026 (sessão seguinte) — Pendências fechadas: search_path, contraste, i18n completo
+
+Branch `feature/pendencias-set-2026` a partir de `develop`. Uma branch
+integradora, não uma por tarefa: sem commit (regra do repo), o staging do git
+é global e não dá para deixar quatro branches cada uma com o seu diff. Willian
+commita em pedaços lógicos pelas fronteiras abaixo. Tudo `git add`, nada
+commitado. `tsc --noEmit` e `vitest run` (138/138) limpos ao fim de cada
+mudança lógica.
+
+**1.1 — `search_path` mutável em `tocar_atualizado_em` — FECHADO.**
+`supabase/migrations/0003_fix_search_path.sql` novo (não editei a 0001, já
+aplicada): `alter function public.tocar_atualizado_em() set search_path = ''`.
+A função só usa `now()`, então nada quebra. Aplicado também no banco real via
+MCP (`apply_migration`, versão `20260910…`), confirmado por
+`pg_proc.proconfig = {search_path=""}` e pelo advisor de segurança: o WARN
+`function_search_path_mutable` sumiu. Sobram só os 5 INFO de
+`rls_enabled_no_policy`, que são o C6 por construção.
+
+**1.2 — Dark/light mode — FECHADO como ajuste de contraste dentro do ato**
+(decisão do Willian, entre as três saídas oferecidas). Não é dark/light mode e
+não lê `prefers-color-scheme`: o arco noir → ivory é mecânica de marca e um
+modo de tema amarrado ao SO o sequestraria. `[data-contraste="alto"]` no
+`<html>` (novo bloco em `globals.css`, depois de `[data-penumbra]`): no noir
+sobe para o `--color-noir-3` já derivado — variante MAIS CLARA dentro do mesmo
+ato, que corta a halação do serif fino sobre quase-preto — e sobe `--ink-2`/
+`--ink-3`/filetes; no ivory (`[data-contraste="alto"] [data-superficie="ivory"]`,
+seletor de descendência porque o ivory é `<div>` e o atributo é do `<html>`)
+o papel escurece meio passo e as tintas ganham corpo. O ouro e os acentos não
+mudam (já passam ≥4,5:1 nos dois atos). `src/components/contraste.tsx`
+(`ControleContraste`): botão fixo no canto inferior direito, notação em caixa
+alta com um piquete de giz vazio→cheio, sem emoji nem gradiente (§8). Escolha
+em `localStorage` (`tailor:contraste`), try/catch em toda leitura/escrita,
+nunca em trânsito. Montado em `[locale]/layout.tsx` (arco noir) e em
+`p/[token]/page.tsx` dentro da `Superficie` (arco ivory). Verificado ao vivo
+no quiz: liga, sobe o noir para noir-3, persiste no reload, zero erro de
+console. O lado ivory ficou só na revisão de código — não há token de proposta
+em dev para percorrer o funil (mesma ressalva de sempre). Fica um lint
+`react-hooks/set-state-in-effect` no efeito que lê o `localStorage` no mount —
+padrão idêntico ao já tolerado em `quiz.tsx` (retomada), é o jeito correto de
+não ter mismatch de hidratação para estado só-cliente.
+
+**1.3 — i18n: mecanismo + tradução completa EN/FR — FECHADO** (Willian pediu a
+tradução completa, assumindo o risco de copy de marca traduzida por agente ir
+a produção sem revisão nativa). Não existe branch `feature/i18n-auto-deteccao`
+no `origin` — implementado do zero.
+- **Detecção por `Accept-Language`**: já era o padrão do next-intl; deixei
+  `localeDetection: true` explícito em `routing.ts` com o comentário. Conferido
+  por `curl`: `/` responde 307 para `/fr`, `/en`, `/pt` conforme o cabeçalho.
+- **Seletor manual** (`src/components/seletor-idioma.tsx`): `PT · EN · FR` em
+  caixa alta no topo do quiz, atual riscada pela linha de corte, sem bandeira
+  nem emoji (§8). Preserva o caminho (`router.replace(pathname, { locale })`) e
+  sincroniza `<html lang>` num efeito (navegação de cliente não re-renderiza o
+  layout raiz). Só no arco noir — a proposta não tem seletor, a língua dela foi
+  decidida no quiz.
+- **`messages/en.json` e `messages/fr.json`**: eram esqueletos de 6 linhas,
+  agora traduzem as 223 chaves de `pt.json` (paridade conferida por script:
+  zero chave faltando, zero sobrando). Regras de produto preservadas: C2 (todo
+  `gap.*.nota`/`pico.leitura.*` abre com "based on what you told me" / "d'après
+  ce que vous m'avez dit", nada de projeção), C3 (Patrícia — "dormant" /
+  "endormis", nunca "wasted"), Bloco 6 traduz o aviso honesto de que nada foi
+  inventado. **As tranches da Q9 em en/fr são qualitativas de propósito** ("A
+  first step" … "The whole journey"): não há preço em USD declarado para a
+  esteira, e inventar `$X` quebraria a regra de "nenhum número que ela não
+  declarou". Registrado em `_traducao.moeda` dos dois arquivos como pendência
+  para a Renilza (tranches reais em USD, e EUR se abrir a França).
+- **`idioma` de ponta a ponta**: o quiz agora manda `idioma: locale` no
+  autosave (`/api/leads`) e no gate (`/api/proposal`) — antes era sempre "pt"
+  hardcoded, apesar de a coluna e o schema Zod já aceitarem. `montarProposta`
+  grava `idioma` no `ConteudoProposta`, e `p/[token]/page.tsx` lê `c.idioma`
+  para `getTranslations` e para a data da validade (`LOCALE_DATA`: pt→pt-BR,
+  en→en-US, fr→fr-FR) em vez do `"pt"` fixo. `Expirada` recebe `locale`.
+  Proposta antiga sem o campo cai em pt.
+- Verificado ao vivo: quiz completo em EN e FR (screenshots), seletor troca
+  idioma e texto, `<html lang>` acompanha, zero erro de console em aba limpa.
+  O caminho da proposta traduzida ficou na revisão de código (sem token de
+  proposta em dev).
+
+**1.4 — Garimpo da branch órfã `feature/dark-light-mode` — FECHADO, quase nada
+a trazer.** Cruzei o `git diff 23ab0db origin/feature/dark-light-mode` de
+`README.md`/`PRODUCT.md`/`.env.example` com o código real de `develop`:
+- **Verificado e trazido**: a stack estava desatualizada nos dois lados de
+  `develop` também. `README.md` e `PRODUCT.md` diziam "Claude API" e o
+  `PRODUCT.md` ainda dizia "Deploy alvo Vercel" — ambos falsos contra o código
+  (`src/lib/llm.ts` com fallback Anthropic↔Gemini, `src/lib/transcricao.ts`
+  Groq/Deepgram, `netlify.toml`). Linha de stack corrigida nos dois arquivos.
+  Adicionada seção "Próximos passos" ao `README.md` só com itens verificáveis
+  (webhook Asaas, preços, NF, WhatsApp, URL canônica) — a substância já estava
+  no `CLAUDE.md` de 24/08.
+- **Não trazido, de propósito**: preços literais no README (R$ 3.500 / 6.997 /
+  9.997 — viola "nenhum preço fora de `config.ts`", e `config.ts` mostra ◆ em
+  tudo); o artefato "Quadro de Corte" (só o Willian tem o link, não
+  verificável); "testar WhatsApp Coexistence" como próximo passo (contradiz a
+  decisão de 24/08 de não migrar o número agora); "produtos Hotmart em criação
+  lá" (estado externo não verificável); "merge da branch whatsapp-direto" (o
+  código de WhatsApp já está em `23ab0db`/`develop`). O corpo do `CLAUDE.md`
+  órfão (222 linhas) **não foi reimportado**: é uma elaboração paralela do
+  mesmo período 13–24/08 que a entrada de 10/09 acima já reconciliou; só o
+  `llm.ts` valia e já foi mergeado em `1756e60`.
+
+**1.5 — Env "pendentes" do log — provavelmente resolvidas, confirmação
+indireta.** Não tenho token do Netlify nesta sessão. Evidência que consegui:
+o projeto Supabase responde `ACTIVE_HEALTHY` (MCP), e a produção
+(`https://sobmedida.renilzamiranda.com`) responde — `/` 307→`/pt`,
+`/pt/diagnostico` e `/en/diagnostico` 200. As entradas de 23/08 e 24/08 já
+registram `ANTHROPIC_API_KEY`, `GEMINI_API_KEY`, `GROQ_API_KEY`,
+`UPSTASH_REDIS_REST_URL/TOKEN` e `PRECO_DOSSIE_CENTAVOS` coladas no Netlify, e
+o task falava de uma auditoria de 10/09 que as encontrou lá mais
+`SUPABASE_SERVICE_ROLE` e os três `PRECO_*_CENTAVOS`. **Tratadas como
+resolvidas**; confirmação definitiva no painel do Netlify cabe ao Willian. O
+que sobra de env não resolvida é preço real (`PRECO_JORNADA_CENTAVOS`,
+`PRECO_CIRCULO_CENTAVOS`, `PRECO_PRISMA_*` — item de negócio, não de config).
+
+**Seção 2 (não-código) — Willian confirmou que nada mudou.** Seguem `⏳ ainda
+pendente, não é código`, sem novidade desde 24/08: preços reais em
+`config.ts`; registro dos três acentos de persona e das divergências de
+contraste no `BRAND-VISUAL.md` (fora deste repo); fornecedor de nota fiscal;
+recuperação da conta Asaas de produção (suporte deles); ativação do webhook do
+Asaas no painel; conta WhatsApp Cloud API (número novo + verificação Meta);
+confirmação com a Renilza do mapa faixa→produto da Q9 — hoje `ate3500→dossie`,
+`de3500a7k→prismaEssencial`, `de7a10k`/`acima10k→prismaCompleto`,
+`naoDizer→prismaEssencial`, alinhado à esteira v4 (nenhum degrau promete teto
+que a esteira não atende).
+
+**Arquivos, por tarefa (fronteiras de commit sugeridas):**
+- 1.1: `supabase/migrations/0003_fix_search_path.sql`
+- 1.2: `src/app/globals.css`, `src/components/contraste.tsx`,
+  `src/app/[locale]/layout.tsx` (parte contraste), `src/app/p/[token]/page.tsx`
+  (parte contraste), `messages/{pt,en,fr}.json` (chave `contraste`)
+- 1.3: `src/i18n/routing.ts`, `src/components/seletor-idioma.tsx`,
+  `src/app/[locale]/layout.tsx` (parte seletor), `src/components/quiz.tsx`,
+  `src/lib/proposta.ts`, `src/app/p/[token]/page.tsx` (parte idioma/data),
+  `messages/{pt,en,fr}.json` (resto)
+- 1.4: `README.md`, `PRODUCT.md`
+- Log: `CLAUDE.md`
+
+### 11/09/2026 — Bandeira no seletor de idioma, ícone no toggle de contraste
+
+Pedido do Willian: idiomas com bandeira (pt-BR, en-US) em vez de só texto, e
+"o mesmo deve ser feito para o dark mode" — ícone reconhecível em vez de botão
+só-texto, seguindo o padrão de mercado, com pesquisa antes de decidir a forma.
+FR foi mantido (não era pra tirar, era só exemplo de dois dos três).
+
+**Pesquisa (WebSearch) antes de implementar:**
+- Seletor de idioma: a literatura de UX geralmente desaconselha bandeira
+  sozinha (bandeira marca país, não língua — PT existe em vários países, EN
+  também) e recomenda ícone de globo/texto puro. Mas quando bandeira é usada
+  (é o pedido explícito aqui), a prática corrente (GitHub, Stripe, Notion) é
+  sempre **parear com o nome do idioma visível**, nunca a bandeira sozinha, e
+  **SVG desenhado, não caractere emoji** — fonte de emoji de bandeira
+  (regional-indicator) não é garantida entre SOs; Windows historicamente
+  mostra as duas letras do país em vez do pavilhão composto.
+- Toggle de contraste: sol/lua é o ícone padrão de dark/light mode, mas este
+  controle não inverte nada — é ajuste de legibilidade dentro do ato, não um
+  segundo tema. Usei o círculo meio-preenchido, o mesmo glifo que
+  alternadores de "alto contraste" de verdade (Windows/macOS) já usam:
+  comunica a função certa em vez de prometer um dark mode que não existe.
+
+**Implementado:**
+- `src/components/seletor-idioma.tsx`: `Bandeira` — três SVGs desenhados
+  (18×13, moldura em `--rule-2`), simplificados de propósito (Brasil sem
+  brasão, EUA com 5 listras e grade de pontos no lugar de 50 estrelas, França
+  exata por ser só três blocos). `aria-hidden`, o texto visível
+  (`PT-BR`/`EN-US`/`FR`) e o `aria-label` do botão carregam a identificação —
+  bandeira nunca é o único sinal. **Correção no mesmo turno**: a primeira
+  versão pôs os três lado a lado; o Willian pediu caixa de seleção — reescrito
+  para trigger (bandeira + código do ativo + seta) que abre um `role="listbox"`
+  com as três opções, fecha ao escolher, clicar fora ou Esc. Mesma navegação
+  por baixo (`router.replace(pathname, { locale })`).
+- `src/components/contraste.tsx`: `IconeContraste`, monocromático
+  (`currentColor`, cor de `--accent` quando ligado) — não abre exceção de cor
+  nova, só o glifo mudou.
+
+**Desvio registrado do BRAND-VISUAL §8** (veta cor fora do ouro/acentos de
+persona, sob 3% de área): a bandeira é cor nacional saturada — verde/amarelo/
+azul, vermelho/azul/branco. Decisão consciente do Willian, não deriva
+automática; documentado no comentário do componente e aqui para entrar no
+`BRAND-VISUAL.md` pelo protocolo §10 se ficar. O ícone de contraste NÃO abre
+esse desvio — é monocromático, dentro do sistema de tinta existente.
+
+Verificado ao vivo: bandeiras renderizam nos três idiomas, PT-BR ativo
+sublinhado em `--accent`, clique em "English" navega para `/en/diagnostico`
+com o conteúdo certo, zero erro de console. `tsc --noEmit` e `vitest run`
+(138/138) limpos. Lint: mesmo `react-hooks/set-state-in-effect` de sempre em
+`contraste.tsx` (leitura de `localStorage` no mount), nada novo.
+
+**Deploy no mesmo dia:** `npm run deploy` (Netlify) publicado direto do
+working directory local — o deploy não passa por git, então foi o branch
+`feature/pendencias-set-2026` inteiro (não commitado) que foi ao ar em
+`https://sobmedida.renilzamiranda.com`. Achado no caminho: o primeiro deploy
+falhou com `EPERM` renomeando `.next` — processos `next dev` órfãos desta
+mesma sessão (do `preview_start`/`preview_stop` do Browser pane) ainda
+seguravam arquivos abertos, clássico do Turbopack não morrer limpo no
+Windows. Resolvido matando só os PIDs confirmados por `Get-CimInstance
+Win32_Process` como deste projeto (`next dev`, `start-server.js`, um worker
+Turbopack) — nenhum processo do VS Code/Playwright MCP tocado. Redeploy
+passou; `/pt`, `/en`, `/fr` conferidos 200 em produção.
+
+### 12/09/2026 — Toggle claro/escuro real, substitui o ajuste de contraste
+
+**Pedido do Willian, direto: "não quero isso [o contraste], quero realmente
+ter um light mode em branco e outra cor que achar boa, e corrigir também as
+cores da animação para ficar condizente com layout de aplicações enterprise."**
+Perguntei o escopo antes de mexer (três perguntas: onde vale, referência
+visual, quais animações) — respostas: **vale em tudo, sem exceção** (inclusive
+a Q3), **paleta a meu critério**, **todas as animações coloridas do sistema**.
+
+**Isto reverte uma regra registrada em `DESIGN.md`**, não um ajuste cosmético:
+"Não clarear a fase noir 'para legibilidade' — o escuro é funcional (Miwa &
+Hanyu 2006: luz baixa aumenta autorrevelação)." A Q3 pedia baixa luz de
+propósito, para reduzir a vergonha de confessar. O pedido do Willian foi
+explícito o bastante para tratar como decisão de produto consciente, não
+como algo que eu deveria filtrar — mas fica registrado em três lugares
+(`DESIGN.md`, aqui, e no comentário do próprio `globals.css`) exatamente
+porque é grande demais para ficar implícito. **Quem não ativa o toggle
+continua no arco padrão** (noir no quiz, Q3 mais escura, ivory na proposta) —
+a reversão só vale para quem escolhe o tema claro.
+
+**O que foi trocado:**
+- `src/components/contraste.tsx` → `src/components/tema.tsx`
+  (`ControleTema`). Mesmo mecanismo de sempre (`localStorage`,
+  `data-*` no `<html>`, try/catch em toda leitura/escrita), chave nova
+  (`tailor:tema`, valor `"claro"`), ícone sol/lua desenhado (Feather-style,
+  `currentColor`) em vez do círculo meio-preenchido — agora é dark mode de
+  verdade, sol/lua é a convenção real (a pesquisa de 11/09 já tinha
+  confirmado isso; só não cabia então). Mostra o ícone do modo PARA ONDE o
+  clique leva (convenção X/GitHub): sol quando está escuro, lua quando está
+  claro.
+- `globals.css`: `[data-contraste="alto"]` saiu, `[data-tema="claro"]` entrou
+  — não é mais "sobe um passo dentro do ato", é o tema inteiro. Branco puro
+  (`#ffffff`), tinta quase-preta `#101828` (slate, não a ameixa do noir),
+  regras/filetes recalculados. **O acento vira índigo** (`--color-gold:
+  #4f46e5`, `--color-gold-hi: #3730a3`) em vez de ouro — índigo é a família
+  de cor mais comum em dashboard B2B (Stripe, Linear, Vercel), e por estar no
+  MESMO token que já era lido diretamente por filete, ênfase de título, foco
+  de teclado e o fio de grainline da atmosfera, todos herdam o índigo de
+  graça — nenhum componente precisou mudar, só o valor do token (mesma
+  arquitetura que já fazia noir→ivory funcionar). `--color-cta`/
+  `--color-cta-ink` (o botão "pôr do sol" laranja, nunca antes trocado por
+  superfície) viram índigo sólido + texto branco. `--color-alerta` vira
+  vermelho convencional (`#b91c1c`) — a família do terra deixa de fazer
+  sentido fora do tema quente. Os três acentos de persona reusam os valores
+  já calibrados para ivory (ivory e branco têm luminância próxima).
+  `[data-tema="claro"]` vem DEPOIS de `[data-penumbra]` no arquivo de
+  propósito — mesma especificidade, quem vem depois vence, e é assim que a
+  Q3 para de escurecer quando o tema é claro. `[data-tema="claro"]
+  [data-superficie="ivory"]` (seletor de descendência, o ivory é `<div>`)
+  garante que a proposta também vira branco/índigo, não fica presa no ivory
+  quente.
+  - Todos os pares conferidos ≥4,5:1 por script de luminância relativa
+    (Node, mesma fórmula das rodadas anteriores): ink 17,75:1, ink-2 7,61:1,
+    ink-3 5,35:1, índigo sobre branco 6,29:1, índigo-alto 9,93:1, branco
+    sobre CTA índigo 6,29:1, alerta 6,47:1 (usei `#b91c1c`, não o `#dc2626`
+    inicial, que media só 4,83:1 — margem curta demais para texto de 14px),
+    os três acentos de persona 5,2–5,24:1.
+- **Animações recoloridas** (pedido: "todas as coloridas"): `atmosfera.tsx`
+  não precisou de nenhuma mudança de código — já lia `--rule`/`--ink-3`/
+  `--color-gold` por herança, então o índigo chegou de graça (verificado ao
+  vivo: o fio de grainline no canto superior direito está índigo no tema
+  claro). O traçado de giz da barra de progresso e os piquetes idem (leem
+  `--accent`/`--color-gold`). As três cenas ilustradas
+  (`cenas/agenda.tsx`, `cenas/armario-cartoon.tsx`, `cenas/etiquetas.tsx`)
+  tinham paleta HARDCODED (`#E8935B`/`#F0C24A`/`#D9707A`, laranja/ouro/rosa —
+  não eram token, não trocavam sozinhas): recoloridas para
+  `#4F46E5`/`#0EA5E9`/`#14B8A6` (índigo/céu/verde-azulado), a mesma família
+  do novo acento. Não converti para CSS custom property (exigiria
+  reestruturar as três cenas) — ficou registrado como possível dívida se um
+  dia precisar variar por tema em vez de ser fixo.
+- **`DESIGN.md`** ganhou uma nota logo depois de "A candeia da Q3" registrando
+  a reversão consciente do veto de Miwa & Hanyu para quem ativa o tema claro.
+
+**Verificado ao vivo** (Browser pane, viewport 1400px pra ver a atmosfera):
+tema claro liga por clique, `data-tema="claro"` no `<html>`, `--surface`
+resolve pra `#fff` mesmo com `data-penumbra` true na Q3 (conferido via
+`getComputedStyle`, não só visual) — a Q3 fica branca de verdade quando o
+tema é claro. Botão "Começar" preenchido em índigo sólido quando ativo, trilho
+de giz e curvas de fundo em índigo/slate. Toggle-off restaura `#1f1530`
+(noir-2, penumbra) e limpa o `localStorage`. Zero erro de console nos dois
+sentidos. `tsc --noEmit` e `vitest run` (138/138) limpos; lint só o
+`react-hooks/set-state-in-effect` de sempre (mesmo padrão tolerado desde
+`quiz.tsx`).
+
+**Não verificado ao vivo:** o lado ivory→branco da proposta (`p/[token]`) —
+mesma ressalva de sempre, sem token de proposta em ambiente de dev. A
+mecânica é idêntica à do quiz (mesmos tokens, mesma herança), então a
+confiança é alta, mas fica registrado como revisão de código, não observação.
+
+**Desvio de marca, maior que os anteriores desta semana.** Isto não é uma
+bandeira ou um ícone — é a paleta inteira do produto quando o tema claro está
+ativo, incluindo a reversão de uma regra com citação de pesquisa. Registrado
+em três arquivos por decisão do Willian (não peço confirmação da Renilza aqui
+porque não é meu lugar decidir isso — só deixo sinalizado): antes de mostrar
+o tema claro pra ela, vale considerar se a paleta índigo/enterprise ainda lê
+como "consultoria de imagem francesa" ou já é um produto visualmente
+diferente por baixo do mesmo texto.
+
+### 18/09/2026 — Prompt de redesign disruptivo/motion: Fase 1 + P0/P1 (mecanismos A–E, H)
+
+Prompt colado pelo Willian, gerado numa sessão separada (Cowork/vault) em cima
+de auditoria ao vivo de `sobmedida.renilzamiranda.com` + inspeção de CSS/JS
+computado. Pedia duas fases: auditoria com `/impeccable` + `/taste` primeiro,
+depois implementar os mecanismos A–H (coluna de costura, menu ancorado, corte
+ao selecionar, tema como peek, costura viva na Q3, painel desktop, clímax da
+revelação, retomada visual) sem parar a cada um — só parar se a Fase 1
+contradissesse algo ou esbarrasse em veto do BRAND-VISUAL.
+
+**Fase 1 rodada de verdade, com achados que mudaram o plano:**
+- **`BRAND-VISUAL.md` — ao contrário do que o prompt assumiu ("não tenho
+  acesso"), esta sessão TEM** (`OneDrive/.../branding/BRAND-VISUAL.md`, lido
+  inteiro). Achado decisivo: **§2.4 regra 4** ("noir é o padrão; ivory é para
+  ler... a troca de fundo é o sinal de 'aqui você lê', e é intencional") é
+  exatamente o argumento do mecanismo D — e o oposto direto do que o Willian
+  tinha pedido em 12/09 ("vale em tudo, sem exceção"). Perguntei antes de
+  implementar; ele escolheu **seguir o mecanismo D como o prompt pede**,
+  revertendo a decisão de 12/09 conscientemente — registrado como decisão
+  dele, não filtro meu.
+- **`/taste` rodou contra produção** (`sobmedida.renilzamiranda.com-viewport
+  .jpeg`, `.md`, `.json` na raiz do repo — não commitados, são artefato de
+  análise, não código do produto). DNA confirmado por medição real: ouro em
+  1,4% da área (vs. 98,1% noir), zero `box-shadow` no sistema inteiro, só 2
+  valores de `border-radius`, e **o achado que mudou o mecanismo A**: as 5
+  transições amostradas usam TODAS o mesmo `cubic-bezier(0.16,1,0.3,1)`
+  escrito à mão — "easing próprio, sem lib de motion" é uma das 4 taste
+  principles com evidência. O prompt pedia GSAP pro mecanismo A; troquei por
+  CSS transition com o MESMO token de easing — GSAP exigiria aproximar essa
+  curva (a exata é plugin pago) e uma dependência nova, pra um tween de valor
+  único que CSS já resolve certo. Nenhum dos mecanismos P0/P1 precisa de
+  scroll-linked orchestration (só F/G, adiados), então **GSAP não entrou —
+  zero dependência nova**.
+- **`/impeccable` foi instalado nesta sessão** (não existia neste repo) —
+  mas a instalação (`npx impeccable@latest install`) trouxe uma versão (0.1.5)
+  cujo binário (`detect`) diverge do fluxo `context.mjs`/`audit` que o próprio
+  SKILL.md documenta (esse arquivo não existe nesta versão instalada — parece
+  o mesmo tipo de drift entre wrapper npm e engine bundlado que o próprio
+  prompt alertava, mas confirmado com `@latest` explícito, não é o bug de
+  cache do issue #266). Rodei `impeccable detect --json` direto (scan de
+  arquivo, não a URL — o binário deu `ERR_NAME_NOT_RESOLVED` tentando resolver
+  DNS sozinho, ambiente isolado do dele, não da rede real) contra
+  `quiz.tsx`/`molde.tsx`/`alfinete.tsx`/`seletor-idioma.tsx`/`tema.tsx`/
+  `globals.css`: **zero achados**, antes e depois da implementação.
+
+**Escopo desta sessão (segunda pergunta ao Willian): P0+P1 agora (A, B, C, D,
+E, H) — G fica pendente de ver a proposta de verdade, F (painel desktop) fica
+pra depois, ambos como P2/P1.5 do próprio prompt.**
+
+**A — Coluna de costura.** `TrilhoDeGiz` (`molde.tsx`) deixou de ser
+`scaleY` em `<div>` e virou `<svg>` com `stroke-dashoffset`/`pathLength=1` —
+a mesma técnica de `tracar`/`atmosfera-tracar`, agora estendida ao indicador
+de progresso. Continua ligada a `PROGRESSO[etapa]` (o índice real, não
+scroll); ao voltar, a transição CSS interpola pra trás sozinha — "descoze"
+sem nenhum código extra, é o mesmo mecanismo de sempre, só que reversível de
+graça. `--rule`/`--accent`, mesma paleta.
+
+**B — Alfinete (conserta o bug de sobreposição achado na auditoria).** Os
+dois controles fixos soltos (idioma canto superior-direito, tema
+inferior-direito) — confirmados na auditoria sobrepondo texto de opção em
+tela longa do quiz, mobile — viraram um único pino (`alfinete.tsx`), 32×32,
+ancorado na MESMA faixa lateral que `TrilhoDeGiz` já ocupa com segurança
+(`left-2 sm:left-4`), nunca sobre a coluna de leitura. Colapsado por padrão;
+abre um painel com idioma + tema + o link de acessibilidade do mecanismo D.
+`seletor-idioma.tsx` e `tema.tsx` viraram módulos de peças reaproveitadas
+(bandeiras, ícones sol/lua, mapas de nome) — o `SeletorIdioma`/`ControleTema`
+fixos e soltos de 11/09 e 12/09 saíram de cena. A seção de idioma vive num
+subcomponente próprio (`SecaoIdioma`) porque `useLocale`/`useRouter` do
+next-intl exigem `NextIntlClientProvider` — a proposta (`p/[token]`) não tem
+um, e hook não pode ser condicional; só o componente pode deixar de montar
+(`mostrarIdioma=false` lá).
+
+**C — Corte ao selecionar.** `LinhaOpcao` (usada por Q7/Q8/Q9 e pela
+sub-lista "situação" do Espelho — NÃO pelos cartões de persona em si, que já
+têm o próprio tratamento de fade a 28% de opacidade e ficaram como estavam,
+de propósito, pra não empilhar duas animações na tela de maior risco de
+abandono) ganhou um traço perpendicular efêmero (`Corte`, 220ms,
+`stroke-dashoffset`, mesmo `tracar`) que cruza a opção no clique, antes do
+estado "selecionada" assumir. O estado real (`aria-pressed`, `onClick`)
+muda no mesmo instante — o corte é só visual, nunca atrasa a lógica.
+Verificado por leitura de `aria-pressed` (correto) e por inspeção de código;
+**não consegui capturar o frame do corte ao vivo** — a janela é 220-260ms e o
+round-trip das ferramentas de browser deste ambiente excede isso, inclusive
+`requestAnimationFrame` trava com a aba em segundo plano. Confiança alta por
+ser o mesmo padrão já provado ao vivo em D/E nesta mesma sessão, não é
+suposição cega.
+
+**D — Tema virou peek, não switch persistente (reverte 12/09, decisão
+explícita do Willian).** `Alfinete` já cobre o mecanismo: segurar (pointerdown/
+pointerup/pointercancel/leave, e Espaço/Enter por teclado) liga
+`data-tema="claro"` só enquanto segura, **nunca grava `localStorage`** —
+verificado ao vivo (`durante: "claro"`, `depois: null`, `storage: null`). O
+switch de verdade, persistente, existe atrás de um link "Acessibilidade" no
+mesmo painel — verificado ao vivo escrevendo e limpando
+`localStorage['tailor:tema']` nos dois sentidos, sem interferir um com o
+outro (soltar o peek nunca apaga a preferência persistente já fixada, e
+vice-versa — os dois efeitos leem `espiando || climaPersistente`).
+
+**E — Costura viva na Q3.** `PerguntaAberta` ganhou uma linha
+`stroke-dashoffset` sob o campo, proporcional a `valor.trim().length / 140`
+(140 = uma frase completa típica, satura em 1, nunca corta texto real).
+Verificado ao vivo: `dashoffset` bateu exato com a fórmula em 108 caracteres
+digitados (`0.2286` calculado = `0.2286` medido), reagindo em tempo real ao
+teclado.
+
+**H — Retomada visual.** Não precisou de código novo: como `indice` nasce em
+0 e só sincroniza pro valor restaurado depois do mount (efeito em `quiz.tsx`,
+já existia), a transição de 700ms de A já desenha do zero até o ponto
+restaurado sozinha — a "sensação de o alfaiate retomando" que H pedia já sai
+de graça da mesma mecânica de A. Não criei uma duração de 600ms separada só
+pra esse caso: a diferença contra 700ms é imperceptível e não justificava
+mais uma ramificação de estado.
+
+**Não feito nesta sessão, de propósito:**
+- **F (painel desktop com Three.js/SVG generativo)** — P2 explícito do
+  próprio prompt, maior risco de custo/prazo, menor efeito na taxa de
+  conclusão do quiz (que é o que importa pro negócio). Não comecei.
+- **G (clímax da revelação noir→ivory)** — o próprio prompt pedia confirmar
+  o estado real da tela de proposta antes de implementar, e **não tenho
+  token de proposta em ambiente de dev** (mesma ressalva de sempre, várias
+  sessões). Fica pendente até alguém abrir uma proposta de verdade e eu ver
+  o que já existe lá antes de "elevar" algo que não vi.
+- Aplicar `Corte` (mecanismo C) aos cartões de persona do Espelho — decisão
+  deliberada, não esquecimento, ver acima.
+
+**Verificado ao vivo** (Browser pane, mobile 375×812, retomando de um estado
+real salvo em `localStorage` até "Peça 3"): rail A desenha e "descoze" ao
+voltar; Alfinete abre sem sobrepor nenhum texto de opção na tela do Espelho
+(a tela exata que a auditoria flagrou); peek D liga/desliga sem persistir;
+link de acessibilidade persiste/limpa corretamente, inclusive re-renderizando
+o painel inteiro em branco/índigo quando ativo; costura E bate com a fórmula
+exata; zero erro de console em todo o percurso. `tsc --noEmit` e `vitest run`
+(138/138) limpos. `impeccable detect` limpo antes e depois.
+
+**Achado de ambiente, registrado porque vai se repetir:** o binário nativo do
+`impeccable` (`detect --viewport ... <url>`) falha com
+`ERR_NAME_NOT_RESOLVED` tentando resolver `sobmedida.renilzamiranda.com`
+mesmo com o domínio resolvendo normalmente por `curl`/`nslookup` no mesmo
+shell — o Chromium bundlado do binário não herda o resolver do sistema neste
+ambiente. Scan por arquivo local (`detect --json <arquivos>`) funciona sem
+problema; é o caminho a usar aqui até isso ser investigado.
+
+**Arquivos não commitados por decisão, deixados fora do `git add`:**
+`.github/agents/`, `.github/hooks/`, `.github/skills/` (scaffolding do
+`impeccable` pra GitHub Copilot — ferramenta local, não código do produto),
+`.mcp.json` (registro do MCP `threejs-devtools-mcp`, tarefa separada),
+`sobmedida.renilzamiranda.com{-viewport.jpeg,.md,.json}` (saída do `/taste`,
+artefato de análise). Nenhum é secreto nem quebra nada ficando de fora; só
+não é produto.
+
+### 18/09/2026 (mesma sessão) — Mecanismos F e G: pedido "siga com todos os ajustes"
+
+Depois de A–E+H, o Willian pediu pra fechar o resto — G (clímax) e F (painel
+desktop), os dois que eu tinha deixado pendentes com razão específica
+registrada acima. As duas razões foram resolvidas, não puladas.
+
+**G — desbloqueado gerando uma proposta real.** Sem token de proposta em dev
+(a ressalva de sempre), usei o próprio `/api/proposal` direto (`fetch` no
+console, backend de arquivo local) com um payload completo de teste — gerou
+um lead + token reais (`d4fe97b9…`), o que finalmente deixou eu ver o estado
+atual da transição. **Achado que mudou o desenho:** não existia transição
+nenhuma — `Pico`'s CTA é um `<a href={url}>` cru, e `/p/[token]` é uma rota
+fora do `[locale]`, então clicar é sempre navegação de página inteira
+(recarrega). Não dá pra fazer crossfade DENTRO de uma troca de página assim.
+Solução: tocar a animação inteira do lado noir, atrás de um véu que já
+cobriu a tela antes da navegação de verdade acontecer.
+
+- `VeuDeRevelacao` (`quiz.tsx`, dentro de `Pico`): um círculo cresce do
+  centro (`clip-path: circle()`, paint-only) cobrindo a tela em ivory —
+  ou no branco real do tema claro, se `data-tema="claro"` estiver ativo,
+  senão o véu prometeria ivory quente e entregaria branco/índigo do outro
+  lado. 1200ms, mesmo easing de sempre. O clique no CTA (`irParaProposta`)
+  previne a navegação, liga o véu, e só troca `window.location.href` depois
+  — sob `prefers-reduced-motion`, a espera cai pra 60ms (não trava ela numa
+  animação que pedimos pro sistema não mostrar). A coluna de costura (A) já
+  chega a 100% sozinha no Pico (`PROGRESSO.pico = 100`), então "a linha
+  completa o traço" não precisou de código novo.
+- Do lado ivory (`p/[token]/page.tsx`): o título do Bloco 1
+  (`TituloRevelado`) revela palavra por palavra — puro SSR, `animation-delay`
+  crescente por `<span>`, sem JS nem client component. Os blocos 2–7
+  (`Bloco`, prop nova `indice`) entram em sequência depois, `surgir` com
+  atraso de `700 + indice*140ms`.
+- **Achado real, corrigido no mesmo lugar:** o `@media (prefers-reduced-motion)`
+  global só zerava `animation-duration`, não `animation-delay` — um reveal
+  escalonado esperaria o delay inteiro (até ~1,5s) antes de aparecer tudo de
+  uma vez, o oposto de "menos movimento". Adicionado `animation-delay: 0s
+  !important` na mesma regra — beneficia qualquer stagger do sistema, não só
+  este.
+- Verificado ao vivo (proposta real gerada pelo fetch acima): `animation-delay`
+  de cada bloco bate exato com a fórmula (0,84s/0,98s/1,26s/1,4s/1,54s pra
+  indice 1/2/4/5/6 — o 3, Bloco 4/fita métrica, não renderizou nesse lead de
+  teste porque o payload não tinha dado pra montar a fita, não é bug do
+  reveal), palavra por palavra do título com 70ms de passo, zero erro de
+  console. **O véu em si (lado noir) não foi capturado ao vivo** — chegar até
+  o Pico exigiria completar as 9 telas pela UI de verdade meio a esta rodada
+  já ter ido longa; confiança alta por ser `clip-path`+`useState`, o mesmo
+  padrão já provado ao vivo em B/D/E nesta sessão.
+
+**F — painel de desktop, ≥1024px, SVG (não Three.js, seguindo o veto do
+próprio prompt).** `src/components/painel-desktop.tsx`, novo:
+`PainelDesktop` — um `<svg>` fixo à direita (espelhando a coluna de costura à
+esquerda), 6 peças de molde simples (colarinho, duas mangas, corpo, saia,
+bainha — formas geométricas, não recorte de costura real) que acendem
+(`--rule` → `--accent`, com o `cena-pop` de sempre) conforme
+`PROGRESSO[etapa]` cruza o marco de cada uma. Na última peça (Pico), as seis
+formam o contorno de uma peça de roupa simples. `hidden lg:flex` — não
+existe abaixo de 1024px, não é responsivo, é um componente que só existe
+quando sobra tela. Verificado ao vivo em 1280px: só o colarinho aceso em
+progresso 24 (< marco 33 da manga), cores batendo (`var(--accent)` vs
+`var(--rule)`) exatamente como o código prevê; confirmado `display: none` em
+375px. Zero erro de console.
+
+`tsc --noEmit`, `vitest run` (138/138) e `impeccable detect --json` (zero
+achados) limpos depois dos dois mecanismos. **Os oito mecanismos do prompt
+de 17/09 (A–H) estão fechados.**
+
+**Fechamento de lacuna — E/G (frase da Q3 palavra por palavra).** Conferência
+final contra o prompt de 17/09 achou um item que as duas passadas anteriores
+não cobriram: E (parte 3) e G (passo 3) pedem que a frase dela, devolvida no
+fim, apareça palavra por palavra — mas só o título do Bloco 1 tinha o stagger;
+a citação no cartão Hoje/Futuro (`comparador.tsx`, usado no Pico e na proposta)
+era um parágrafo estático. Novo `FraseRevelada` no próprio `comparador.tsx`:
+`surgir` por palavra, começa em 250ms, passo de até 70ms que encolhe em frase
+longa (revelação inteira ≤ ~1,4s). Texto literal dela, só o ritmo é nosso.
+Verificado ao vivo numa proposta gerada em dev: 14 palavras, atrasos 250ms →
+1160ms, espaços preservados. Armadilha registrada: espaço final dentro de
+`inline-block` colapsa e gruda as palavras — o separador tem de ser NBSP
+(` `), como já era no `TituloRevelado`. `tsc` e `vitest` (138/138) limpos.
+
+**Desvios conscientes do prompt de 17/09, para não voltarem como "pendência":**
+GSAP/ScrollTrigger/Lenis não entraram (CSS + estado React, mesmo easing —
+ver entrada de A–H); sob `prefers-reduced-motion` o véu de G colapsa a 60ms
+em vez do crossfade de ~400ms que o prompt sugeria; a checagem do
+`ui-ux-pro-max` (Fase 1, item 3) e os critérios 3 e 5 (overlap em 360/414px e
+TTI antes/depois no Lighthouse) não foram medidos formalmente — só 375px foi
+conferido ao vivo.
+
+### 19/09/2026 — Controles do topo (sol/lua + idioma) e animações mais visíveis
+
+Pedido do Willian com um seletor de tema de app como referência (pílula
+sol/lua, modo ativo preenchido), mais uma pílula de idioma. Ele achou o tema
+claro "ainda escuro" — causa: desde 18/09 o claro era só "segurar para
+espiar" (mecanismo D) e o botão persistente ficava atrás de um link de
+acessibilidade dentro de um pino colapsado; o CSS do claro já era branco
+(`--surface: #fff`, conferido). **Reverte o mecanismo D por decisão dele**
+(a mesma chave `tailor:tema`, agora um switch visível).
+
+- `src/components/controles-topo.tsx` (novo) substitui `alfinete.tsx`
+  (removido): duas pílulas no **fluxo** da página (`absolute` no topo, rolam
+  com ela — nunca `fixed`, que era a causa do bug de sobreposição de 17/09).
+  Idioma: bandeira + PT/EN/FR (sem bandeira abaixo de 360px). Tema: sol/lua,
+  ativo com `--color-cta` (laranja no escuro, índigo no claro). O `main` do
+  quiz ganhou `pt-p5` para reservar a faixa. Na proposta só o tema aparece.
+- `src/app/layout.tsx`: script inline aplica `data-tema` antes do primeiro
+  paint (sem flash escuro nem os 900ms de transição a cada carga) e
+  `suppressHydrationWarning` no `<html>`.
+- Mensagens: bloco `alfinete` virou `controles` (`idioma/tema/claro/escuro`).
+- Animações (pedido "mais bonito, mais claro"): fio de costura de 1px→2px com
+  uma "agulha" (ponto + anel que respira) na ponta; opção escolhida ganha um
+  lavado do acento que varre da esquerda (`scaleX`, 480ms) e o corte passa a
+  2px/300ms; peças do painel de desktop se desenham (`tracar`) e ganham
+  preenchimento de 12% do acento. Só `transform`/`opacity`/paint.
+- Painel de desktop só a partir de 1120px (a 1024px encostava no texto) e o
+  fio de grainline da atmosfera foi para a esquerda (colidia com o painel).
+- **Desvio de forma:** as pílulas usam `border-radius: 999px`, fora do "cantos
+  2px" do §4 do BRAND-VISUAL — seguem a referência do Willian; registrar pelo
+  §10 se ficar.
+- Verificado ao vivo em 375px (barra numa linha só; toggle troca, grava
+  `localStorage` e persiste) e em 1360px (claro/escuro). `tsc` limpo.

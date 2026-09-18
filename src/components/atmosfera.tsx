@@ -79,9 +79,9 @@ export function Atmosfera() {
           molde real, nunca usada no sistema até agora. Só some no mobile
           via CSS: no celular a régua de leitura já ocupa a tela inteira. */}
       <g className="atmosfera-fio" stroke="var(--color-gold)" strokeWidth="1">
-        <line x1="1260" y1="120" x2="1260" y2="420" />
-        <path d="M 1260 120 l -7 16 M 1260 120 l 7 16" fill="none" />
-        <path d="M 1260 420 l -7 -16 M 1260 420 l 7 -16" fill="none" />
+        <line x1="200" y1="120" x2="200" y2="420" />
+        <path d="M 200 120 l -7 16 M 200 120 l 7 16" fill="none" />
+        <path d="M 200 420 l -7 -16 M 200 420 l 7 -16" fill="none" />
       </g>
 
       {/* Cruzes de registro, na mesma notação de `.registro`, só que grandes

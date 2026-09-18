@@ -1,6 +1,359 @@
 {
   "_traducao": {
-    "status": "TODO — nenhuma string traduzida ainda. Toda chave ausente cai no pt-BR (ver src/i18n/request.ts).",
-    "bloqueio": "Antes de traduzir os textos de preço, a Renilza precisa decidir em qual moeda a calculadora do Gap aparece para um lead em EN/FR — BRL fixo, ou EUR/USD conforme o locale. Pendência aberta em tailor-spec.md §5."
+    "status": "Full translation of messages/pt.json (pt-BR is canonical). Any key missing here falls back to pt-BR — see src/i18n/request.ts.",
+    "moeda": "Prices show in USD for en (content/config.ts, MOEDA_POR_IDIOMA), no conversion. The Q9 ranges are qualitative on purpose: there is no declared USD price for the catalogue, and the product never shows a number nobody declared. Renilza to confirm whether real USD bands should replace them."
+  },
+  "marca": {
+    "nome": "Renilza Miranda",
+    "assinatura": "French image methodology",
+    "frasePrincipal": "From invisible worth to perceived worth.",
+    "fraseAncora": "Being excellent isn't enough. You have to be seen.",
+    "filosofia": "Translation, not transformation."
+  },
+  "acoes": {
+    "comecar": "Begin",
+    "avancar": "Continue",
+    "voltar": "Back",
+    "recomecar": "Start over",
+    "confirmar": "That's it",
+    "ajustar": "Adjust"
+  },
+  "peca": {
+    "abertura": "Piece 1 · The opening",
+    "espelho": "Piece 2 · The mirror",
+    "q3": "Piece 3 · The one thing",
+    "gap": "Piece 4 · The measure",
+    "futuro": "Piece 5 · The future",
+    "q7": "Piece 6 of 9 · What you've tried",
+    "q8": "Piece 7 of 9 · The timeline",
+    "q9": "Piece 8 of 9 · The investment",
+    "gate": "Piece 9 of 9 · Where I reach you",
+    "pico": "The tracing",
+    "proposta": "The pattern"
+  },
+  "retomada": {
+    "aviso": "I picked up where you left off. Nothing was lost."
+  },
+  "painelDesktop": {
+    "rotulo": "The pieces of your pattern, taking shape as you go"
+  },
+  "controles": {
+    "idioma": "Language",
+    "tema": "Theme",
+    "claro": "Light theme",
+    "escuro": "Dark theme"
+  },
+  "regua": {
+    "diminuir": "Decrease",
+    "aumentar": "Increase"
+  },
+  "abertura": {
+    "titulo": "First, one question.",
+    "corpo": "A few questions, under three minutes. At the end you get a diagnosis made to measure, not a generic quiz result. Getting here already traced the first piece.",
+    "nome": "What's your name?",
+    "nomePlaceholder": "Your first name",
+    "nota": "No right answers. Only yours."
+  },
+  "espelho": {
+    "titulo": "Which of these sentences echoes in you the most, right now?",
+    "sub": "Pick the one that hurts most, not the one that sounds best.",
+    "cards": {
+      "patricia": "I open the packed closet… and can't find anything to wear.",
+      "camila": "I deliver more than plenty of people who show up and charge more than I do.",
+      "carla": "My clinic delivers a high-standard result. My image, not always."
+    },
+    "rotulagem": "Plenty of people who live this also felt ashamed to admit it, {nome}. Let's take it step by step.",
+    "situacaoTitulo": {
+      "patricia": "And where did it show up last?",
+      "camila": "And when was the last time it cost you something?",
+      "carla": "And where did that gap show most?"
+    },
+    "situacoes": {
+      "patricia": [
+        "In front of the closet, running late, changing clothes three times",
+        "At an event where I didn't know what was appropriate",
+        "In a photo someone posted without telling me",
+        "On an ordinary day, just the usual tiredness of always looking the same"
+      ],
+      "camila": [
+        "In a meeting where I knew more and they spoke to someone else",
+        "On a proposal I lost to someone less prepared",
+        "An invitation that never came, and I found out later",
+        "On a project where my work shone and I didn't"
+      ],
+      "carla": [
+        "When a patient compared my price with someone who delivers less",
+        "In a photo of the office that didn't look like my standard",
+        "At a conference where colleagues with lesser results had more presence",
+        "When I realised my image didn't back up my price increase"
+      ]
+    },
+    "outraSituacao": "It was something else",
+    "outraSituacaoPlaceholder": "Tell me in one line."
+  },
+  "q3": {
+    "titulo": {
+      "patricia": "If, in 30 days, one thing changed in you for good, what would it be?",
+      "camila": "If in 30 days one thing changed in how you're seen professionally, what would it be?",
+      "carla": "If in 30 days your image started to communicate the real level of your work, what would change first?"
+    },
+    "sub": "Write it your way, {nome}. This is the sentence I'll give back to you at the end.",
+    "placeholder": "Just one thing.",
+    "rotulo": "Your answer",
+    "recibo": "Got it. Word for word."
+  },
+  "gap": {
+    "precificacao": {
+      "titulo": "Now your measurements.",
+      "sub": "Drag until it's close to real. No one but you sees these numbers.",
+      "precoAtual": "Today, how much do you charge for your main service?",
+      "precoDesejado": "And how much should it be worth?",
+      "precoDesejadoNota": "It can't be below what you already charge.",
+      "volumeMensal": "On average, how many of those do you do per month?",
+      "calculoTitulo": "Based on what you told me:",
+      "porAtendimento": "{unidade} of difference on every appointment.",
+      "porMes": "By your own schedule, {mes} a month.",
+      "porAno": "Over twelve months, {ano}.",
+      "semGap": "Your target came out equal to what you already charge. Drag the second measure to where it should be.",
+      "nota": "This math is yours, {nome}. Your own numbers made it. No one is taking this money. It just isn't being charged.",
+      "aguardando": "Move the three measures to see your math."
+    },
+    "guardaRoupa": {
+      "titulo": "Now your measurements.",
+      "sub": "Drag until it's close to real. No one but you sees these numbers.",
+      "pctUsado": "What share of your wardrobe do you actually wear?",
+      "valorParado": "Over the last 12 months, how much do you think you spent on pieces that stayed on the hanger?",
+      "calculoTitulo": "Based on what you told me:",
+      "usado": "{pct}% of your wardrobe works for you today.",
+      "adormecido": "The other {pct}% didn't disappear. They're dormant.",
+      "valor": "{valor} in pieces still hanging there, waiting for someone to say what they go with.",
+      "nota": "It's not about owning more clothes, {nome}. It's about waking up what's already yours.",
+      "aguardando": "Move the two measures to see your math."
+    }
+  },
+  "futuro": {
+    "sub": {
+      "patricia": "Close your eyes. You walk into a room. How do people see you?",
+      "camila": "You walk into the meeting. Before you say a word, what has your presence already said?",
+      "carla": "A new patient arrives. Has your image already confirmed the price you charge?"
+    },
+    "titulo": "Six months from now, when you leave a room, how do you want to be described?",
+    "instrucao": "Choose 2 to 3 words.",
+    "restante": "{n, plural, =0 {No picks left} one {One more, if you want} other {# more words}}",
+    "trocar": "Three marked. Tap one to swap it.",
+    "palavras": {
+      "elegante": "elegant",
+      "autoridade": "authority",
+      "memoravel": "memorable",
+      "cara": "expensive",
+      "inevitavel": "inevitable",
+      "referencia": "a reference",
+      "confiavel": "trustworthy",
+      "desejada": "sought-after",
+      "admirada": "admired",
+      "segura": "self-assured"
+    }
+  },
+  "q7": {
+    "titulo": "What have you already tried to fix this?",
+    "opcoes": [
+      "I bought clothes and new things on my own",
+      "I followed ready-made tips from influencers",
+      "I've considered therapy or self-esteem work",
+      "I've never tried anything structured"
+    ],
+    "outro": "Other",
+    "outroPlaceholder": "What was it?"
+  },
+  "q8": {
+    "titulo": "By when do you want this sorted?",
+    "opcoes": [
+      "I want to start this week",
+      "I want to sort it in the next 2 to 4 weeks",
+      "I want to sort it this quarter",
+      "No rush, just gathering information for now"
+    ]
+  },
+  "q9": {
+    "titulo": {
+      "precificacao": "Based on what you told me, that difference adds up to {ano} over twelve months. Which investment range makes sense for you to start changing it?",
+      "guardaRoupa": "Based on what you told me, there's {valor} lying dormant in your wardrobe. Which investment range makes sense so this stops repeating?"
+    },
+    "tituloSemGap": "Which investment range makes sense for you to start changing this?",
+    "sub": "It's not my price. It's your opening ceiling.",
+    "opcoes": {
+      "ate3500": "A first step",
+      "de3500a7k": "Beyond the first step",
+      "de7a10k": "Room to go deep",
+      "acima10k": "The whole journey",
+      "naoDizer": "I'd rather not say now"
+    },
+    "balao": {
+      "ate3500": "You can start here. Starting is what unlocks the rest.",
+      "de3500a7k": "This range opens more road than the first step.",
+      "de7a10k": "With this margin, you can go deep in one go.",
+      "acima10k": "This fits the whole journey, without cutting corners.",
+      "naoDizer": "That's fine. The proposal doesn't depend on it to exist."
+    }
+  },
+  "gate": {
+    "titulo": "Your diagnosis and the map of your turn are on the way.",
+    "whatsapp": "Your WhatsApp",
+    "whatsappPlaceholder": "Area code and number — if you're outside Brazil, start with +",
+    "email": "Your email (optional)",
+    "emailPlaceholder": "you@email.com",
+    "cta": "Show me my map",
+    "enviando1": "Reading what you wrote…",
+    "enviando2": "Measuring what you declared…",
+    "enviando3": "Tracing your pattern…",
+    "nota": "You get the link right away. If you prefer, I'll also send it on your WhatsApp.",
+    "privacidade": "Your details are used only to build and send you this diagnosis. No spam, no sharing with third parties. Just ask and I'll delete it.",
+    "erroWhatsapp": "Check the number? I need it to send you the link.",
+    "erroEmail": "Check the email? It looks incomplete.",
+    "erroGeral": "I couldn't save just now. Try again in a few seconds."
+  },
+  "pico": {
+    "titulo": "{nome}, here's the map between who you are today and who you decided to be.",
+    "hoje": "Today",
+    "futuro": "Future",
+    "cta": "See my full proposal",
+    "leitura": {
+      "abertura": "You started with the sentence “{frase}”, and told me it showed up {situacao}.",
+      "aberturaSemSituacao": "You started with the sentence “{frase}”.",
+      "numerosPreco": "By your own numbers, you charge {preco} today and see {volume} clients a month.",
+      "numerosGuardaRoupa": "By your own numbers, {pct}% of your wardrobe works for you today.",
+      "tentou": "And before getting here you'd already tried to solve it on your own: “{tentou}”.",
+      "palavras": "Six months from now, you want to leave a room and be remembered as {palavras}.",
+      "metaPreco": "You said your work should be worth {meta}, and by your own math that's {ano} over twelve months.",
+      "metaSemGap": "You said your work should be worth {meta}.",
+      "adormecido": "The {valor} sitting idle is still yours. It didn't vanish, it's just waiting for someone to say what it goes with.",
+      "prazo": "On timing: you marked {prazo}."
+    }
+  },
+  "audio": {
+    "convite": "Rather tell me by voice?",
+    "consentimento": "Your audio becomes text only to build your diagnosis. Once transcribed, we don't keep the file. OK to record?",
+    "gravar": "Record audio",
+    "parar": "Done",
+    "digitar": "I'd rather type",
+    "transcrevendo": "Transcribing…",
+    "gravando": "Listening to you",
+    "consentir": "Go ahead and record",
+    "erro": "I couldn't record just now. You can type."
+  },
+  "confirmacao": {
+    "titulo": "Hi, {nome}. I got your audio.",
+    "corpo": "I just need to confirm what I understood. Takes 30 seconds, not 3 minutes.",
+    "cta": "Confirm my answers",
+    "ouvi": "This is what I heard:",
+    "confirma": "right?",
+    "rodape": "You've already told me most of this. Just confirm what I understood correctly. Takes 30 seconds.",
+    "linkInvalido": "This link isn't valid anymore. No problem, you can answer right here just the same."
+  },
+  "proposta": {
+    "b1": {
+      "titulo": "{nome}, here's what I heard, and what I see.",
+      "epigrafe": "Being excellent isn't enough. You have to be seen."
+    },
+    "b2": {
+      "notacao": "The diagnosis"
+    },
+    "b3": {
+      "notacao": "Today and after",
+      "titulo": "The two halves of the same person.",
+      "hoje": "Today",
+      "futuro": "Future"
+    },
+    "b4": {
+      "notacao": "The measuring tape of the turn",
+      "titulo": "Three stations, measured on your ruler.",
+      "fecho": "It's not a product; it's the map between who you are and who you decided to be.",
+      "hojeMarca": "You are here",
+      "metaMarca": "Your target",
+      "estacoes": {
+        "percebida": "The Perceived",
+        "referencia": "The Reference",
+        "inevitavel": "The Inevitable"
+      },
+      "pontes": {
+        "percebida": "Perceived Worth Journey",
+        "referencia": "Image Dossier",
+        "inevitavel": "Prism Method"
+      },
+      "copy": {
+        "patricia": {
+          "percebida": "You stop dressing on autopilot. The right capsule, the right colours, the basics no one taught you.",
+          "referencia": "Your image starts telling your story instead of hiding it. People notice before you speak.",
+          "inevitavel": "You walk into any room knowing you belong there. You stop wondering what to wear. You just live."
+        },
+        "camila": {
+          "percebida": "Your competence gets a shop window. You stop being the best no one sees.",
+          "referencia": "You start getting invited into the right rooms before you have to explain yourself.",
+          "inevitavel": "Your name becomes shorthand for what you do. Perception finally catches up with merit."
+        },
+        "carla": {
+          "percebida": "Your image starts communicating the price you already charge.",
+          "referencia": "Patients arrive pre-convinced of your level; the conversation starts before the appointment.",
+          "inevitavel": "Your clinic becomes a reference. Price stops being the first objection."
+        }
+      }
+    },
+    "b5": {
+      "notacao": "The method",
+      "titulo": "Translation, not transformation.",
+      "corpo": "Generic style consulting swaps you for someone else: an archetype, a palette, a manual. The French methodology does the opposite. It reads what's already there and translates it. You don't become someone else. You start being read as who you already are.",
+      "corpo2": "That's why the work starts by measuring, not buying. First the reading, then the language, and only then the piece."
+    },
+    "b6": {
+      "notacao": "The proof",
+      "titulo": "Before you.",
+      "corpo": "Before you, {numero} other women have already crossed this.",
+      "placeholder": "Space reserved for testimonials and credentials. Nothing here was invented: there is no real material available until Renilza provides hers."
+    },
+    "b7": {
+      "notacao": "The investment",
+      "titulo": "What this costs.",
+      "investimento": "{valor}",
+      "pix": "Pix, paid in full",
+      "pixBonus": "Paying in full by Pix, you lock in {bonus} as a bonus.",
+      "cartao": "Card, up to 12×",
+      "ctaPrimario": "Secure my spot",
+      "ctaSecundario": "I'd rather talk to Renilza",
+      "seguranca": "Payment processed securely. Questions? Talk to us before you decide.",
+      "mockAviso": "Demo checkout — no charge is processed in this version.",
+      "produto": "{nome}",
+      "parcelamentoNota": "Up to {parcelas}× on card. Instalment interest is included in the instalment. Paying in full by Pix, you pay none.",
+      "ctaAbrindo": "Opening payment…",
+      "erroAviso": "I couldn't open the payment just now. Try again, or message me on WhatsApp and I'll sort it there.",
+      "expiradaAviso": "This proposal has expired, so the payment has too. Message me on WhatsApp and I'll build the next one with you."
+    },
+    "validade": {
+      "ativa": "This proposal was written for you and is valid until {data}.",
+      "expirada": "This proposal has expired.",
+      "expiradaCorpo": "It was written for a specific moment and its validity has ended. Talk to Renilza and she'll build the next one with you.",
+      "expiradaCta": "Talk to Renilza"
+    },
+    "naoEncontrada": {
+      "titulo": "I couldn't find this proposal.",
+      "corpo": "The link may have been typed wrong or belong to someone else.",
+      "cta": "Do my diagnosis"
+    },
+    "crossSell": {
+      "titulo": "If now isn't the time.",
+      "nota": "Not every month is the month. These two start small and keep carrying you. You come in today and move up when it makes sense.",
+      "itens": {
+        "circulo": {
+          "nome": "The Circle",
+          "descricao": "Ongoing belonging · free"
+        },
+        "jornada": {
+          "nome": "Perceived Worth Journey",
+          "descricao": "The method's foundation · monthly subscription"
+        }
+      }
+    }
+  },
+  "whatsapp": {
+    "mensagem": "Hi Renilza! I finished the diagnosis and want to talk about the next steps."
   }
 }
