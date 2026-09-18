@@ -3,7 +3,7 @@
 import { AGENDA_CAPACIDADE, agendaTransbordou, marcadoresAgenda } from "@/lib/cenas";
 import { CenaContainer } from "./base";
 
-const PALETA = ["#E8935B", "#F0C24A", "#D9707A"];
+const PALETA = ["#4F46E5", "#0EA5E9", "#14B8A6"]; // Recolorido 12/09/2026: índigo/céu/verde-azulado, tema claro enterprise (era laranja/ouro/rosa)
 
 const COLUNAS = 4;
 

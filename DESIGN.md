@@ -275,6 +275,17 @@ modulação dentro do noir: quarto com abajur em vez de void (Miwa & Hanyu
 mediram luz *baixa*, não breu). **Validar pela taxa de resposta da Q3 no
 autosave; reverter é apagar uma regra de CSS.**
 
+**ATUALIZADO 12/09/2026 — o veto acima foi conscientemente revertido para
+quem ativa o tema claro.** Decisão do Willian: um toggle claro/escuro real
+(`src/components/tema.tsx`, `[data-tema="claro"]` em `globals.css`) agora
+sobrepõe o arco inteiro, Q3 incluída — "vale em tudo, sem exceção". A regra
+"não clarear o noir para legibilidade" (§ "Anti-regras" acima) segue válida
+para quem NÃO ativou o tema claro; o padrão do produto continua sendo o arco
+noir→ivory com a Q3 escurecida. Isto é uma troca de propósito da vantagem
+psicológica documentada por consistência visual — decisão de produto
+registrada, não bug. Ver `CLAUDE.md`, entrada de 12/09/2026, para a paleta
+inteira e a justificativa de contraste.
+
 ### Retenção estrutural (sem tela nova; C1 segue 9, teste verde)
 
 - **Retomada local** (`src/lib/retomada.ts`): `{indice, respostas, leadId}`

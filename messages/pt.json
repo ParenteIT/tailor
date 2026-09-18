@@ -30,6 +30,15 @@
   "retomada": {
     "aviso": "Retomei de onde você parou. Nada se perdeu."
   },
+  "painelDesktop": {
+    "rotulo": "As peças do seu molde, se formando conforme você avança"
+  },
+  "controles": {
+    "idioma": "Idioma",
+    "tema": "Tema",
+    "claro": "Tema claro",
+    "escuro": "Tema escuro"
+  },
   "regua": {
     "diminuir": "Diminuir",
     "aumentar": "Aumentar"

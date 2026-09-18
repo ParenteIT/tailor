@@ -46,6 +46,7 @@ import {
   tique,
 } from "@/components/molde";
 import { guardarMolde, lerMolde, limparMolde } from "@/lib/retomada";
+import { PainelDesktop } from "@/components/painel-desktop";
 import { useGravador } from "@/lib/gravador";
 import { Comparador } from "@/components/comparador";
 import { indiceOpcao } from "@/lib/cenas";
@@ -73,7 +74,10 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
   const t = useTranslations();
   // A moeda vem do idioma em que ela está respondendo: BRL no pt-BR, USD no
   // internacional. Nada é convertido — ver o comentário em content/config.ts.
-  const moeda = moedaDoIdioma(useLocale());
+  // O mesmo `locale` viaja no autosave e no gate para que a proposta reabra na
+  // língua em que ela respondeu (a página /p/[token] lê isso do conteúdo).
+  const locale = useLocale();
+  const moeda = moedaDoIdioma(locale);
   const faixas = FAIXAS_POR_MOEDA[moeda];
   const [indice, setIndice] = useState(0);
   const [r, setR] = useState<Respostas>(() =>
@@ -177,6 +181,7 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
         body: JSON.stringify({
           leadId,
           persona: r.persona,
+          idioma: locale,
           // Sem isto, todo autosave regravava origem "quiz_frio" por cima
           // do lead do modo confirmação — achado consertando o F6.
           origem: confirmacao ? "confirmacao" : "quiz_frio",
@@ -206,7 +211,7 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
     } catch {
       /* autosave é melhor-esforço */
     }
-  }, [leadId, r, confirmacao]);
+  }, [leadId, r, confirmacao, locale]);
 
   /**
    * A confissão da Q3 é o lead parcial mais valioso do funil — se ela abandona
@@ -258,6 +263,7 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
           nome: r.nome,
           whatsapp: r.whatsapp,
           email: r.email.trim() || undefined,
+          idioma: locale,
           respostas: {
             situacao: r.situacao,
             situacaoOutro: r.situacaoOutro,
@@ -311,6 +317,10 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
         marcas={MARCAS_TRILHO}
         rotulo={t("peca." + etapa)}
       />
+      <PainelDesktop
+        progresso={PROGRESSO[etapa]}
+        rotulo={t("painelDesktop.rotulo")}
+      />
 
       {/* min-h-svh é piso, não teto: uma tela curta centraliza como peça
           exposta; uma tela longa (o cartão-espelho, por exemplo) já é mais
@@ -318,7 +328,7 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
           vertical encolhe no celular (p4, não p6): num viewport de ~660px
           úteis, 104px de topo empurravam a revelação do espelho e o CTA para
           fora da dobra. */}
-      <main className="mx-auto flex min-h-svh w-full max-w-[var(--container-leitura)] flex-col justify-center px-p4 py-p4 sm:px-p5 sm:py-p6">
+      <main className="mx-auto flex min-h-svh w-full max-w-[var(--container-leitura)] flex-col justify-center px-p4 pt-p5 pb-p4 sm:px-p5 sm:py-p6">
         <div ref={topo} />
         {retomada && etapa !== "pico" ? (
           <p className="notacao surgir mb-p3">{t("retomada.aviso")}</p>
@@ -737,17 +747,45 @@ function PerguntaAberta({
     return () => clearTimeout(timer);
   }, [valor]);
 
+  // Costura ao vivo (mecanismo E): a linha sob o campo acompanha o
+  // comprimento do que ela já escreveu — não é barra de progresso (não mede
+  // "completo", só "quanto já existe"), é o mesmo `tracar` de
+  // TrilhoveDeGiz/LinhaOpcao aplicado ao ato de escrever. ALVO é uma frase
+  // completa típica, não um limite — passar disso satura em 1, nunca corta o
+  // texto real.
+  const ALVO_COSTURA = 140;
+  const costura = Math.min(valor.trim().length / ALVO_COSTURA, 1);
+
   return (
     <>
       <h2 className="mb-p2">{titulo}</h2>
       <p className="notacao mb-p4">{sub}</p>
-      <CampoAberto
-        rotulo={rotulo}
-        placeholder={placeholder}
-        valor={valor}
-        linhas={5}
-        onChange={onChange}
-      />
+      <div className="relative">
+        <CampoAberto
+          rotulo={rotulo}
+          placeholder={placeholder}
+          valor={valor}
+          linhas={5}
+          onChange={onChange}
+        />
+        <svg
+          className="pointer-events-none absolute right-0 bottom-0 left-0 h-px w-full"
+          aria-hidden
+        >
+          <line
+            x1="0"
+            y1="0.5"
+            x2="100%"
+            y2="0.5"
+            stroke="var(--accent)"
+            strokeWidth="1"
+            pathLength={1}
+            strokeDasharray={1}
+            strokeDashoffset={1 - costura}
+            style={{ transition: "stroke-dashoffset 160ms linear" }}
+          />
+        </svg>
+      </div>
       {audioTextos && onTranscrito ? (
         <BotaoAudio
           estado={gravador.estado}
@@ -1445,6 +1483,33 @@ function RotuloEnvio() {
  * casa entregando a peça costurada com a linha dela. Antes desta tela o ouro
  * só existiu como filete e rotulagem (gramática registrada no DESIGN.md).
  */
+
+/**
+ * O véu do clímax — mecanismo G. Um círculo cresce do centro (`clip-path`,
+ * paint-only) cobrindo a tela inteira em ivory antes de o link de verdade
+ * levar pra `/p/[token]`. `--color-ivory` é o literal da marca; se o tema
+ * claro (mecanismo D) estiver ativo, o véu vai pro branco real do tema, pra
+ * não prometer ivory quente e entregar branco/índigo do outro lado.
+ * `prefers-reduced-motion` já zera a duração da transição pelo `@media`
+ * global de `globals.css` — sem lógica extra aqui.
+ */
+function VeuDeRevelacao({ ativo }: { ativo: boolean }) {
+  const claro =
+    typeof document !== "undefined" &&
+    document.documentElement.dataset.tema === "claro";
+  return (
+    <div
+      aria-hidden
+      className="pointer-events-none fixed inset-0 z-[60]"
+      style={{
+        background: claro ? "#ffffff" : "var(--color-ivory)",
+        clipPath: ativo ? "circle(150% at 50% 50%)" : "circle(0% at 50% 50%)",
+        transition: "clip-path 1200ms cubic-bezier(0.16, 1, 0.3, 1)",
+      }}
+    />
+  );
+}
+
 function Pico({
   r,
   gap,
@@ -1459,6 +1524,29 @@ function Pico({
   const t = useTranslations();
   const fmt = (v: number) => dinheiro(v, moeda);
   const palavrasLegiveis = r.palavras.map((p) => t(`futuro.palavras.${p}`));
+
+  // O clímax (mecanismo G): a coluna de costura já chegou aos 100% (pico é o
+  // teto de PROGRESSO), então falta só o veu — um wipe de tela cheia
+  // cruzando noir → ivory antes da navegação real. `/p/[token]` é uma rota
+  // fora do `[locale]`, então o link é sempre um <a> de navegação de
+  // verdade (recarrega a página) — não dá pra fazer crossfade DENTRO da
+  // troca de página. A saída encontrada: tocar a animação aqui, no lado
+  // noir, e só navegar depois que ela terminar — o "salto" físico de página
+  // acontece atrás do véu já fechado, nunca visível.
+  const [saindo, setSaindo] = useState(false);
+  function irParaProposta(e: React.MouseEvent<HTMLAnchorElement>) {
+    if (!url) return;
+    e.preventDefault();
+    const reduzido =
+      typeof matchMedia !== "undefined" &&
+      matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setSaindo(true);
+    // Sem motion: não faz sentido prender ela numa espera de 1,3s por uma
+    // animação que ela pediu pro sistema não mostrar.
+    window.setTimeout(() => {
+      window.location.href = url;
+    }, reduzido ? 60 : 1300);
+  }
 
   /**
    * A leitura do que ela contou, em prosa, dentro do próprio cartão.
@@ -1544,6 +1632,7 @@ function Pico({
               aos valores antigos aqui. */}
           <a
             href={url}
+            onClick={irParaProposta}
             className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
             style={{
               background: "var(--color-cta)",
@@ -1556,6 +1645,7 @@ function Pico({
           >
             {t("pico.cta")} <Seta />
           </a>
+          <VeuDeRevelacao ativo={saindo} />
         </div>
       ) : null}
     </>

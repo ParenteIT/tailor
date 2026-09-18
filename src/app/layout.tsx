@@ -60,8 +60,20 @@ export default async function RootLayout({
   return (
     <html
       lang={locale}
+      suppressHydrationWarning
       className={`${cormorant.variable} ${jost.variable} ${hanken.variable}`}
     >
+      <head>
+        {/* Aplica o tema salvo antes do primeiro paint — sem isto, quem
+            escolheu o claro veria um flash escuro (e os 900ms de transição do
+            body) a cada carga. */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              'try{if(localStorage.getItem("tailor:tema")==="claro")document.documentElement.setAttribute("data-tema","claro")}catch(e){}',
+          }}
+        />
+      </head>
       <body>
         {/* THESIS: A pattern sheet is the only drawing that exists because one
         specific person exists. Refuses the quiz-funnel card stack: no boxes, no

@@ -1,6 +1,6 @@
 "use client";
 
-import type { CSSProperties, ReactNode } from "react";
+import { useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 /* ==========================================================================
    A FOLHA DE MOLDE — primitivas
@@ -129,12 +129,23 @@ export function Folha({ children }: { children: ReactNode }) {
 }
 
 /**
- * O trilho de giz: a linha que o alfaiate risca antes de cortar. É o indicador
- * de progresso — traçado sólido até onde ela chegou, tracejado adiante, com um
- * piquete por peça concluída.
+ * A coluna de costura: uma única linha atravessando a jornada inteira, do
+ * início ao fim — o mesmo traço, nunca reiniciado. Estende o vocabulário de
+ * `tracar`/`traco-corte` (globals.css) em vez de inventar um estilo novo:
+ * `stroke-dashoffset` de SVG, exatamente a técnica que já desenha as curvas da
+ * atmosfera e a linha de decisão de `TracoDecisao`.
  *
- * Não é barra de urgência (que o §8 do BRAND-VISUAL veta): não conta vagas nem
- * tempo, só diz onde ela está no molde.
+ * Ligada ao progresso REAL (o índice da pergunta, não o scroll da página) —
+ * `progresso` já vem de `PROGRESSO[etapa]` em `quiz-state.ts`. Ao voltar
+ * (`VOLTAR`), o número cai e a transição CSS interpola pra trás sozinha: a
+ * linha "descoze". Nenhuma lib de motion nova — o easing é o mesmo
+ * `cubic-bezier(0.16,1,0.3,1)` do resto do sistema, escrito à mão como em
+ * toda outra transição daqui; GSAP resolveria o mesmo tween com uma curva só
+ * aproximada (a exata é plugin pago do GSAP) e uma dependência nova — troca
+ * ruim para um valor único reagindo a state do React, que CSS já faz certo.
+ *
+ * Não é barra de urgência (que o §8 do BRAND-VISUAL veta): não conta vagas
+ * nem tempo, só diz onde ela está no molde.
  */
 export function TrilhoDeGiz({
   progresso,
@@ -145,6 +156,7 @@ export function TrilhoDeGiz({
   marcas: number[];
   rotulo: string;
 }) {
+  const offset = 1 - progresso / 100;
   return (
     <div
       className="pointer-events-none fixed top-0 bottom-0 left-2 z-40 w-6 sm:left-4"
@@ -154,28 +166,76 @@ export function TrilhoDeGiz({
       aria-valuemax={100}
       aria-label={rotulo}
     >
+      {/* Sem viewBox: o sistema de coordenadas do SVG casa 1:1 com px do seu
+          próprio box, então strokeWidth 1 é sempre um fio de 1px, qualquer
+          altura de viewport. */}
+      <svg className="absolute inset-0 h-full w-full" aria-hidden>
+        {/* A linha de costura: tracejada, o caminho inteiro, sempre visível —
+            é a jornada completa, decidida ou não. */}
+        <line
+          x1="50%"
+          y1="0"
+          x2="50%"
+          y2="100%"
+          stroke="var(--rule)"
+          strokeWidth="1"
+          strokeDasharray="4 5"
+        />
+        {/* A linha de corte: o traçado sólido, cresce por stroke-dashoffset —
+            paint-only, como `tracar`. `pathLength=1` normaliza o comprimento
+            pra 1, então o offset é sempre 0..1, qualquer altura de tela. */}
+        <line
+          x1="50%"
+          y1="0"
+          x2="50%"
+          y2="100%"
+          stroke="var(--accent)"
+          strokeWidth="2"
+          strokeLinecap="round"
+          pathLength={1}
+          strokeDasharray={1}
+          strokeDashoffset={offset}
+          style={{
+            transition:
+              "stroke-dashoffset 700ms cubic-bezier(0.16, 1, 0.3, 1), stroke 700ms cubic-bezier(0.16, 1, 0.3, 1)",
+          }}
+        />
+      </svg>
+      {/* A agulha: um ponto na ponta do fio, com um anel que respira. O
+          wrapper tem a altura toda e sobe por translateY em % — o mesmo
+          transform que o resto do sistema já usa, nada de animar top. */}
       <span
-        className="absolute top-0 bottom-0 left-1/2 w-px -translate-x-1/2"
+        aria-hidden
+        className="absolute inset-x-0 top-0 h-full"
         style={{
-          backgroundImage:
-            "repeating-linear-gradient(to bottom, var(--rule) 0 4px, transparent 4px 9px)",
+          transform: `translateY(${progresso}%)`,
+          transition: "transform 700ms cubic-bezier(0.16, 1, 0.3, 1)",
         }}
-      />
-      {/* O traçado cresce por transform, não por height: animar layout numa
-          barra que acompanha o scroll é o caminho mais curto para jank. O
-          background também transiciona: quando ela escolhe a frase-espelho e
-          --accent vira a cor dela, todo o caminho já riscado se torna dela —
-          visivelmente, não num corte seco. Paint-only, zero layout. */}
-      <span
-        className="absolute top-0 bottom-0 left-1/2 w-px"
-        style={{
-          background: "var(--accent)",
-          transform: `translateX(-50%) scaleY(${progresso / 100})`,
-          transformOrigin: "top",
-          transition:
-            "transform 700ms cubic-bezier(0.16, 1, 0.3, 1), background 700ms cubic-bezier(0.16, 1, 0.3, 1)",
-        }}
-      />
+      >
+        <span
+          className="absolute left-1/2"
+          style={{
+            width: 9,
+            height: 9,
+            marginLeft: -4.5,
+            marginTop: -4.5,
+            borderRadius: 999,
+            background: "var(--accent)",
+          }}
+        />
+        <span
+          className="absolute left-1/2"
+          style={{
+            width: 19,
+            height: 19,
+            marginLeft: -9.5,
+            marginTop: -9.5,
+            borderRadius: 999,
+            border: "1px solid var(--accent)",
+            animation: "respirar 2600ms ease-in-out infinite",
+          }}
+        />
+      </span>
       {marcas.map((marca) => (
         <span
           key={marca}
@@ -203,6 +263,37 @@ export function Notacao({ children }: { children: ReactNode }) {
 }
 
 /**
+ * O corte: um traço fino cruzando a opção no instante da escolha — mesma
+ * técnica de `stroke-dashoffset` de `tracar`/`TrilhoDeGiz`, só que na
+ * horizontal e efêmero (220ms, desmonta sozinho). É a tesoura cortando o
+ * tecido antes de a linha de decisão assumir — o clique vira um pequeno
+ * ritual, não uma troca de cor instantânea. `aria-hidden`: puramente visual,
+ * o estado real já mudou no `aria-pressed` do botão no mesmo instante do
+ * clique — o corte não atrasa a lógica, só a revelação.
+ */
+function Corte() {
+  return (
+    <svg
+      className="pointer-events-none absolute inset-0 h-full w-full"
+      aria-hidden
+    >
+      <line
+        x1="0"
+        y1="50%"
+        x2="100%"
+        y2="50%"
+        stroke="var(--accent)"
+        strokeWidth="2"
+        strokeLinecap="round"
+        pathLength={1}
+        strokeDasharray={1}
+        style={{ animation: "tracar 300ms cubic-bezier(0.16, 1, 0.3, 1) both" }}
+      />
+    </svg>
+  );
+}
+
+/**
  * Uma opção é uma linha a traçar, não um cartão. Tracejada enquanto latente,
  * sólida quando escolhida — e o piquete cresce.
  */
@@ -217,17 +308,37 @@ export function LinhaOpcao({
   onClick: () => void;
   sublinha?: ReactNode;
 }) {
+  const [cortando, setCortando] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   return (
     <button
       type="button"
       onClick={() => {
         tique();
         onClick();
+        if (timerRef.current) clearTimeout(timerRef.current);
+        setCortando(true);
+        timerRef.current = setTimeout(() => setCortando(false), 260);
       }}
       aria-pressed={selecionada}
-      className="group block w-full cursor-pointer py-p2 text-left"
+      className="group relative isolate block w-full cursor-pointer py-p2 text-left"
       style={{ minHeight: 56 }}
     >
+      {/* A tinta: um lavado suave do acento que varre a opção da esquerda pra
+          direita ao escolher. transform-only (scaleX), atrás do texto. */}
+      <span
+        aria-hidden
+        className="pointer-events-none absolute inset-0"
+        style={{
+          zIndex: -1,
+          background: "color-mix(in srgb, var(--accent) 11%, transparent)",
+          transform: `scaleX(${selecionada ? 1 : 0})`,
+          transformOrigin: "left",
+          transition: "transform 480ms cubic-bezier(0.16, 1, 0.3, 1)",
+        }}
+      />
+      {cortando ? <Corte /> : null}
       <span className="flex items-start gap-p2">
         <span
           className="piquete mt-2"
