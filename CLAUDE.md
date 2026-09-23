@@ -63,7 +63,12 @@ Restrição de produto, não sugestão. Ver o README para onde cada uma vive.
 
 ## Regras que não se negociam neste repo
 
-- **Nenhum preço fora de `src/content/config.ts`.** Se aparecer um número de
+- **Nenhum preço fora da configuração de cliente.** Na holding, preço é
+  `produto.preco` em `src/content/clientes/<cliente>.ts` (publicado no banco
+  `tenants` — ver §"Multi-tenant" abaixo); `publicado: false` tira o produto
+  da regra de oferta mesmo com preço preenchido. No fluxo legado (quiz de
+  personas, modo confirmação), continua sendo `src/content/config.ts` +
+  `PRECO_*_CENTAVOS` no Netlify, como sempre foi. Se aparecer um número de
   oferta em outro arquivo, é bug.
 - **Nenhum número exibido que ela não tenha declarado.** Nada de projeção,
   estimativa ou exemplo. A aritmética é dela e só dela.
@@ -81,8 +86,22 @@ Restrição de produto, não sugestão. Ver o README para onde cada uma vive.
 - **White label.** Nada de marca, vertente, pergunta, faixa, produto ou texto
   de cliente escrito em componente: tudo sai da configuração do cliente, e
   vertente é dado, não `if` (HANDOFF §1). Vale para todo código novo; o fluxo
-  único em `develop` é anterior e migra com a holding. Infra multi-cliente
-  fica fora de escopo até a Renilza estar validada.
+  único em `develop` é anterior e migra com a holding.
+- **Multi-tenant por domínio (desde 23/09/2026).** Um cliente é resolvido
+  pelo domínio da requisição (`src/lib/tenants.ts` → `resolverCliente(host)`),
+  com cache em Redis (Upstash, 5 min) na frente da tabela `public.tenants`
+  (Supabase, migração `supabase/migrations/0004_tenants.sql`). O arquivo em
+  `src/content/clientes/<slug>.ts` continua sendo a **fonte revisada por
+  PR**; `npm run sync:tenant -- <slug>` publica esse arquivo no banco — é o
+  passo que leva mudança de preço, copy ou cliente novo ao ar, sem deploy.
+  Sem Supabase/Redis configurados, ou sem linha para o domínio, cai no
+  `CLIENTE` estático do build (a Renilza), o mesmo de sempre — infra fora do
+  ar nunca derruba a tela de quem está respondendo. Pontos de entrada
+  (`page.tsx`, `layout.tsx`, as rotas de API da holding) resolvem o cliente
+  e passam por **prop**/parâmetro explícito; nenhum deles importa mais
+  `CLIENTE` do módulo `@/content/clientes` para servir uma resposta real —
+  esse import fica só para os testes, o fallback dentro de `tenants.ts`, e
+  o fluxo legado de personas (que continua num cliente só).
 - **Repo × vault.** O repo guarda código, a spec de implementação
   (`docs/holding/`), as pendências e o histórico. Negócio e estratégia vão
   para o vault (`.../20-renilza-planejamento/holding/`); material superado,

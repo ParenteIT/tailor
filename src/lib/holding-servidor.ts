@@ -1,6 +1,6 @@
 import "server-only";
 import { z } from "zod";
-import { CLIENTE, IDIOMAS, moedaDe, type Idioma } from "@/content/clientes";
+import { IDIOMAS, moedaDe, type Cliente, type Idioma } from "@/content/clientes";
 import {
   CENA_LIVRE,
   RESPOSTAS_VAZIAS,
@@ -52,13 +52,17 @@ export type ResultadoRespostas =
   | { ok: true; respostas: RespostasHolding }
   | { ok: false; detalhes: unknown };
 
-export function validarRespostas(bruto: unknown, idioma: Idioma): ResultadoRespostas {
-  const moeda = moedaDe(CLIENTE, idioma);
-  const r = esquemaRespostas(CLIENTE, moeda).safeParse(bruto);
+export function validarRespostas(
+  cliente: Cliente,
+  bruto: unknown,
+  idioma: Idioma
+): ResultadoRespostas {
+  const moeda = moedaDe(cliente, idioma);
+  const r = esquemaRespostas(cliente, moeda).safeParse(bruto);
   if (!r.success) return { ok: false, detalhes: r.error.issues };
   const respostas: RespostasHolding = { ...RESPOSTAS_VAZIAS, ...r.data };
   // Um ramo fechado nesta moeda não recebe resposta, nem por chamada direta.
-  const v = vertenteDaCena(CLIENTE, respostas.cena);
+  const v = vertenteDaCena(cliente, respostas.cena);
   if (v && !vertenteDisponivel(v, moeda)) return { ok: false, detalhes: "ramo_fechado" };
   return { ok: true, respostas };
 }
@@ -70,8 +74,12 @@ export function validarRespostas(bruto: unknown, idioma: Idioma): ResultadoRespo
  * resto — vertente, cena, ramo inteiro — vai para `respostas_raw`, que é o
  * superset auditável de sempre.
  */
-export function dadosDasRespostas(r: RespostasHolding, idioma: Idioma): DadosRespostas {
-  const v = vertenteDaCena(CLIENTE, r.cena);
+export function dadosDasRespostas(
+  cliente: Cliente,
+  r: RespostasHolding,
+  idioma: Idioma
+): DadosRespostas {
+  const v = vertenteDaCena(cliente, r.cena);
   const aberta = v?.perguntas.find((p) => p.tipo === "aberta");
   const escrita = aberta ? r.ramo[aberta.id] : undefined;
   const medida = v?.perguntas.find((p) => p.tipo === "medida");
@@ -98,8 +106,8 @@ export function dadosDasRespostas(r: RespostasHolding, idioma: Idioma): DadosRes
     q9: typeof marcada === "string" ? marcada : null,
     raw: {
       versao: 2,
-      cliente: CLIENTE.id,
-      versaoFluxo: CLIENTE.versaoFluxo,
+      cliente: cliente.id,
+      versaoFluxo: cliente.versaoFluxo,
       idioma,
       vertente: v?.id ?? null,
       entrada: r.entrada,

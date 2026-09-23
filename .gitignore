@@ -70,3 +70,6 @@ sobmedida.renilzamiranda.com-viewport.jpeg
 .github/agents/
 .github/hooks/
 .github/skills/
+
+# Cache local do Supabase CLI (\`supabase link\`/\`db push\`), 23/09/2026
+supabase/.temp/

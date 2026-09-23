@@ -8,7 +8,8 @@ import {
   whatsappValido,
 } from "@/lib/quiz-state";
 import { calcularExpiracao, montarProposta, montarPropostaHolding } from "@/lib/proposta";
-import { CLIENTE, moedaDe } from "@/content/clientes";
+import { moedaDe, type Cliente } from "@/content/clientes";
+import { resolverCliente } from "@/lib/tenants";
 import { emailValido as emailValidoHolding, ramoCompleto } from "@/lib/fluxo";
 import {
   CorpoPropostaHolding,
@@ -81,7 +82,10 @@ export async function POST(req: Request) {
     return NextResponse.json({ erro: "json_invalido" }, { status: 400 });
   }
 
-  if (ehCorpoDaHolding(bruto)) return propostaDaHolding(bruto);
+  if (ehCorpoDaHolding(bruto)) {
+    const cliente = await resolverCliente(req.headers.get("host"));
+    return propostaDaHolding(bruto, cliente);
+  }
 
   const analise = Corpo.safeParse(bruto);
   if (!analise.success) {
@@ -172,13 +176,13 @@ export async function POST(req: Request) {
  * forma das respostas contra a configuração, ramo inteiro respondido, nome,
  * WhatsApp e e-mail. Só então grava e monta a proposta.
  */
-async function propostaDaHolding(bruto: unknown) {
+async function propostaDaHolding(bruto: unknown, cliente: Cliente) {
   const corpo = CorpoPropostaHolding.safeParse(bruto);
   if (!corpo.success) {
     return NextResponse.json({ erro: "corpo_invalido", detalhes: corpo.error.issues }, { status: 400 });
   }
   const { leadId, nome, whatsapp, email, idioma } = corpo.data;
-  const validadas = validarRespostas(corpo.data.respostas, idioma);
+  const validadas = validarRespostas(cliente, corpo.data.respostas, idioma);
   if (!validadas.ok) {
     return NextResponse.json({ erro: "respostas_invalidas", detalhes: validadas.detalhes }, { status: 400 });
   }
@@ -187,7 +191,7 @@ async function propostaDaHolding(bruto: unknown) {
     !nomeValido(nome) ||
     !whatsappValido(whatsapp) ||
     !emailValidoHolding(email ?? "") ||
-    !ramoCompleto(CLIENTE, respostas, moedaDe(CLIENTE, idioma))
+    !ramoCompleto(cliente, respostas, moedaDe(cliente, idioma))
   ) {
     return NextResponse.json({ erro: "gate_invalido" }, { status: 400 });
   }
@@ -202,9 +206,9 @@ async function propostaDaHolding(bruto: unknown) {
       idioma,
       origem: "quiz_frio",
     });
-    await store.salvarRespostas(id, dadosDasRespostas(respostas, idioma));
+    await store.salvarRespostas(id, dadosDasRespostas(cliente, respostas, idioma));
 
-    const conteudo = await montarPropostaHolding({ cliente: CLIENTE, respostas, idioma });
+    const conteudo = await montarPropostaHolding({ cliente, respostas, idioma });
     const token = gerarTokenProposta();
     const proposta = await store.criarProposta(
       id,

@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
+import { headers } from "next/headers";
 import { getLocale } from "next-intl/server";
 import { Atmosfera } from "@/components/atmosfera";
-import { CLIENTE, txt } from "@/content/clientes";
+import { txt } from "@/content/clientes";
+import { resolverCliente } from "@/lib/tenants";
 import "./globals.css";
 import "./holding.css";
 
@@ -39,10 +41,15 @@ const hanken = localFont({
 });
 
 // Padrão de quem chega sem idioma; o layout de [locale] sobrepõe por língua.
-export const metadata: Metadata = {
-  title: txt(CLIENTE.textos.meta.titulo, CLIENTE.idiomaPadrao),
-  description: txt(CLIENTE.textos.meta.descricao, CLIENTE.idiomaPadrao),
-};
+// `/p/[token]` (a proposta) não tem layout de locale — passa só por aqui —,
+// então isto também precisa resolver o cliente do domínio, não só o `[locale]`.
+export async function generateMetadata(): Promise<Metadata> {
+  const cliente = await resolverCliente((await headers()).get("host"));
+  return {
+    title: txt(cliente.textos.meta.titulo, cliente.idiomaPadrao),
+    description: txt(cliente.textos.meta.descricao, cliente.idiomaPadrao),
+  };
+}
 
 export const viewport: Viewport = {
   themeColor: "#141009",

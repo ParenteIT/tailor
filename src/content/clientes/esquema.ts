@@ -251,9 +251,17 @@ export const Produto = z.object({
   /**
    * Preço de referência da regra de oferta, por moeda. null = ainda sem
    * preço decidido nesta moeda: o produto existe no catálogo mas nunca é
-   * ofertado nela. O valor EXIBIDO continua vindo da env de checkout.
+   * ofertado nela.
    */
   preco: z.record(z.enum(MOEDAS), z.number().positive().nullable()),
+  /**
+   * O preço é o que cobra — não existe mais uma env separada para isso.
+   * `publicado: false` é o freio: o produto fica fora da regra de oferta
+   * (nunca escolhido) mesmo com preço preenchido, para o caso comum de "o
+   * número já está decidido, mas ainda não é para vender" (decisão de
+   * 23/09/2026, ao tirar `PRECO_*_CENTAVOS` do Netlify).
+   */
+  publicado: z.boolean(),
   recorrencia: z.enum(["unica", "mensal"]),
 });
 export type Produto = z.infer<typeof Produto>;
@@ -364,6 +372,14 @@ const Textos = z.object({
 export const Cliente = z
   .object({
     id,
+    /**
+     * O domínio pelo qual este cliente é resolvido em runtime (`src/lib/tenants.ts`),
+     * um por deploy multi-tenant. Sem porta, minúsculo — "sobmedida.renilzamiranda.com",
+     * nunca uma URL inteira.
+     */
+    dominio: z.string().min(1),
+    /** Domínios extras que resolvem para o mesmo cliente (preview, staging). */
+    dominiosExtra: z.array(z.string().min(1)).default([]),
     /**
      * Versão do roteiro. Muda quando perguntas ou opções mudam: um molde
      * guardado no aparelho com outra versão é descartado em vez de ser lido

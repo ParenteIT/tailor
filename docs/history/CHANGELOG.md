@@ -3032,3 +3032,113 @@ o ajuste da regra "nenhum preço fora de `src/content/config.ts`" no
 CLAUDE.md (hoje os preços de referência da holding moram em
 `src/content/clientes/renilza.ts`) e o pedido de não deixar `docs/` staged
 neste worktree.
+
+## 23/09/2026 — Multi-tenant por domínio: preço e config saem do Netlify, vão para o banco
+
+Pedido do Willian, depois de rastrear que nenhum preço da holding tinha env
+configurada no Netlify (nem `PRECO_JORNADA_CENTAVOS`, que só serve ao fluxo
+legado — a proposta da holding lia `produto.id` pelo mesmo nome sem saber):
+"vamos já pensar em transformar isso em produto e ter uma configuração
+simplificada para os demais clientes". Solução completa, não um remendo.
+
+**O que mudou:**
+- `src/content/clientes/esquema.ts`: `Cliente` ganha `dominio` +
+  `dominiosExtra`; `Produto` ganha `publicado` (o freio — fora com preço
+  preenchido e `publicado: false`, como Dossiê Digital e Alta-Costura,
+  ainda sem número aprovado).
+- `src/content/clientes/renilza.ts`: domínio `sobmedida.renilzamiranda.com`
+  (+ `tailor-renilza.netlify.app`, `localhost`); `publicado: true` nos 8
+  produtos com preço já decidido (20–22/09).
+- `src/lib/fluxo.ts` (`escolherOferta`): a regra de oferta agora também
+  filtra por `publicado`.
+- `src/lib/proposta.ts` (`montarPropostaHolding`): o preço exibido vem
+  direto de `produto.preco[moeda]` — sem `checkout.ts`, sem
+  `PRECO_*_CENTAVOS`. O fluxo legado (quiz de personas) continua com o
+  sistema antigo, intocado.
+- **`src/lib/tenants.ts` (novo):** `resolverCliente(host)` — Redis (5 min)
+  na frente de `public.tenants` (Supabase); sem infra configurada ou sem
+  linha para o domínio, cai no `CLIENTE` estático do build. Nunca lança.
+- **`supabase/migrations/0004_tenants.sql` (novo, não aplicado ainda —
+  DDL pede autorização a cada vez, ver `docs/PENDING.md` §6).**
+- **`scripts/sync-tenant.ts` (novo) + `npm run sync:tenant -- <slug>`:**
+  publica o arquivo validado de um cliente na tabela. O arquivo continua
+  sendo a fonte revisada por PR; o banco é o que a aplicação lê.
+- Pontos de entrada (`[locale]/layout.tsx`, `layout.tsx` raiz —
+  `/p/[token]` não passa pelo de locale —, `diagnostico/page.tsx`,
+  `v/[vertente]/page.tsx`, `p/[token]/page.tsx`, `api/leads/route.ts`,
+  `api/proposal/route.ts`) resolvem o cliente pelo host e passam por
+  parâmetro. `src/lib/holding-servidor.ts` (`validarRespostas`,
+  `dadosDasRespostas`) e `QuizHolding` + seus componentes internos
+  (`Logo`, `EstiloDosMundos`, `TelaNome`/`TelaCena`/`TelaGate`/`Montando`/
+  `TelaFim`/`Painel`/`Indisponivel`) recebem `cliente` por prop — nenhum
+  deles importa mais o `CLIENTE` global para servir uma resposta real.
+  `perguntas.tsx` já recebia `cliente` por prop; não mudou.
+- `CLAUDE.md`: a regra "nenhum preço fora de `config.ts`" ficou "nenhum
+  preço fora da configuração de cliente", com a exceção do fluxo legado
+  registrada; nova entrada em "Fronteiras" descreve o multi-tenant.
+
+**Verificado:** `tsc --noEmit` limpo, 191 testes passando (fluxo.test.ts e
+conselho.test.ts usam `{ ...renilza, ... }` — herdam os campos novos sem
+precisar de fixture própria), e local com `npm run dev`: `/pt/diagnostico`,
+entrada direta `/pt/v/imagem` (logo, frase-mestra, cena pulada) e o autosave
+(`POST /api/leads` → 200) funcionando sem Supabase/Redis configurados —
+confirma o degrau para `CLIENTE` estático em dev, exatamente como antes
+desta mudança.
+
+**Não aplicado (decisão do Willian, ver `docs/PENDING.md` §6):** a migração
+`0004_tenants.sql` e a primeira publicação (`npm run sync:tenant -- renilza`).
+Até isso rodar, o site funciona exatamente como já funcionava — o degrau
+para o `CLIENTE` estático é o comportamento de hoje, não uma regressão.
+
+**Fechado no mesmo dia, pelo Willian:** migração colada no SQL Editor do
+painel (o `supabase db push` via CLI bateu em `EAUTHQUERY` no pooler e
+depois num histórico de migração remoto sem correspondência local — as
+0001–0003 foram aplicadas em produção antes de existir este fluxo de CLI;
+nenhum dos dois erro é deste SQL, que é `create table if not exists`,
+seguro fora da esteira do CLI); `npm run sync:tenant -- renilza` publicou a
+linha (versão 1), com `SUPABASE_URL`/`SUPABASE_SERVICE_ROLE` obtidos via
+`netlify env:get <nome>` sem `--context` (com `--context production` o CLI
+devolvia "No value set" para uma env marcada "mesmo valor em todos os
+contextos" — particularidade do CLI). Site conferido no ar depois da
+publicação, sem erro de console.
+
+Achado no caminho: **`scripts/sync-tenant.ts` não podia usar
+`@supabase/supabase-js`** — o SDK monta o cliente de realtime no import e
+lança "Node.js 20 detected without native WebSocket support" rodando fora
+do runtime do Next (é exatamente este script, chamado por `tsx` no
+terminal). Reescrito para falar com a API REST do Supabase por HTTP puro,
+mesmo padrão de `asaas.ts`/`transcricao.ts`. `src/lib/tenants.ts` continua
+com o SDK — roda dentro do Next.js/Netlify Functions, onde isso nunca deu
+problema (é o mesmo cliente que `store.ts` já usa em produção).
+
+## 23/09/2026 — Keepalive do Supabase: faltava o secret, auto-restore nunca tinha sido exercitado
+
+Willian reportou a tela de erro do quiz ("Não consegui salvar agora") e
+perguntou se faltava algo na automação. Projeto `tailor`
+(`ffyzmplwuvxdzikxpsje`) estava `INACTIVE`; religuei manual pela Management
+API. O workflow `supabase-keepalive.yml` (19/09) estava certo na lógica, mas
+`gh secret list` mostrou **zero secrets no repo** — `SUPABASE_ACCESS_TOKEN`
+nunca tinha sido criado. Ou seja: desde que o workflow existe, o branch de
+auto-restore só sabia falhar ("SUPABASE_ACCESS_TOKEN nao configurado"); a
+parte que religa sozinho nunca rodou de verdade.
+
+**Corrigido:** Willian gerou o token em
+`supabase.com/dashboard/account/tokens` com escopo mínimo —
+resource access **Project → tailor** (não Organization) e permissão
+**Project Settings: Read-write** (única linha que precisa de escrita; cobre
+status/pause/restore), resto em Read. Configurado via
+`gh secret set SUPABASE_ACCESS_TOKEN --repo ParenteIT/tailor` (colado direto
+no prompt do terminal, nunca passou pelo chat).
+
+**Validado ponta a ponta:** pausei o projeto de propósito (Willian
+autorizou), disparei o workflow via `workflow_dispatch` — ping detectou 500,
+chamou `restore` com o token novo, esperou `ACTIVE_HEALTHY`, reconferiu o
+endpoint. Run verde em 5m54s
+(`github.com/ParenteIT/tailor/actions/runs/35917532464`).
+
+**Why isso importa:** um workflow de auto-heal sem o secret configurado *
+parece* certo — ele existe, roda, e "success" no ping mascara que o branch
+de restore nunca foi testado. Só apareceu porque o projeto pausou de
+verdade. Checklist pra qualquer automação nova desse tipo: confirmar que o
+secret existe (`gh secret list`) E forçar o caminho de falha pelo menos uma
+vez, não só o caminho feliz.

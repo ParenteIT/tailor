@@ -56,6 +56,8 @@ const CONTA_PRECO_IGUAL = {
 
 export const renilza: z.input<typeof Cliente> = {
   id: "renilza",
+  dominio: "sobmedida.renilzamiranda.com",
+  dominiosExtra: ["tailor-renilza.netlify.app", "localhost"],
   versaoFluxo: "holding-2026-09-22",
   idiomaPadrao: "en",
   moedaPorIdioma: { en: "USD", pt: "BRL" },
@@ -604,17 +606,20 @@ export const renilza: z.input<typeof Cliente> = {
   // escada (Auditoria, Assinatura Anual, Dubai em Pessoa) não entram: não são
   // vendidos pelo funil.
   produtos: [
-    { id: "saiPronta", vertente: "imagem", nivel: 0, nome: { pt: "Sai Pronta em 7 Dias", en: "Ready in 7 Days" }, preco: { BRL: 97, USD: null }, recorrencia: "unica" },
-    { id: "consultoraDeBolso", vertente: "imagem", nivel: 0, nome: { pt: "Consultora de Bolso", en: "Pocket Consultant" }, preco: { BRL: 49, USD: null }, recorrencia: "mensal" },
-    { id: "dossieDigital", vertente: "imagem", nivel: 0, nome: { pt: "Dossiê Digital", en: "Digital Dossier" }, preco: { BRL: null, USD: null }, recorrencia: "unica" },
-    { id: "dossieImagem", vertente: "imagem", nivel: 1, nome: { pt: "Dossiê de Imagem", en: "Image Dossier" }, preco: { BRL: 3500, USD: null }, recorrencia: "unica" },
-    { id: "consultoriaInternacional", vertente: "imagem", nivel: 1, nome: { pt: "Consultoria de Imagem · Dubai & Europa", en: "Image Consulting · Dubai & Europe" }, preco: { BRL: null, USD: 1800 }, recorrencia: "unica" },
-    { id: "altaCostura", vertente: "imagem", nivel: 2, nome: { pt: "Alta-Costura", en: "Haute Couture" }, preco: { BRL: null, USD: null }, recorrencia: "unica" },
-    { id: "jornada", vertente: "posicionamento", nivel: 1, nome: { pt: "Jornada Valor Percebido", en: "Perceived Value Journey" }, preco: { BRL: 97.9, USD: null }, recorrencia: "mensal" },
-    { id: "posicionamento1a1", vertente: "posicionamento", nivel: 2, nome: { pt: "1:1 de Posicionamento", en: "1:1 Positioning" }, preco: { BRL: 9997, USD: 8500 }, recorrencia: "unica" },
-    { id: "daMaca", vertente: "estetica", nivel: 1, nome: { pt: "Da Maca ao Alto Padrão", en: "From the Treatment Bed to High End" }, preco: { BRL: 497, USD: null }, recorrencia: "unica" },
-    { id: "turmaEstetica", vertente: "estetica", nivel: 2, nome: { pt: "Turma de Estética", en: "Aesthetics Cohort" }, preco: { BRL: 4997, USD: 2200 }, recorrencia: "unica" },
-    { id: "signature", vertente: "estetica", nivel: 2, nome: { pt: "Signature", en: "Signature" }, preco: { BRL: 9997, USD: null }, recorrencia: "unica" },
+    // publicado: true nos 8 preços já decididos (20-22/09) — sem env separada
+    // pra cobrar, o preço daqui já é o que a proposta mostra e cobra. false
+    // nos 3 que ainda dependem da Renilza aprovar o número (docs/PENDING.md §1).
+    { id: "saiPronta", vertente: "imagem", nivel: 0, nome: { pt: "Sai Pronta em 7 Dias", en: "Ready in 7 Days" }, preco: { BRL: 97, USD: null }, publicado: true, recorrencia: "unica" },
+    { id: "consultoraDeBolso", vertente: "imagem", nivel: 0, nome: { pt: "Consultora de Bolso", en: "Pocket Consultant" }, preco: { BRL: 49, USD: null }, publicado: true, recorrencia: "mensal" },
+    { id: "dossieDigital", vertente: "imagem", nivel: 0, nome: { pt: "Dossiê Digital", en: "Digital Dossier" }, preco: { BRL: null, USD: null }, publicado: false, recorrencia: "unica" },
+    { id: "dossieImagem", vertente: "imagem", nivel: 1, nome: { pt: "Dossiê de Imagem", en: "Image Dossier" }, preco: { BRL: 3500, USD: null }, publicado: true, recorrencia: "unica" },
+    { id: "consultoriaInternacional", vertente: "imagem", nivel: 1, nome: { pt: "Consultoria de Imagem · Dubai & Europa", en: "Image Consulting · Dubai & Europe" }, preco: { BRL: null, USD: 1800 }, publicado: true, recorrencia: "unica" },
+    { id: "altaCostura", vertente: "imagem", nivel: 2, nome: { pt: "Alta-Costura", en: "Haute Couture" }, preco: { BRL: null, USD: null }, publicado: false, recorrencia: "unica" },
+    { id: "jornada", vertente: "posicionamento", nivel: 1, nome: { pt: "Jornada Valor Percebido", en: "Perceived Value Journey" }, preco: { BRL: 97.9, USD: null }, publicado: true, recorrencia: "mensal" },
+    { id: "posicionamento1a1", vertente: "posicionamento", nivel: 2, nome: { pt: "1:1 de Posicionamento", en: "1:1 Positioning" }, preco: { BRL: 9997, USD: 8500 }, publicado: true, recorrencia: "unica" },
+    { id: "daMaca", vertente: "estetica", nivel: 1, nome: { pt: "Da Maca ao Alto Padrão", en: "From the Treatment Bed to High End" }, preco: { BRL: 497, USD: null }, publicado: true, recorrencia: "unica" },
+    { id: "turmaEstetica", vertente: "estetica", nivel: 2, nome: { pt: "Turma de Estética", en: "Aesthetics Cohort" }, preco: { BRL: 4997, USD: 2200 }, publicado: true, recorrencia: "unica" },
+    { id: "signature", vertente: "estetica", nivel: 2, nome: { pt: "Signature", en: "Signature" }, preco: { BRL: 9997, USD: null }, publicado: true, recorrencia: "unica" },
   ],
 
   textos: {

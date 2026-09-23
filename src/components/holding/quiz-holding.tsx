@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
-import { CLIENTE, moedaDe, txt, type Idioma, type Texto } from "@/content/clientes";
+import { moedaDe, txt, type Cliente, type Idioma, type Texto } from "@/content/clientes";
 import {
   CENA_LIVRE,
   RESPOSTAS_VAZIAS,
@@ -68,18 +68,24 @@ function lerUtm(): Record<string, string> | undefined {
 
 /**
  * O diagnóstico da holding: nome → cena → ramo da vertente → gate → prazo →
- * montando → fim. Tudo o que a tela diz sai de `CLIENTE`; este componente só
+ * montando → fim. Tudo o que a tela diz sai de `cliente`; este componente só
  * sabe andar pelas telas que `telasDe` devolve.
+ *
+ * `cliente` chega por prop, resolvido pelo domínio no servidor (a página que
+ * renderiza este componente decide qual — `src/lib/tenants.ts`), não mais
+ * importado como um global fixo no bundle: um domínio, um cliente, sem
+ * recompilar.
  */
 export function QuizHolding({
   idioma,
+  cliente,
   vertenteDireta,
 }: {
   idioma: Idioma;
+  cliente: Cliente;
   /** Entrada de campanha (`/v/<vertente>`): pula a cena. */
   vertenteDireta?: string;
 }) {
-  const cliente = CLIENTE;
   const moeda = moedaDe(cliente, idioma);
   const inicial = useMemo<RespostasHolding>(
     () =>
@@ -266,7 +272,7 @@ export function QuizHolding({
   /* ---------------------------------------------------------------- telas */
 
   if (!abertos.length || (vertente && !vertenteDisponivel(vertente, moeda))) {
-    return <Indisponivel idioma={idioma} />;
+    return <Indisponivel idioma={idioma} cliente={cliente} />;
   }
 
   const primeiroNome = r.nome.trim().split(/\s+/)[0] ?? "";
@@ -311,6 +317,7 @@ export function QuizHolding({
       <div className="h-grade">
         <Painel
           idioma={idioma}
+          cliente={cliente}
           tela={tela}
           temCena={r.entrada === "cena"}
           figura={figura}
@@ -352,12 +359,19 @@ export function QuizHolding({
             ) : null}
 
             {tela.tipo === "nome" ? (
-              <TelaNome idioma={idioma} nome={r.nome} onNome={(nome) => setR((x) => ({ ...x, nome }))} onEnter={avancar} />
+              <TelaNome
+                idioma={idioma}
+                cliente={cliente}
+                nome={r.nome}
+                onNome={(nome) => setR((x) => ({ ...x, nome }))}
+                onEnter={avancar}
+              />
             ) : null}
 
             {tela.tipo === "cena" ? (
               <TelaCena
                 idioma={idioma}
+                cliente={cliente}
                 r={r}
                 nome={primeiroNome}
                 cenas={[
@@ -401,6 +415,7 @@ export function QuizHolding({
             {tela.tipo === "gate" ? (
               <TelaGate
                 idioma={idioma}
+                cliente={cliente}
                 nome={primeiroNome}
                 frase={fraseDela}
                 r={r}
@@ -430,6 +445,7 @@ export function QuizHolding({
             {tela.tipo === "montando" ? (
               <Montando
                 idioma={idioma}
+                cliente={cliente}
                 proposta={proposta}
                 onPronto={() => setIndice((i) => i + 1)}
                 onVoltarAoGate={() => {
@@ -440,7 +456,14 @@ export function QuizHolding({
             ) : null}
 
             {tela.tipo === "fim" ? (
-              <TelaFim idioma={idioma} r={r} nome={primeiroNome} frase={fraseDela} urlProposta={urlProposta} />
+              <TelaFim
+                idioma={idioma}
+                cliente={cliente}
+                r={r}
+                nome={primeiroNome}
+                frase={fraseDela}
+                urlProposta={urlProposta}
+              />
             ) : null}
 
             {tela.tipo !== "montando" && tela.tipo !== "fim" ? (
@@ -478,19 +501,21 @@ export function QuizHolding({
 
 function TelaNome({
   idioma,
+  cliente,
   nome,
   onNome,
   onEnter,
 }: {
   idioma: Idioma;
+  cliente: Cliente;
   nome: string;
   onNome: (v: string) => void;
   onEnter: () => void;
 }) {
-  const a = CLIENTE.textos.abertura;
+  const a = cliente.textos.abertura;
   return (
     <>
-      <Logo idioma={idioma} />
+      <Logo idioma={idioma} cliente={cliente} />
       <h1 className="h-titulo h-titulo-abertura">{txt(a.titulo, idioma)}</h1>
       <p className="h-apoio">{txt(a.apoio, idioma)}</p>
       <div className="h-campo-grupo">
@@ -516,6 +541,7 @@ function TelaNome({
 
 function TelaCena({
   idioma,
+  cliente,
   r,
   nome,
   cenas,
@@ -523,13 +549,14 @@ function TelaCena({
   onLivre,
 }: {
   idioma: Idioma;
+  cliente: Cliente;
   r: RespostasHolding;
   nome: string;
   cenas: { id: string; texto: Texto; icone: Parameters<typeof Icone>[0]["nome"] }[];
   onCena: (id: string) => void;
   onLivre: (v: string) => void;
 }) {
-  const c = CLIENTE.textos.cena;
+  const c = cliente.textos.cena;
   return (
     <>
       <p className="h-kicker">{txt(c.kicker, idioma)}</p>
@@ -563,6 +590,7 @@ function TelaCena({
 
 function TelaGate({
   idioma,
+  cliente,
   nome,
   frase,
   r,
@@ -570,13 +598,14 @@ function TelaGate({
   onContato,
 }: {
   idioma: Idioma;
+  cliente: Cliente;
   nome: string;
   frase: string;
   r: RespostasHolding;
   erro: Texto | null;
   onContato: (p: Partial<Pick<RespostasHolding, "whatsapp" | "email">>) => void;
 }) {
-  const g = CLIENTE.textos.gate;
+  const g = cliente.textos.gate;
   return (
     <>
       <p className="h-kicker">{txt(g.kicker, idioma)}</p>
@@ -633,16 +662,18 @@ function TelaGate({
  */
 function Montando({
   idioma,
+  cliente,
   proposta,
   onPronto,
   onVoltarAoGate,
 }: {
   idioma: Idioma;
+  cliente: Cliente;
   proposta: EstadoProposta;
   onPronto: () => void;
   onVoltarAoGate: () => void;
 }) {
-  const m = CLIENTE.textos.montando;
+  const m = cliente.textos.montando;
   const [acesas, setAcesas] = useState(0);
 
   useEffect(() => {
@@ -672,10 +703,10 @@ function Montando({
       {proposta === "erro" ? (
         <div className="h-acoes">
           <p className="h-erro" role="alert">
-            {txt(CLIENTE.textos.gate.erroGeral, idioma)}
+            {txt(cliente.textos.gate.erroGeral, idioma)}
           </p>
           <button type="button" className="h-link" onClick={onVoltarAoGate}>
-            {txt(CLIENTE.textos.comum.voltar, idioma)}
+            {txt(cliente.textos.comum.voltar, idioma)}
           </button>
         </div>
       ) : null}
@@ -685,20 +716,22 @@ function Montando({
 
 function TelaFim({
   idioma,
+  cliente,
   r,
   nome,
   frase,
   urlProposta,
 }: {
   idioma: Idioma;
+  cliente: Cliente;
   r: RespostasHolding;
   nome: string;
   frase: string;
   urlProposta: string | null;
 }) {
-  const f = CLIENTE.textos.fim;
-  const vertente = vertenteDaCena(CLIENTE, r.cena);
-  const moeda = moedaDe(CLIENTE, idioma);
+  const f = cliente.textos.fim;
+  const vertente = vertenteDaCena(cliente, r.cena);
+  const moeda = moedaDe(cliente, idioma);
   const medida = vertente?.perguntas.find((p) => p.tipo === "medida");
   const conta = medida?.tipo === "medida" ? contaDaMedida(medida, r.ramo[medida.id]) : null;
 
@@ -720,7 +753,7 @@ function TelaFim({
   const cena =
     r.entrada === "cena"
       ? r.cena === CENA_LIVRE
-        ? txt(CLIENTE.cenaLivre.texto, idioma)
+        ? txt(cliente.cenaLivre.texto, idioma)
         : vertente
           ? txt(vertente.cena.citacao ?? vertente.cena.texto, idioma)
           : null
@@ -731,7 +764,7 @@ function TelaFim({
   const origem = typeof window === "undefined" ? "" : window.location.origin;
   const link = urlProposta ? `${origem}${urlProposta}` : "";
   const mensagem = txt(f.mensagemWhatsapp, idioma, { nome: nome || r.nome.trim(), link });
-  const href = `https://wa.me/${CLIENTE.contato.whatsapp}?text=${encodeURIComponent(mensagem)}`;
+  const href = `https://wa.me/${cliente.contato.whatsapp}?text=${encodeURIComponent(mensagem)}`;
 
   return (
     <>
@@ -768,6 +801,7 @@ function TelaFim({
 
 function Painel({
   idioma,
+  cliente,
   tela,
   temCena,
   figura,
@@ -776,6 +810,7 @@ function Painel({
   total,
 }: {
   idioma: Idioma;
+  cliente: Cliente;
   tela: Tela;
   temCena: boolean;
   figura: Parameters<typeof FiguraDoPainel>[0]["figura"];
@@ -783,7 +818,7 @@ function Painel({
   posicao: number;
   total: number;
 }) {
-  const p = CLIENTE.textos.painel.passos;
+  const p = cliente.textos.painel.passos;
   const etapa =
     tela.tipo === "nome" ? 0 : tela.tipo === "cena" ? 1 : tela.tipo === "pergunta" ? 2 : 3;
   const passos = [
@@ -795,8 +830,8 @@ function Painel({
   return (
     <aside className="h-painel" aria-hidden="true">
       <div>
-        <div className="h-painel-nome">{CLIENTE.marca.nome}</div>
-        <div className="h-painel-sub">{txt(CLIENTE.marca.fraseMestra, idioma)}</div>
+        <div className="h-painel-nome">{cliente.marca.nome}</div>
+        <div className="h-painel-sub">{txt(cliente.marca.fraseMestra, idioma)}</div>
       </div>
       <ul className="h-passos">
         {passos.map((passo) => (
@@ -809,24 +844,24 @@ function Painel({
       <div className="h-painel-obj">
         {tela.tipo !== "nome" ? <FiguraDoPainel figura={figura} icone={icone} posicao={posicao} total={total} /> : null}
       </div>
-      <p className="h-painel-rodape">{txt(CLIENTE.textos.painel.rodape, idioma)}</p>
+      <p className="h-painel-rodape">{txt(cliente.textos.painel.rodape, idioma)}</p>
     </aside>
   );
 }
 
-function Indisponivel({ idioma }: { idioma: Idioma }) {
-  const t = CLIENTE.textos.indisponivel;
-  const destino = (Object.keys(CLIENTE.moedaPorIdioma) as Idioma[]).find(
-    (i) => i !== idioma && vertentesDisponiveis(CLIENTE, moedaDe(CLIENTE, i)).length > 0
+function Indisponivel({ idioma, cliente }: { idioma: Idioma; cliente: Cliente }) {
+  const t = cliente.textos.indisponivel;
+  const destino = (Object.keys(cliente.moedaPorIdioma) as Idioma[]).find(
+    (i) => i !== idioma && vertentesDisponiveis(cliente, moedaDe(cliente, i)).length > 0
   );
   return (
-    <div data-vertente={ID_CASA} data-gesto={CLIENTE.casa.gesto} className="h-mundo">
+    <div data-vertente={ID_CASA} data-gesto={cliente.casa.gesto} className="h-mundo">
       <main className="h-folha h-folha-sozinha">
         <div className="h-topo">
-          <SeletorIdioma rotulo={txt(CLIENTE.textos.idioma, idioma)} />
+          <SeletorIdioma rotulo={txt(cliente.textos.idioma, idioma)} />
         </div>
         <div className="h-miolo">
-          <Logo idioma={idioma} />
+          <Logo idioma={idioma} cliente={cliente} />
           <h1 className="h-titulo h-titulo-abertura">{txt(t.titulo, idioma)}</h1>
           <p className="h-apoio">{txt(t.corpo, idioma)}</p>
           {destino ? (

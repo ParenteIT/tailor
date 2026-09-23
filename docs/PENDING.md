@@ -239,11 +239,28 @@ trabalho está no §9):
 ## 6. Higiene do repo e merge da branch da holding
 
 - **Inglês da holding fechado até existirem números em USD** (decisão do Willian, 23/09): faixas de investimento e réguas por vertente ficam `null` em `src/content/clientes/renilza.ts`; enquanto forem, nenhum ramo abre em EN.
-- **Regra de preço do `CLAUDE.md` × `renilza.ts` — decisão do Willian,
-  obrigatória antes do merge.** O `CLAUDE.md` diz "Nenhum preço fora de
-  `src/content/config.ts`"; o HANDOFF §1 põe os preços na configuração do
-  cliente, e o `src/content/clientes/renilza.ts` da branch já grava preços
-  em BRL e USD. A regra continua valendo até o Willian decidir.
+- ~~Aplicar a migração `0004_tenants.sql` e publicar a Renilza no banco~~ —
+  **feito em 23/09/2026**, pelo Willian: migração colada no SQL Editor do
+  painel (o `supabase db push` via CLI bateu duas vezes em problema de rede —
+  `EAUTHQUERY` no pooler e depois histórico de migração remoto sem
+  correspondência local; nenhum dos dois é específico deste SQL); `npm run
+  sync:tenant -- renilza` publicou a linha (versão 1). `SUPABASE_URL`/
+  `SUPABASE_SERVICE_ROLE` obtidos via `netlify env:get <nome>` (sem
+  `--context`, que devolvia "No value set" para uma env marcada "mesmo valor
+  em todos os contextos" — bug/particularidade do CLI, não do Netlify).
+  Site conferido no ar depois, sem erro de console.
+  **`scripts/sync-tenant.ts` deixou de usar `@supabase/supabase-js`**: o SDK
+  monta o cliente de realtime no import e lança "Node.js 20 detected without
+  native WebSocket support" rodando fora do runtime do Next — o script fala
+  com a API REST do Supabase por HTTP puro agora (mesmo padrão de
+  `asaas.ts`/`transcricao.ts`). `src/lib/tenants.ts` continua com o SDK, sem
+  problema, porque roda dentro do Next.js/Netlify Functions.
+- ~~Regra de preço do `CLAUDE.md` × `renilza.ts`~~ — **resolvido em
+  23/09/2026.** A regra virou "preço só na configuração de cliente" (CLAUDE.md
+  §"Regras que não se negociam"); `checkout.ts`/`PRECO_*_CENTAVOS` continuam
+  existindo, mas só para o fluxo legado de personas, que a holding não usa
+  mais. O preço agora é `produto.preco` + `produto.publicado` em
+  `src/content/clientes/renilza.ts`, sem env no Netlify.
 - **`docs/` staged no worktree da branch.** A branch tem cópia staged de
   todo o `docs/`, inclusive o que saiu deste repo em 23/09 (`docs/jornada/`,
   `docs/oferta/`, `docs/renilza-conhecimento.md`, o planejamento, a

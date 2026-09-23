@@ -13,6 +13,7 @@ import { nomeExibido, precoExibido } from "@/lib/checkout";
 import { escreverTexto, llmDisponivel } from "@/lib/llm";
 import {
   calcularGap,
+  dinheiro,
   escalaDaFita,
   posicoesDasEstacoes,
   type EscalaFita,
@@ -373,13 +374,17 @@ export async function montarPropostaHolding(opcoes: {
     fita: null,
     palavras,
     q9: faixaId,
-    // Preço exibido: a mesma env que cobra, ou ◆. O preço de referência da
-    // configuração só decide QUAL produto cabe, nunca aparece na tela.
+    // Preço exibido: o mesmo preço da configuração que decidiu QUAL produto
+    // cabe — uma fonte só, sem env de checkout à parte (23/09/2026, ao mover
+    // a config de cliente para o banco). `publicado` já filtrou em
+    // escolherOferta; aqui só falta formatar ou cair em ◆ se a moeda não
+    // tiver preço (produto com preço só em outra moeda, sinal de config
+    // furada — nunca deveria chegar aqui, mas não inventa número).
     oferta: produto
       ? {
           produto: produto.id,
-          nome: nomeExibido(produto.id, idioma),
-          preco: precoExibido(produto.id, moeda) ?? "◆",
+          nome: txt(produto.nome, idioma),
+          preco: produto.preco[moeda] != null ? dinheiro(produto.preco[moeda]!, moeda) : "◆",
           nivel: nivel ? txt(nivel, idioma) : undefined,
         }
       : null,

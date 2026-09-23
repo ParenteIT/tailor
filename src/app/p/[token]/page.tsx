@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { getTranslations } from "next-intl/server";
 import { CONTATO, PRECOS } from "@/content/config";
 import { PALAVRAS_IDENTIDADE, PERSONAS } from "@/content/personas";
@@ -14,7 +15,8 @@ import { ESTACOES_FITA, type EstacaoFita } from "@/lib/gap";
 import { expirou, type ConteudoProposta } from "@/lib/proposta";
 import { getStore } from "@/lib/store";
 import { tokenPlausivel } from "@/lib/token";
-import { CLIENTE, idiomaValido, txt } from "@/content/clientes";
+import { idiomaValido, txt, type Cliente } from "@/content/clientes";
+import { resolverCliente } from "@/lib/tenants";
 import { EstiloDosMundos } from "@/components/holding/estilo-mundos";
 
 export const dynamic = "force-dynamic";
@@ -66,11 +68,17 @@ export default async function PaginaProposta({
   const primeiroNome = c.nome.split(/\s+/)[0] ?? c.nome;
 
   const persona = c.persona;
+  // O cliente resolve pelo domínio de quem abre o link — na prática, o
+  // mesmo cliente que gerou a proposta, porque o link só circula no domínio
+  // dele. Se o token migrar de domínio um dia (não hoje), isto lê errado; a
+  // alternativa (gravar o cliente junto com o conteúdo) fica para quando
+  // existir esse caso de verdade.
+  const cliente = await resolverCliente((await headers()).get("host"));
   // Proposta da holding: o mundo da vertente em vez do ivory, a marca e a
   // oferta da configuração do cliente. A estrutura dos blocos é a mesma — o
   // desenho da proposta por vertente ainda não foi feito (handoff §9.7).
-  const vertente = c.vertente ? CLIENTE.vertentes.find((v) => v.id === c.vertente) : undefined;
-  const idiomaCliente = idiomaValido(locale) ? locale : CLIENTE.idiomaPadrao;
+  const vertente = c.vertente ? cliente.vertentes.find((v) => v.id === c.vertente) : undefined;
+  const idiomaCliente = idiomaValido(locale) ? locale : cliente.idiomaPadrao;
 
   const copyEstacoes = Object.fromEntries(
     ESTACOES_FITA.map((chave) => [
@@ -97,7 +105,7 @@ export default async function PaginaProposta({
   );
 
   return (
-    <Superficie acento={persona ? PERSONAS[persona].acento : undefined} vertente={vertente?.id}>
+    <Superficie acento={persona ? PERSONAS[persona].acento : undefined} vertente={vertente?.id} cliente={cliente}>
       <RegistrarAbertura token={token} />
       {/* Só o tema: a proposta não troca de língua (decidida no quiz). No
           mundo de uma vertente não há tema — as cores são as dela. */}
@@ -119,7 +127,7 @@ export default async function PaginaProposta({
           <p className="filete notacao mb-p4">
             <span>
               {vertente
-                ? `${CLIENTE.marca.nome} · ${txt(CLIENTE.marca.fraseMestra, idiomaCliente)}`
+                ? `${cliente.marca.nome} · ${txt(cliente.marca.fraseMestra, idiomaCliente)}`
                 : `${t("marca.nome")} · ${t("marca.assinatura")}`}
             </span>
           </p>
@@ -216,7 +224,7 @@ export default async function PaginaProposta({
         <Bloco notacao={t("proposta.b7.notacao")} titulo={t("proposta.b7.titulo")} indice={6}>
           {c.oferta?.nivel ? (
             <p className="notacao mb-p2">
-              {txt(CLIENTE.textos.proposta.nivel, idiomaCliente, { nivel: c.oferta.nivel })}
+              {txt(cliente.textos.proposta.nivel, idiomaCliente, { nivel: c.oferta.nivel })}
             </p>
           ) : null}
           {/* Sem oferta ("prefiro não dizer", ou nenhum produto cabe na faixa
@@ -224,12 +232,12 @@ export default async function PaginaProposta({
           {c.oferta === null ? (
             <>
               <p className="mb-p4" style={{ color: "var(--ink-2)" }}>
-                {txt(CLIENTE.textos.proposta.semOferta, idiomaCliente)}
+                {txt(cliente.textos.proposta.semOferta, idiomaCliente)}
               </p>
               <a
                 className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
-                href={`https://wa.me/${CLIENTE.contato.whatsapp}?text=${encodeURIComponent(
-                  txt(CLIENTE.textos.proposta.mensagemWhatsapp, idiomaCliente)
+                href={`https://wa.me/${cliente.contato.whatsapp}?text=${encodeURIComponent(
+                  txt(cliente.textos.proposta.mensagemWhatsapp, idiomaCliente)
                 )}`}
                 target="_blank"
                 rel="noreferrer"
@@ -241,13 +249,13 @@ export default async function PaginaProposta({
                   textDecoration: "none",
                 }}
               >
-                {txt(CLIENTE.textos.proposta.semOfertaCta, idiomaCliente)} <Seta />
+                {txt(cliente.textos.proposta.semOfertaCta, idiomaCliente)} <Seta />
               </a>
             </>
           ) : (
           <Oferta
             token={token}
-            whatsapp={vertente ? CLIENTE.contato.whatsapp : CONTATO.whatsapp}
+            whatsapp={vertente ? cliente.contato.whatsapp : CONTATO.whatsapp}
             textos={{
               produto: c.oferta?.nome ?? "",
               parcelamentoNota: t("proposta.b7.parcelamentoNota", {
@@ -267,7 +275,7 @@ export default async function PaginaProposta({
               seguranca: t("proposta.b7.seguranca"),
               mockAviso: t("proposta.b7.mockAviso"),
               mensagemWhatsapp: vertente
-                ? txt(CLIENTE.textos.proposta.mensagemWhatsapp, idiomaCliente)
+                ? txt(cliente.textos.proposta.mensagemWhatsapp, idiomaCliente)
                 : t("whatsapp.mensagem"),
             }}
           />
@@ -324,11 +332,13 @@ function Superficie({
   children,
   acento,
   vertente,
+  cliente,
 }: {
   children: React.ReactNode;
   acento?: string;
   /** Proposta da holding: os tokens do mundo dela, gerados da configuração. */
   vertente?: string;
+  cliente?: Cliente;
 }) {
   return (
     <div
@@ -342,7 +352,7 @@ function Superficie({
         } as React.CSSProperties
       }
     >
-      {vertente ? <EstiloDosMundos /> : null}
+      {vertente && cliente ? <EstiloDosMundos cliente={cliente} /> : null}
       <Atmosfera />
       {children}
     </div>

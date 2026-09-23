@@ -1,4 +1,4 @@
-import { CLIENTE, txt, type Idioma } from "@/content/clientes";
+import { txt, type Cliente, type Idioma } from "@/content/clientes";
 
 /**
  * A logo do cliente: nome em caixa-alta espaçada com o degradê da
@@ -6,8 +6,8 @@ import { CLIENTE, txt, type Idioma } from "@/content/clientes";
  * institucionais; nas outras telas o nome aparece em Cormorant, na faixa.
  * Entra por opacity+translateY (e fica parada sob reduced-motion).
  */
-export function Logo({ idioma }: { idioma: Idioma }) {
-  const { nome, fraseMestra, logo } = CLIENTE.marca;
+export function Logo({ idioma, cliente }: { idioma: Idioma; cliente: Cliente }) {
+  const { nome, fraseMestra, logo } = cliente.marca;
   const passo = 100 / (logo.degrade.length - 1);
   const degrade = logo.degrade.map((cor, i) => `${cor} ${Math.round(i * passo)}%`).join(", ");
   return (

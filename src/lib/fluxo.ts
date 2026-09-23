@@ -440,7 +440,7 @@ export function escolherOferta(
   const piso = opcao.piso;
   const cabem = cliente.produtos.filter((p) => {
     const preco = p.preco[moeda];
-    return p.vertente === vertenteId && preco !== null && preco <= piso;
+    return p.publicado && p.vertente === vertenteId && preco !== null && preco <= piso;
   });
   if (!cabem.length) return null;
   return cabem.reduce((maior, p) => ((p.preco[moeda] ?? 0) > (maior.preco[moeda] ?? 0) ? p : maior));
