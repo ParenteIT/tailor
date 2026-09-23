@@ -1,9 +1,11 @@
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
 import type { Metadata } from "next";
 import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
-import { CLIENTE, idiomaValido, txt } from "@/content/clientes";
+import { idiomaValido, txt } from "@/content/clientes";
+import { resolverCliente } from "@/lib/tenants";
 import { EstiloDosMundos } from "@/components/holding/estilo-mundos";
 
 export function generateStaticParams() {
@@ -16,10 +18,11 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>;
 }): Promise<Metadata> {
   const { locale } = await params;
-  const idioma = idiomaValido(locale) ? locale : CLIENTE.idiomaPadrao;
+  const cliente = await resolverCliente((await headers()).get("host"));
+  const idioma = idiomaValido(locale) ? locale : cliente.idiomaPadrao;
   return {
-    title: txt(CLIENTE.textos.meta.titulo, idioma),
-    description: txt(CLIENTE.textos.meta.descricao, idioma),
+    title: txt(cliente.textos.meta.titulo, idioma),
+    description: txt(cliente.textos.meta.descricao, idioma),
   };
 }
 
@@ -34,13 +37,14 @@ export default async function LocaleLayout({
   if (!hasLocale(routing.locales, locale)) notFound();
 
   setRequestLocale(locale);
+  const cliente = await resolverCliente((await headers()).get("host"));
 
   return (
     <NextIntlClientProvider>
       {/* Os controles do topo agora são de cada página: o diagnóstico da
           holding só tem idioma (os mundos têm cor própria, validada para
           contraste); o modo confirmação legado mantém idioma e tema. */}
-      <EstiloDosMundos />
+      <EstiloDosMundos cliente={cliente} />
       {children}
     </NextIntlClientProvider>
   );
