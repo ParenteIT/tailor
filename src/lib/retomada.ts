@@ -7,6 +7,14 @@ import {
   etapaCompleta,
   type Respostas,
 } from "@/lib/quiz-state";
+import type { Cliente } from "@/content/clientes/esquema";
+import {
+  ramoCompleto,
+  sanearRespostas as sanearRespostasHolding,
+  telaCompleta,
+  telasDe,
+  type RespostasHolding,
+} from "@/lib/fluxo";
 
 /**
  * Retomada do molde — o estado do quiz guardado no aparelho dela.
@@ -196,5 +204,141 @@ export function limparMolde(): void {
     store.removeItem(CHAVE);
   } catch {
     /* melhor-esforço */
+  }
+}
+
+/* ==========================================================================
+   Retomada do diagnóstico da holding
+   ==========================================================================
+   Chaves próprias, com a versão do roteiro e o cliente dentro: um molde do
+   quiz de personas (`tailor:molde:v1`) nunca é lido aqui, e um molde de outra
+   versão do roteiro é descartado inteiro — respostas a perguntas que ela
+   nunca viu não podem virar escolhas da cena nova.
+   ========================================================================= */
+
+const CHAVE_HOLDING = "tailor:holding:v2";
+const CHAVE_HOLDING_SESSAO = "tailor:holding:sessao:v2";
+
+export interface MoldeHolding {
+  cliente: string;
+  versaoFluxo: string;
+  indice: number;
+  respostas: RespostasHolding;
+  leadId: string | null;
+  moeda: Moeda;
+  /** Só depois do gate: o link da proposta já gerada. */
+  urlProposta: string | null;
+}
+
+function indiceHoldingSeguro(
+  cliente: Cliente,
+  r: RespostasHolding,
+  pedido: number,
+  moeda: Moeda,
+  urlProposta: string | null
+): number {
+  const telas = telasDe(cliente, r);
+  const gate = telas.findIndex((t) => t.tipo === "gate");
+  // Depois do gate só volta quem tem a proposta na mão e o ramo inteiro
+  // respondido; "montando" é passagem, reabre direto no fim.
+  if (gate > 0 && pedido > gate && urlProposta && ramoCompleto(cliente, r, moeda)) {
+    const tipo = telas[Math.min(pedido, telas.length - 1)]?.tipo;
+    return tipo === "montando" ? telas.length - 1 : Math.min(pedido, telas.length - 1);
+  }
+  const primeiraIncompleta = telas.findIndex((t) => !telaCompleta(cliente, t, r, moeda));
+  const teto = gate > 0 ? gate : telas.length - 1;
+  const alcancavel = primeiraIncompleta === -1 ? teto : primeiraIncompleta;
+  return Math.max(0, Math.min(pedido, alcancavel, teto));
+}
+
+export function interpretarMoldeHolding(
+  cru: string,
+  cliente: Cliente,
+  moeda: Moeda,
+  daAba: boolean
+): MoldeHolding | null {
+  let dados: Record<string, unknown>;
+  try {
+    dados = JSON.parse(cru) as Record<string, unknown>;
+  } catch {
+    return null;
+  }
+  if (typeof dados !== "object" || dados === null) return null;
+  if (dados.cliente !== cliente.id || dados.versaoFluxo !== cliente.versaoFluxo) return null;
+  // Valores foram declarados numa moeda: noutra, as réguas mudam de sentido.
+  if (dados.moeda !== moeda) return null;
+
+  const respostas = sanearRespostasHolding(cliente, dados.respostas, moeda);
+  const url =
+    daAba && typeof dados.urlProposta === "string" && dados.urlProposta.startsWith("/p/")
+      ? dados.urlProposta
+      : null;
+  const pedido = typeof dados.indice === "number" ? Math.trunc(dados.indice) : 0;
+  const indice = indiceHoldingSeguro(cliente, respostas, pedido, moeda, url);
+  if (!daAba && indice < 1) return null;
+
+  return {
+    cliente: cliente.id,
+    versaoFluxo: cliente.versaoFluxo,
+    indice,
+    respostas,
+    leadId: typeof dados.leadId === "string" ? dados.leadId : null,
+    moeda,
+    urlProposta: indice > telasDe(cliente, respostas).findIndex((t) => t.tipo === "gate") ? url : null,
+  };
+}
+
+export function lerMoldeHolding(cliente: Cliente, moeda: Moeda): MoldeHolding | null {
+  for (const [store, chave, daAba] of [
+    [armazenamentoDaAba(), CHAVE_HOLDING_SESSAO, true],
+    [armazenamento(), CHAVE_HOLDING, false],
+  ] as const) {
+    if (!store) continue;
+    try {
+      const cru = store.getItem(chave);
+      const molde = cru ? interpretarMoldeHolding(cru, cliente, moeda, daAba) : null;
+      if (molde) return molde;
+    } catch {
+      /* melhor-esforço */
+    }
+  }
+  return null;
+}
+
+/**
+ * Aparelho (entre visitas) só até o gate; a aba guarda também o pós-gate,
+ * para a troca de idioma não jogá-la de volta à tela 1. WhatsApp e e-mail
+ * nunca vão para o disco.
+ */
+export function guardarMoldeHolding(molde: MoldeHolding): void {
+  const semContato = {
+    ...molde,
+    respostas: { ...molde.respostas, whatsapp: "", email: "" },
+  };
+  try {
+    armazenamentoDaAba()?.setItem(CHAVE_HOLDING_SESSAO, JSON.stringify(semContato));
+  } catch {
+    /* melhor-esforço */
+  }
+  try {
+    const store = armazenamento();
+    if (!store) return;
+    if (molde.urlProposta) store.removeItem(CHAVE_HOLDING);
+    else store.setItem(CHAVE_HOLDING, JSON.stringify({ ...semContato, urlProposta: null }));
+  } catch {
+    /* quota cheia ou storage bloqueado */
+  }
+}
+
+export function limparMoldeHolding(): void {
+  for (const [store, chave] of [
+    [armazenamento(), CHAVE_HOLDING],
+    [armazenamentoDaAba(), CHAVE_HOLDING_SESSAO],
+  ] as const) {
+    try {
+      store?.removeItem(chave);
+    } catch {
+      /* melhor-esforço */
+    }
   }
 }

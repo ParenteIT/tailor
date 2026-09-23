@@ -45,7 +45,7 @@ const pilula: CSSProperties = {
     `useLocale`/`useRouter` (next-intl) exigem `NextIntlClientProvider`, e a
     proposta (`p/[token]`) não tem um — hook não pode ser condicional, então é
     o componente inteiro que deixa de montar. */
-function SeletorIdioma({ rotulo }: { rotulo: string }) {
+export function SeletorIdioma({ rotulo }: { rotulo: string }) {
   const atual = useLocale();
   const pathname = usePathname();
   const router = useRouter();

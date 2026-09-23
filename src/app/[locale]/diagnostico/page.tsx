@@ -1,5 +1,7 @@
+import { notFound } from "next/navigation";
 import { setRequestLocale } from "next-intl/server";
-import { Quiz } from "@/components/quiz";
+import { idiomaValido } from "@/content/clientes";
+import { QuizHolding } from "@/components/holding/quiz-holding";
 
 export default async function Diagnostico({
   params,
@@ -7,6 +9,7 @@ export default async function Diagnostico({
   params: Promise<{ locale: string }>;
 }) {
   const { locale } = await params;
+  if (!idiomaValido(locale)) notFound();
   setRequestLocale(locale);
-  return <Quiz />;
+  return <QuizHolding idioma={locale} />;
 }

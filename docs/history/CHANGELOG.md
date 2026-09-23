@@ -2915,3 +2915,120 @@ assinatura da Renilza.
 `AGENTS.md` e o protótipo publicado. A regra "nenhum preço fora de
 `src/content/config.ts`" também segue como está: mudar a regra é decisão do
 Willian, registrada como pendência.
+
+## 23/09/2026 — Diagnóstico da holding implementado (handoff §9, etapas 1–10)
+
+Worktree `claude/brave-hermann-42e1da`. Base: o staged do checkout principal
+(`develop`, com `docs/holding/` e a Fase 0), aplicado aqui antes de começar.
+Tudo `git add`, nada commitado.
+
+**Quatro decisões do Willian nesta sessão**, pedidas antes de escrever o fluxo:
+1. **Inglês sem números até ele definir.** Faixas de investimento e réguas em
+   USD ficam `null` na configuração; enquanto forem, nenhum ramo abre em EN e
+   `/en/diagnostico` mostra "ainda não abriu neste idioma" com o link para PT.
+2. **Regra da oferta:** piso = limite inferior da faixa; em "Até X" o piso é
+   X. Entre os produtos da vertente que cabem, o mais alto. Preços em negrito
+   do planejamento (20–22/09) entram na configuração só como referência da
+   regra; pendentes (Alta-Costura, Dossiê Digital) ficam sem preço e nunca
+   são ofertados. Na tela, o preço continua vindo da env de checkout, senão ◆.
+3. **Tela final:** o gate gera a proposta `/p/[token]` como antes; "Continuar
+   no WhatsApp" abre o número da Renilza com o nome dela e o link já na
+   mensagem.
+4. **Modo confirmação fica no legado.** `/diagnostico/c/[token]` segue no
+   quiz de personas, intocado; `/diagnostico` é o fluxo novo.
+
+**White label — a fronteira.** `src/content/clientes/esquema.ts` (Zod) +
+`renilza.ts` + loader `index.ts`. Marca, logo, cores de cada mundo, vertentes,
+perguntas, faixas, produtos, preços de referência e todos os textos do
+diagnóstico (EN e PT) vêm da configuração; os componentes não têm uma linha de
+copy. O esquema recusa na carga: cor fora de `#rrggbb`/`rgba()`/`linear-gradient`
+estreito (vira CSS gerado no servidor), texto sem um dos idiomas, ids
+repetidos, medida que não cobre os papéis da conta e **ramo com mais de 9
+telas até o gate (C1 na carga, além do teste)**. Cliente ativo por
+`NEXT_PUBLIC_TAILOR_CLIENTE` (padrão `renilza`). Sem banco nem painel.
+
+**Fluxo** (`src/lib/fluxo.ts`, o mesmo módulo no navegador e no servidor):
+nome → cena → 6 perguntas do ramo → gate → prazo → montando → fim. Entrada
+direta `/[locale]/v/<vertente>` pula a cena (8 telas). Trocar de cena zera as
+respostas do ramo (ids como `frase`/`medida` existem nos três mundos). A
+proposta é pedida no gate e montada enquanto ela responde o prazo; o fim só
+abre quando ela existe, e erro devolve ao gate sem perder nada.
+
+**Tipos de pergunta genéricos** (`components/holding/perguntas.tsx`):
+escolha, aberta (texto + o áudio de sempre, `BotaoAudio`/`useGravador`),
+medida (réguas + conta via `calcularGap`, a mesma aritmética da proposta),
+palavras, faixa. **Mundos** por `[data-vertente]`: `lib/mundos-css.ts` gera as
+custom properties da configuração (e preenche os tokens antigos, para a
+proposta e as primitivas herdarem o mundo); `app/holding.css` só lê `--v-*` e
+aplica o gesto por `[data-gesto]` (contorno, fio, preenchimento, onda).
+**Figuras** do catálogo (`figuras.tsx`): agulha, templo, toque — só
+transform/opacity, nascem uma casa atrás e andam (retomada visual).
+Desktop ≥1024px: painel persistente (nome, passos, figura grande) + folha.
+
+**Servidor.** `/api/leads` e `/api/proposal` aceitam `versao: 2`; o corpo
+antigo segue para o modo confirmação. As respostas são revalidadas contra a
+configuração (opção forjada, régua fora da faixa, cena inexistente e ramo
+fechado na moeda respondem 400 — conferido por requisição), e o gate exige o
+ramo inteiro respondido. Sem migração: frase → `q3_unica_coisa`, medidas nas
+colunas de sempre (as geradas do gap valem), prazo → `q8`, faixa → `q9`;
+vertente, cena, ramo e "leitura manual" (cena livre) em `respostas_raw`.
+`montarPropostaHolding` monta o diagnóstico com as respostas legíveis e a
+oferta pela regra acima; `checkout.ts` aceita produto da configuração (env
+`PRECO_<ID>_CENTAVOS`, ex. `PRECO_DOSSIE_IMAGEM_CENTAVOS` — de propósito não
+herda a env do Dossiê antigo, que guardava outro preço).
+
+**Proposta por vertente:** mesma estrutura, com os tokens do mundo dela,
+assinatura da configuração, "Para quem é: <nível>" na oferta, e sem produto
+("prefiro não dizer" ou nada cabe) um convite a conversar. **A fita métrica
+sai da proposta da holding** (era a esteira antiga Jornada → Dossiê → Prisma,
+que a holding desmembrou) e o cross-sell Hotmart também, até existir o
+desenho por vertente.
+
+**EN padrão, francês fora:** `routing` (`en`, `pt`), `messages/fr.json`
+removido, bandeira e mapas limpos. **Bug achado no caminho:** o matcher do
+middleware excluía tudo que começa com `p` para pular `/p/…` — inclusive
+`/pt/…`. Enquanto o padrão era pt ninguém via; com en, a página em PT abria
+com o seletor em EN. Corrigido para `p/`.
+
+**Retomada** com chave nova (`tailor:holding:v2`), cliente e versão do
+roteiro dentro: molde do quiz de personas nunca é lido; versão ou moeda
+diferente descarta; resposta com id desconhecido some; pós-gate só pela aba e
+com a proposta na mão. WhatsApp e e-mail nunca vão para o disco.
+
+**Verificação.** `tsc --noEmit` limpo; `vitest run` com 36 testes novos
+(`fluxo.test.ts`: configuração, troca de vertente, tipos de pergunta, faixa →
+oferta, ausência de orçamento, retomada, reduced-motion) e C1 por vertente em
+`conselho.test.ts` (escrito antes do roteamento). No dev server, os três
+ramos ponta a ponta em 390px (Imagem pela cena, Posicionamento com volta e
+troca de vertente, Estética pela entrada direta com "prefiro não dizer"),
+cena livre e os três mundos no desktop (1440px), `/en` fechado, modo
+confirmação legado 200, vertente inexistente 404. Zero erro de console.
+
+**O que fica para o Willian / a Renilza:**
+- Números em USD (faixas e réguas) — o EN abre quando existirem.
+- Tradução EN é nossa: leitura nativa antes de abrir. Nomes de produto em EN
+  ("Ready in 7 Days"…) são tradução provisória de nome de marca.
+- **Revisar as duas frases reescritas** (abaixo) na leitura com a Renilza.
+- Fonte Bodoni Moda não está no repo (baixar arquivo pede sua autorização);
+  até lá a logo cai nas Didone do sistema (Bodoni MT/Didot/Georgia).
+- Copy da proposta, prompt do diagnóstico e "O Método" ainda falam de
+  consultoria de imagem e vivem em `messages/` e `prompts/v1.ts` — fora da
+  configuração do cliente e deslocados para Posicionamento e Estética. É o
+  "desenho da proposta por vertente" do handoff §10.
+- Exceções de marca do handoff §6 continuam para registrar no BRAND-VISUAL §10.
+
+**Correções da auditoria A29 e do planejamento (mesmo dia, pedidas por outra
+sessão do Willian):** a frase de privacidade do gate e o apoio das réguas
+eram desmentidos pelo fluxo real ("sem compartilhar com terceiros" com o
+áudio indo para transcrição; "ninguém além de você vê estes números" com o
+autosave indo ao servidor). Reescritas para descrever o caminho real, sem
+"seus dados estão seguros". A pergunta de local da Estética ganhou a ordem
+que não sugere escada (casa das clientes / espaço só meu / sala alugada /
+minha casa / mais de um). A cena de Posicionamento volta citada só pela
+segunda metade ("…e continuo sendo a última lembrada.", campo
+`cena.citacao` na configuração). Placeholder do WhatsApp em PT avisa o "+"
+para número de fora do Brasil. Não apliquei, por serem decisão do Willian:
+o ajuste da regra "nenhum preço fora de `src/content/config.ts`" no
+CLAUDE.md (hoje os preços de referência da holding moram em
+`src/content/clientes/renilza.ts`) e o pedido de não deixar `docs/` staged
+neste worktree.

@@ -238,6 +238,7 @@ trabalho está no §9):
 
 ## 6. Higiene do repo e merge da branch da holding
 
+- **Inglês da holding fechado até existirem números em USD** (decisão do Willian, 23/09): faixas de investimento e réguas por vertente ficam `null` em `src/content/clientes/renilza.ts`; enquanto forem, nenhum ramo abre em EN.
 - **Regra de preço do `CLAUDE.md` × `renilza.ts` — decisão do Willian,
   obrigatória antes do merge.** O `CLAUDE.md` diz "Nenhum preço fora de
   `src/content/config.ts`"; o HANDOFF §1 põe os preços na configuração do
