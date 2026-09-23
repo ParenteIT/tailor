@@ -65,3 +65,8 @@ deno.lock
 sobmedida.renilzamiranda.com.md
 sobmedida.renilzamiranda.com.json
 sobmedida.renilzamiranda.com-viewport.jpeg
+
+# Ferramentas locais (impeccable para Copilot; binário de 14 MB)
+.github/agents/
+.github/hooks/
+.github/skills/
