@@ -56,3 +56,17 @@ next-env.d.ts
 
 # Gerado pelo edge-bundler do Netlify durante o deploy
 deno.lock
+
+# Saída da skill /taste (auditoria de UI contra o site em produção) — artefato
+# de análise, não código do produto. Decisão registrada em 18/09/2026
+# (docs/history/CHANGELOG.md): fica local, nunca commitado. Reorganizada em
+# .taste/ (19/09/2026) para não poluir a raiz — o padrão casa por nome de
+# arquivo, então continua ignorada em qualquer subpasta.
+sobmedida.renilzamiranda.com.md
+sobmedida.renilzamiranda.com.json
+sobmedida.renilzamiranda.com-viewport.jpeg
+
+# Ferramentas locais (impeccable para Copilot; binário de 14 MB)
+.github/agents/
+.github/hooks/
+.github/skills/

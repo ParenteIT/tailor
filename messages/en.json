@@ -70,24 +70,24 @@
       "carla": "And where did that gap show most?"
     },
     "situacoes": {
-      "patricia": [
-        "In front of the closet, running late, changing clothes three times",
-        "At an event where I didn't know what was appropriate",
-        "In a photo someone posted without telling me",
-        "On an ordinary day, just the usual tiredness of always looking the same"
-      ],
-      "camila": [
-        "In a meeting where I knew more and they spoke to someone else",
-        "On a proposal I lost to someone less prepared",
-        "An invitation that never came, and I found out later",
-        "On a project where my work shone and I didn't"
-      ],
-      "carla": [
-        "When a patient compared my price with someone who delivers less",
-        "In a photo of the office that didn't look like my standard",
-        "At a conference where colleagues with lesser results had more presence",
-        "When I realised my image didn't back up my price increase"
-      ]
+      "patricia": {
+        "s1": "In front of the closet, running late, changing clothes three times",
+        "s2": "At an event where I didn't know what was appropriate",
+        "s3": "In a photo someone posted without telling me",
+        "s4": "On an ordinary day, just the usual tiredness of always looking the same"
+      },
+      "camila": {
+        "s1": "In a meeting where I knew more and they spoke to someone else",
+        "s2": "On a proposal I lost to someone less prepared",
+        "s3": "An invitation that never came, and I found out later",
+        "s4": "On a project where my work shone and I didn't"
+      },
+      "carla": {
+        "s1": "When a patient compared my price with someone who delivers less",
+        "s2": "In a photo of the office that didn't look like my standard",
+        "s3": "At a conference where colleagues with lesser results had more presence",
+        "s4": "When I realised my image didn't back up my price increase"
+      }
     },
     "outraSituacao": "It was something else",
     "outraSituacaoPlaceholder": "Tell me in one line."
@@ -157,23 +157,23 @@
   },
   "q7": {
     "titulo": "What have you already tried to fix this?",
-    "opcoes": [
-      "I bought clothes and new things on my own",
-      "I followed ready-made tips from influencers",
-      "I've considered therapy or self-esteem work",
-      "I've never tried anything structured"
-    ],
+    "opcoes": {
+      "compras": "I bought clothes and new things on my own",
+      "influenciadoras": "I followed ready-made tips from influencers",
+      "autoestima": "I've considered therapy or self-esteem work",
+      "nada": "I've never tried anything structured"
+    },
     "outro": "Other",
     "outroPlaceholder": "What was it?"
   },
   "q8": {
     "titulo": "By when do you want this sorted?",
-    "opcoes": [
-      "I want to start this week",
-      "I want to sort it in the next 2 to 4 weeks",
-      "I want to sort it this quarter",
-      "No rush, just gathering information for now"
-    ]
+    "opcoes": {
+      "semana": "I want to start this week",
+      "quatroSemanas": "I want to sort it in the next 2 to 4 weeks",
+      "trimestre": "I want to sort it this quarter",
+      "semPressa": "No rush, just gathering information for now"
+    }
   },
   "q9": {
     "titulo": {
