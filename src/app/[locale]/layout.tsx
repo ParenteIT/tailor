@@ -1,11 +1,26 @@
 import { notFound } from "next/navigation";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import type { Metadata } from "next";
+import { setRequestLocale } from "next-intl/server";
 import { routing } from "@/i18n/routing";
-import { ControlesTopo } from "@/components/controles-topo";
+import { CLIENTE, idiomaValido, txt } from "@/content/clientes";
+import { EstiloDosMundos } from "@/components/holding/estilo-mundos";
 
 export function generateStaticParams() {
   return routing.locales.map((locale) => ({ locale }));
+}
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const idioma = idiomaValido(locale) ? locale : CLIENTE.idiomaPadrao;
+  return {
+    title: txt(CLIENTE.textos.meta.titulo, idioma),
+    description: txt(CLIENTE.textos.meta.descricao, idioma),
+  };
 }
 
 export default async function LocaleLayout({
@@ -20,20 +35,12 @@ export default async function LocaleLayout({
 
   setRequestLocale(locale);
 
-  const t = await getTranslations({ locale, namespace: "controles" });
-
   return (
     <NextIntlClientProvider>
-      {/* Pílulas de idioma e tema no topo, no fluxo da página (não fixas) —
-          nunca mais sobre o texto das opções. */}
-      <ControlesTopo
-        textos={{
-          idioma: t("idioma"),
-          tema: t("tema"),
-          claro: t("claro"),
-          escuro: t("escuro"),
-        }}
-      />
+      {/* Os controles do topo agora são de cada página: o diagnóstico da
+          holding só tem idioma (os mundos têm cor própria, validada para
+          contraste); o modo confirmação legado mantém idioma e tema. */}
+      <EstiloDosMundos />
       {children}
     </NextIntlClientProvider>
   );

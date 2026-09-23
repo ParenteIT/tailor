@@ -7,7 +7,15 @@ import {
   normalizarWhatsapp,
   whatsappValido,
 } from "@/lib/quiz-state";
-import { calcularExpiracao, montarProposta } from "@/lib/proposta";
+import { calcularExpiracao, montarProposta, montarPropostaHolding } from "@/lib/proposta";
+import { CLIENTE, moedaDe } from "@/content/clientes";
+import { emailValido as emailValidoHolding, ramoCompleto } from "@/lib/fluxo";
+import {
+  CorpoPropostaHolding,
+  dadosDasRespostas,
+  ehCorpoDaHolding,
+  validarRespostas,
+} from "@/lib/holding-servidor";
 import {
   dentroDoTetoGlobal,
   identificarChamador,
@@ -72,6 +80,8 @@ export async function POST(req: Request) {
   } catch {
     return NextResponse.json({ erro: "json_invalido" }, { status: 400 });
   }
+
+  if (ehCorpoDaHolding(bruto)) return propostaDaHolding(bruto);
 
   const analise = Corpo.safeParse(bruto);
   if (!analise.success) {
@@ -153,6 +163,64 @@ export async function POST(req: Request) {
     });
   } catch (erro) {
     console.error("[tailor] falha ao gerar proposta", erro);
+    return NextResponse.json({ erro: "falha_ao_gerar" }, { status: 500 });
+  }
+}
+
+/**
+ * Gate do diagnóstico da holding. Tudo o que o navegador já checou é refeito:
+ * forma das respostas contra a configuração, ramo inteiro respondido, nome,
+ * WhatsApp e e-mail. Só então grava e monta a proposta.
+ */
+async function propostaDaHolding(bruto: unknown) {
+  const corpo = CorpoPropostaHolding.safeParse(bruto);
+  if (!corpo.success) {
+    return NextResponse.json({ erro: "corpo_invalido", detalhes: corpo.error.issues }, { status: 400 });
+  }
+  const { leadId, nome, whatsapp, email, idioma } = corpo.data;
+  const validadas = validarRespostas(corpo.data.respostas, idioma);
+  if (!validadas.ok) {
+    return NextResponse.json({ erro: "respostas_invalidas", detalhes: validadas.detalhes }, { status: 400 });
+  }
+  const respostas = { ...validadas.respostas, nome, whatsapp, email: email ?? "" };
+  if (
+    !nomeValido(nome) ||
+    !whatsappValido(whatsapp) ||
+    !emailValidoHolding(email ?? "") ||
+    !ramoCompleto(CLIENTE, respostas, moedaDe(CLIENTE, idioma))
+  ) {
+    return NextResponse.json({ erro: "gate_invalido" }, { status: 400 });
+  }
+
+  const store = getStore();
+  try {
+    const id = await store.upsertLead(leadId ?? null, {
+      persona: null,
+      nome: nome.trim(),
+      whatsapp: normalizarWhatsapp(whatsapp),
+      email: email?.trim() || null,
+      idioma,
+      origem: "quiz_frio",
+    });
+    await store.salvarRespostas(id, dadosDasRespostas(respostas, idioma));
+
+    const conteudo = await montarPropostaHolding({ cliente: CLIENTE, respostas, idioma });
+    const token = gerarTokenProposta();
+    const proposta = await store.criarProposta(
+      id,
+      token,
+      conteudo as unknown as Record<string, unknown>,
+      calcularExpiracao()
+    );
+
+    return NextResponse.json({
+      leadId: id,
+      token: proposta.token,
+      url: `/p/${proposta.token}`,
+      expiraEm: proposta.expiraEm,
+    });
+  } catch (erro) {
+    console.error("[tailor] falha ao gerar proposta da holding", erro);
     return NextResponse.json({ erro: "falha_ao_gerar" }, { status: 500 });
   }
 }

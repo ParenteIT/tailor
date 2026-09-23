@@ -85,15 +85,13 @@ export const VALIDADE_PROPOSTA_HORAS = 72;
  * muda todo dia — e o princípio do produto é que nenhum número exibido venha
  * de fora do que a pessoa digitou. O idioma traduz o texto, não o dinheiro.
  *
- * FR segue USD junto do EN por ser o mesmo público internacional. Se a Renilza
- * abrir a França especificamente, virar EUR é esta linha.
+ * O francês saiu em 22/09/2026 (handoff da holding §9.9).
  */
 export type Moeda = "BRL" | "USD";
 
 export const MOEDA_POR_IDIOMA: Record<string, Moeda> = {
   pt: "BRL",
   en: "USD",
-  fr: "USD",
 };
 
 export function moedaDoIdioma(idioma: string | undefined): Moeda {

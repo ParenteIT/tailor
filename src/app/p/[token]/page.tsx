@@ -14,6 +14,8 @@ import { ESTACOES_FITA, type EstacaoFita } from "@/lib/gap";
 import { expirou, type ConteudoProposta } from "@/lib/proposta";
 import { getStore } from "@/lib/store";
 import { tokenPlausivel } from "@/lib/token";
+import { CLIENTE, idiomaValido, txt } from "@/content/clientes";
+import { EstiloDosMundos } from "@/components/holding/estilo-mundos";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +23,6 @@ export const dynamic = "force-dynamic";
 const LOCALE_DATA: Record<string, string> = {
   pt: "pt-BR",
   en: "en-US",
-  fr: "fr-FR",
 };
 
 // C6 — a proposta carrega nome, WhatsApp e os números declarados de uma pessoa.
@@ -64,13 +65,20 @@ export default async function PaginaProposta({
 
   const primeiroNome = c.nome.split(/\s+/)[0] ?? c.nome;
 
+  const persona = c.persona;
+  // Proposta da holding: o mundo da vertente em vez do ivory, a marca e a
+  // oferta da configuração do cliente. A estrutura dos blocos é a mesma — o
+  // desenho da proposta por vertente ainda não foi feito (handoff §9.7).
+  const vertente = c.vertente ? CLIENTE.vertentes.find((v) => v.id === c.vertente) : undefined;
+  const idiomaCliente = idiomaValido(locale) ? locale : CLIENTE.idiomaPadrao;
+
   const copyEstacoes = Object.fromEntries(
     ESTACOES_FITA.map((chave) => [
       chave,
       {
         nome: t(`proposta.b4.estacoes.${chave}`),
         ponte: t(`proposta.b4.pontes.${chave}`),
-        texto: t(`proposta.b4.copy.${c.persona}.${chave}`),
+        texto: persona ? t(`proposta.b4.copy.${persona}.${chave}`) : "",
       } satisfies CopyEstacao,
     ])
   ) as Record<EstacaoFita, CopyEstacao>;
@@ -89,25 +97,30 @@ export default async function PaginaProposta({
   );
 
   return (
-    <Superficie acento={PERSONAS[c.persona]?.acento}>
+    <Superficie acento={persona ? PERSONAS[persona].acento : undefined} vertente={vertente?.id}>
       <RegistrarAbertura token={token} />
-      {/* Só o tema: a proposta não troca de língua (decidida no quiz). */}
-      <ControlesTopo
-        mostrarIdioma={false}
-        textos={{
-          idioma: "",
-          tema: t("controles.tema"),
-          claro: t("controles.claro"),
-          escuro: t("controles.escuro"),
-        }}
-      />
+      {/* Só o tema: a proposta não troca de língua (decidida no quiz). No
+          mundo de uma vertente não há tema — as cores são as dela. */}
+      {vertente ? null : (
+        <ControlesTopo
+          mostrarIdioma={false}
+          textos={{
+            idioma: "",
+            tema: t("controles.tema"),
+            claro: t("controles.claro"),
+            escuro: t("controles.escuro"),
+          }}
+        />
+      )}
 
       <article className="mx-auto w-full max-w-[var(--container-leitura)] px-p4 py-p5 sm:px-p5 sm:py-p6">
         {/* B1 — Abertura / Espelho */}
         <header className="mb-p6">
           <p className="filete notacao mb-p4">
             <span>
-              {t("marca.nome")} · {t("marca.assinatura")}
+              {vertente
+                ? `${CLIENTE.marca.nome} · ${txt(CLIENTE.marca.fraseMestra, idiomaCliente)}`
+                : `${t("marca.nome")} · ${t("marca.assinatura")}`}
             </span>
           </p>
           <TituloRevelado
@@ -201,9 +214,40 @@ export default async function PaginaProposta({
 
         {/* B7 — Oferta */}
         <Bloco notacao={t("proposta.b7.notacao")} titulo={t("proposta.b7.titulo")} indice={6}>
+          {c.oferta?.nivel ? (
+            <p className="notacao mb-p2">
+              {txt(CLIENTE.textos.proposta.nivel, idiomaCliente, { nivel: c.oferta.nivel })}
+            </p>
+          ) : null}
+          {/* Sem oferta ("prefiro não dizer", ou nenhum produto cabe na faixa
+              dela): o próximo passo é conversa, nunca um preço presumido. */}
+          {c.oferta === null ? (
+            <>
+              <p className="mb-p4" style={{ color: "var(--ink-2)" }}>
+                {txt(CLIENTE.textos.proposta.semOferta, idiomaCliente)}
+              </p>
+              <a
+                className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
+                href={`https://wa.me/${CLIENTE.contato.whatsapp}?text=${encodeURIComponent(
+                  txt(CLIENTE.textos.proposta.mensagemWhatsapp, idiomaCliente)
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                style={{
+                  background: "var(--color-cta)",
+                  color: "var(--color-cta-ink)",
+                  borderRadius: "var(--radius-cta)",
+                  minHeight: 56,
+                  textDecoration: "none",
+                }}
+              >
+                {txt(CLIENTE.textos.proposta.semOfertaCta, idiomaCliente)} <Seta />
+              </a>
+            </>
+          ) : (
           <Oferta
             token={token}
-            whatsapp={CONTATO.whatsapp}
+            whatsapp={vertente ? CLIENTE.contato.whatsapp : CONTATO.whatsapp}
             textos={{
               produto: c.oferta?.nome ?? "",
               parcelamentoNota: t("proposta.b7.parcelamentoNota", {
@@ -222,12 +266,18 @@ export default async function PaginaProposta({
               ctaSecundario: t("proposta.b7.ctaSecundario"),
               seguranca: t("proposta.b7.seguranca"),
               mockAviso: t("proposta.b7.mockAviso"),
-              mensagemWhatsapp: t("whatsapp.mensagem"),
+              mensagemWhatsapp: vertente
+                ? txt(CLIENTE.textos.proposta.mensagemWhatsapp, idiomaCliente)
+                : t("whatsapp.mensagem"),
             }}
           />
+          )}
         </Bloco>
 
-        {/* O degrau de baixo, na Hotmart — só aparece se os links existirem. */}
+        {/* O degrau de baixo, na Hotmart — só aparece se os links existirem.
+            Fica fora da proposta da holding: Círculo e Jornada eram a escada
+            antiga, e a esteira por vertente ainda não tem cross-sell. */}
+        {vertente ? null : (
         <CrossSell
           itens={crossSellHotmart()}
           titulo={t("proposta.crossSell.titulo")}
@@ -243,6 +293,7 @@ export default async function PaginaProposta({
             },
           }}
         />
+        )}
 
         {/* C5 exibida como data, nunca como relógio: o §8 veta countdown. */}
         <footer className="mt-p6">
@@ -272,13 +323,16 @@ export default async function PaginaProposta({
 function Superficie({
   children,
   acento,
+  vertente,
 }: {
   children: React.ReactNode;
   acento?: string;
+  /** Proposta da holding: os tokens do mundo dela, gerados da configuração. */
+  vertente?: string;
 }) {
   return (
     <div
-      data-superficie="ivory"
+      {...(vertente ? { "data-vertente": vertente } : { "data-superficie": "ivory" })}
       className="min-h-svh"
       style={
         {
@@ -288,6 +342,7 @@ function Superficie({
         } as React.CSSProperties
       }
     >
+      {vertente ? <EstiloDosMundos /> : null}
       <Atmosfera />
       {children}
     </div>

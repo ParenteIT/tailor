@@ -30,16 +30,6 @@ export function Bandeira({ loc }: { loc: string }) {
       </svg>
     );
   }
-  if (loc === "fr") {
-    return (
-      <svg {...comum}>
-        <rect width="6" height="13" fill="#2b5faa" />
-        <rect x="6" width="6" height="13" fill="#f4f1ea" />
-        <rect x="12" width="6" height="13" fill="#c1443c" />
-        <rect width="18" height="13" {...moldura} />
-      </svg>
-    );
-  }
   if (loc !== "en") {
     // Idioma sem bandeira desenhada: quadro neutro, nunca a de outro país.
     // Para acrescentar uma língua: routing.ts, messages/<loc>.json,
@@ -80,6 +70,5 @@ export function Bandeira({ loc }: { loc: string }) {
 export const NOMES_IDIOMA: Record<string, string> = {
   pt: "Português",
   en: "English",
-  fr: "Français",
 };
 

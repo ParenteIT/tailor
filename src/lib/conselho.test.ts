@@ -10,6 +10,9 @@ import {
 import { PERSONAS } from "@/content/personas";
 import { calcularGap, dinheiro, escalaDaFita } from "@/lib/gap";
 import { ETAPAS, TELAS_ATE_O_GATE, etapaCompleta, RESPOSTAS_VAZIAS } from "@/lib/quiz-state";
+import { CLIENTE, carregarCliente, MAXIMO_TELAS_ATE_O_GATE } from "@/content/clientes";
+import { renilza } from "@/content/clientes/renilza";
+import { telasAteOGate, telasDoRamo } from "@/lib/fluxo";
 
 /**
  * As condições do Conselho de 13/08/2026 são restrição de produto, não
@@ -20,7 +23,44 @@ import { ETAPAS, TELAS_ATE_O_GATE, etapaCompleta, RESPOSTAS_VAZIAS } from "@/lib
  * 1.200 a uma régua de 5.000 (4,17×), acima do limite de 2–3×.
  */
 
-describe("C1 — no máximo 9 telas do início ao gate", () => {
+describe("C1 — no máximo 9 telas até o gate, em cada ramo da holding", () => {
+  it("o cliente tem pelo menos uma vertente para conferir", () => {
+    expect(CLIENTE.vertentes.length).toBeGreaterThan(0);
+    expect(MAXIMO_TELAS_ATE_O_GATE).toBe(9);
+  });
+
+  for (const vertente of CLIENTE.vertentes) {
+    it(`'${vertente.id}' pela cena: ≤ 9 telas, e o gate é a última delas`, () => {
+      expect(telasAteOGate(vertente, "cena")).toBeLessThanOrEqual(9);
+      const telas = telasDoRamo(vertente, "cena");
+      expect(telas.slice(0, telasAteOGate(vertente, "cena")).at(-1)?.tipo).toBe("gate");
+    });
+
+    it(`'${vertente.id}' pela entrada direta: uma tela a menos`, () => {
+      expect(telasAteOGate(vertente, "direta")).toBe(telasAteOGate(vertente, "cena") - 1);
+      expect(telasDoRamo(vertente, "direta").some((t) => t.tipo === "cena")).toBe(false);
+    });
+
+    it(`'${vertente.id}': prazo, montagem e fim vêm depois do gate`, () => {
+      const tipos = telasDoRamo(vertente, "cena").map((t) => t.tipo);
+      const gate = tipos.indexOf("gate");
+      for (const depois of ["prazo", "montando", "fim"] as const) {
+        expect(tipos.indexOf(depois)).toBeGreaterThan(gate);
+      }
+    });
+  }
+
+  it("um ramo com pergunta a mais nem carrega", () => {
+    const [primeira, ...resto] = renilza.vertentes;
+    const longa = {
+      ...primeira,
+      perguntas: [...primeira.perguntas, { ...primeira.perguntas[0], id: "extra" }],
+    };
+    expect(() => carregarCliente({ ...renilza, vertentes: [longa, ...resto] })).toThrow(/C1/);
+  });
+});
+
+describe("C1 — no máximo 9 telas do início ao gate (quiz legado do modo confirmação)", () => {
   it("o gate é a nona tela", () => {
     expect(TELAS_ATE_O_GATE).toBe(9);
     expect(TELAS_ATE_O_GATE).toBeLessThanOrEqual(9);
@@ -130,10 +170,10 @@ describe("aritmética do gap — só o que ela declarou", () => {
 });
 
 describe("moeda por idioma — BRL no pt-BR, USD no internacional", () => {
-  it("mapeia os três locales e cai em BRL no desconhecido", () => {
+  it("mapeia os dois locales e cai em BRL no desconhecido", () => {
     expect(moedaDoIdioma("pt")).toBe("BRL");
     expect(moedaDoIdioma("en")).toBe("USD");
-    expect(moedaDoIdioma("fr")).toBe("USD");
+    expect(moedaDoIdioma("fr")).toBe("BRL");
     expect(moedaDoIdioma(undefined)).toBe("BRL");
     expect(moedaDoIdioma("de")).toBe("BRL");
   });

@@ -2,7 +2,9 @@ import type { Metadata, Viewport } from "next";
 import localFont from "next/font/local";
 import { getLocale } from "next-intl/server";
 import { Atmosfera } from "@/components/atmosfera";
+import { CLIENTE, txt } from "@/content/clientes";
 import "./globals.css";
+import "./holding.css";
 
 /* O display vive atrás de --font-display (globals.css). BRAND-VISUAL §3.1-BIS
    já registra que Cormorant sai em setembro: a troca é este bloco e a linha
@@ -36,13 +38,10 @@ const hanken = localFont({
   display: "swap",
 });
 
+// Padrão de quem chega sem idioma; o layout de [locale] sobrepõe por língua.
 export const metadata: Metadata = {
-  title: "Renilza Miranda — seu diagnóstico de imagem",
-  // Espelha abertura.corpo: este texto é o preview do link no WhatsApp e na
-  // bio — a primeira tela do funil. "Seis passos" era a mesma promessa falsa
-  // que a auditoria de 14/08 removeu de dentro do app (o fluxo tem 9 peças).
-  description:
-    "Poucas perguntas, menos de três minutos. No final, um diagnóstico feito sob medida — não um resultado genérico de quiz.",
+  title: txt(CLIENTE.textos.meta.titulo, CLIENTE.idiomaPadrao),
+  description: txt(CLIENTE.textos.meta.descricao, CLIENTE.idiomaPadrao),
 };
 
 export const viewport: Viewport = {
