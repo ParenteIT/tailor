@@ -1,0 +1,1254 @@
+<title>Diagnóstico em Três Mundos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bodoni+Moda:ital,opsz,wght@0,6..96,400;0,6..96,500;1,6..96,400&family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;1,300;1,400&family=Hanken+Grotesk:wght@400;500&family=Jost:wght@400;500&display=swap">
+<style>
+:root {
+  color-scheme: dark;
+  --serif: "Cormorant Garamond", "Iowan Old Style", Georgia, serif;
+  --sans: "Hanken Grotesk", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --label: "Jost", "Hanken Grotesk", system-ui, sans-serif;
+  --ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --radius: 2px;
+  --radius-cta: 10px;
+}
+/* Mundos. A casa é o noir oficial do BRAND-VISUAL §2.1; cada vertente pinta o seu. */
+.w-casa { --bg: #141009; --card: #1E1812; --ink: #F6EFE1; --ink2: #A79E90; --line: #736A60; --acc: #F6EFE1; --acc-soft: rgba(246,239,225,.08); --gold: #C9A24C; --cta-bg: #F6EFE1; --cta-ink: #141009; --board: #141009; }
+.w-img  { --bg: #1C1229; --card: #27193A; --ink: #F6EFE1; --ink2: #B8ABBE; --line: #806C86; --acc: #C17B83; --acc-soft: rgba(193,123,131,.12); --gold: #C9A24C; --cta-bg: #EADBC8; --cta-ink: #1C1229; --board: #1C1229; --panel: #150D20; }
+.w-pos  { --bg: #111315; --card: #191B1E; --ink: #ECE6DA; --ink2: #9C978E; --line: #6C675F; --acc: #C8935E; --acc-soft: rgba(200,147,94,.16); --gold: #C8935E; --cobre: #C8935E; --cobre-grad: linear-gradient(135deg, #E3B888 0%, #C48A55 55%, #A8733F 100%); --fill: var(--cobre-grad); --r-cta: 999px; --cta-bg: var(--fill); --cta-ink: #111315; --board: #111315; --panel: #0C0D0F; }
+.w-pos[data-acabamento="regra"] { --fill: var(--cobre); --r-cta: 10px; }
+.w-est  { color-scheme: light; --bg: #F6EFE1; --card: #FFFBF4; --ink: #18231E; --ink2: #4A5650; --line: #6B7A72; --acc: #4A6D5B; --acc-soft: rgba(111,155,133,.18); --gold: #856828; --cta-bg: #2E4A3B; --cta-ink: #F6EFE1; --board: #ECE3D2; --panel: #2E4A3B; }
+
+* { box-sizing: border-box; }
+body { margin: 0; background: #141009; color: #F6EFE1; font-family: var(--sans); font-size: 16px; line-height: 1.6; }
+.wrap { max-width: 1180px; margin-inline: auto; padding-inline: 16px; }
+h1, h2, h3, h4 { font-family: var(--serif); font-weight: 300; margin: 0; letter-spacing: -.005em; text-wrap: balance; }
+p { margin: 0; }
+button { font: inherit; color: inherit; }
+.kicker { font-family: var(--label); font-weight: 500; font-size: .7rem; letter-spacing: .18em; text-transform: uppercase; color: var(--ink2); display: flex; align-items: center; gap: 12px; }
+.kicker::before { content: ""; width: 36px; height: 1px; background: var(--gold); flex: none; }
+.nota { font-family: var(--label); font-size: .68rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); }
+
+/* ---------- topo ---------- */
+.topo { padding-block: 56px 48px; border-bottom: 1px solid rgba(246,239,225,.12); }
+.assinatura { display: inline-flex; flex-direction: column; gap: 6px; }
+.assinatura::before { content: ""; width: 36px; height: 1px; background: #C9A24C; margin-bottom: 10px; }
+.assinatura b { font-family: var(--serif); font-weight: 300; font-size: 1.9rem; letter-spacing: -.02em; line-height: 1; }
+.assinatura span { font-family: var(--label); font-weight: 500; font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; color: #A79E90; }
+.topo h1 { font-size: clamp(2.2rem, 5.5vw, 3.6rem); line-height: 1.05; margin-top: 36px; max-width: 18ch; }
+.lede { color: #C9BFAF; max-width: 62ch; margin-top: 18px; font-size: 1.02rem; }
+.mudancas { margin-top: 32px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); gap: 24px; }
+.mudancas div { border-top: 1px solid rgba(246,239,225,.2); padding-top: 14px; }
+.mudancas b { display: block; font-family: var(--serif); font-weight: 400; font-size: 1.25rem; line-height: 1.2; margin-bottom: 6px; }
+.mudancas p { color: #A79E90; font-size: .92rem; }
+
+/* ---------- pranchas ---------- */
+.board { background: var(--board); color: var(--ink); padding-block: 64px; }
+.board-topo { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 16px 40px; }
+.board-topo h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); line-height: 1.08; margin-top: 12px; }
+.board-topo .tese { color: var(--ink2); max-width: 46ch; font-size: .96rem; }
+.telas { display: flex; flex-wrap: wrap; gap: 28px 32px; margin-top: 40px; align-items: flex-start; }
+.tela-bloco { display: flex; flex-direction: column; gap: 12px; width: min(100%, 300px); }
+.legenda-tela { font-family: var(--label); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); }
+.legenda-tela b { color: var(--ink); font-weight: 500; }
+.controle { display: flex; gap: 14px; flex-wrap: wrap; }
+.controle button { background: none; border: 0; padding: 6px 0; min-height: 32px; cursor: pointer; font-family: var(--label); font-size: .66rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); text-decoration: underline; text-underline-offset: 4px; }
+.controle button:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+
+/* ---------- aparelho ---------- */
+.phone { width: 100%; aspect-ratio: 300 / 632; border-radius: 40px; padding: 9px; background: #07060A; box-shadow: 0 0 0 1px rgba(255,255,255,.07) inset, 0 24px 48px -28px rgba(0,0,0,.7); }
+.w-est .phone { box-shadow: 0 0 0 1px rgba(0,0,0,.08) inset, 0 24px 48px -30px rgba(40,50,40,.45); }
+.screen { position: relative; height: 100%; border-radius: 32px; overflow: hidden; background: var(--bg); color: var(--ink); display: flex; flex-direction: column; padding: 30px 18px 18px; }
+.screen::before { content: ""; position: absolute; top: 8px; left: 50%; width: 76px; height: 20px; margin-left: -38px; border-radius: 12px; background: #07060A; }
+.screen .corpo { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; }
+.screen h3 { font-family: var(--serif); font-weight: 400; font-size: 1.42rem; line-height: 1.16; color: var(--ink); }
+.screen h3 em { font-style: italic; }
+.screen .apoio { font-size: .76rem; color: var(--ink2); line-height: 1.45; }
+.screen .kicker { font-size: .56rem; gap: 8px; }
+.screen .kicker::before { width: 24px; }
+.cta { margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 10px; min-height: 46px; width: 100%; border: 0; border-radius: var(--radius-cta); background: var(--cta-bg); color: var(--cta-ink); font-family: var(--label); font-weight: 500; font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; cursor: pointer; transition: opacity 180ms ease; }
+.cta[aria-disabled="true"] { opacity: .45; cursor: default; }
+.cta:focus-visible { outline: 2px solid var(--acc); outline-offset: 3px; }
+.seta { width: 16px; height: 8px; flex: none; }
+
+/* faixa = painel persistente comprimido */
+.faixa { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding-bottom: 12px; margin-bottom: 14px; border-bottom: 1px solid var(--acc-soft); }
+.faixa .nome { font-family: var(--serif); font-weight: 300; font-size: .98rem; letter-spacing: -.01em; line-height: 1; }
+.faixa .n { font-family: var(--label); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); margin-top: 4px; font-variant-numeric: tabular-nums; }
+.faixa svg { flex: none; overflow: visible; }
+
+/* opções */
+.opcoes { display: flex; flex-direction: column; gap: 7px; }
+.op { position: relative; display: flex; align-items: flex-start; gap: 10px; width: 100%; min-height: 44px; padding: 10px 11px; text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); cursor: pointer; font-family: var(--sans); font-size: .76rem; line-height: 1.38; color: var(--ink); overflow: hidden; }
+.op:focus-visible { outline: 2px solid var(--acc); outline-offset: 2px; }
+.op .radio { position: relative; flex: none; width: 15px; height: 15px; margin-top: 1px; border-radius: 50%; border: 1px solid var(--ink2); }
+.op .radio::after { content: ""; position: absolute; inset: 3px; border-radius: 50%; background: var(--acc); opacity: 0; transform: scale(.4); transition: opacity 180ms ease, transform 180ms var(--ease); }
+.op[aria-checked="true"] { border-color: var(--acc); }
+.op[aria-checked="true"] .radio { border-color: var(--acc); }
+.op[aria-checked="true"] .radio::after { opacity: 1; transform: scale(1); }
+.op .ic { flex: none; width: 22px; height: 22px; color: var(--ink2); margin-top: -2px; }
+.op[aria-checked="true"] .ic { color: var(--ink); }
+.w-casa .op[aria-checked="true"] { border-width: 1px; box-shadow: 0 0 0 1px var(--ink) inset; }
+
+/* gesto Imagem: o fio que se desenha sob a opção */
+.fio { position: absolute; left: 11px; right: 11px; bottom: 5px; height: 1px; background: var(--acc); transform: scaleX(0); transform-origin: left; transition: transform 360ms var(--ease); }
+.op[aria-checked="true"] .fio { transform: scaleX(1); }
+/* gesto Posicionamento: a régua de cobre que assenta à esquerda */
+.regua { position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--acc); transform: scaleY(0); transform-origin: bottom; transition: transform 420ms var(--ease); }
+.op[aria-checked="true"] .regua { transform: scaleY(1); }
+/* gesto Estética: o toque que revela */
+.toque { position: absolute; left: 50%; top: 50%; width: 15px; height: 15px; margin: -7.5px 0 0 -7.5px; border-radius: 50%; border: 1px solid var(--acc); opacity: 0; pointer-events: none; }
+.op.revela .toque { animation: revela 620ms var(--ease) forwards; }
+.op.revela .toque.t2 { animation-delay: 110ms; }
+@keyframes revela { 0% { opacity: .55; transform: scale(.5); } 100% { opacity: 0; transform: scale(2.6); } }
+
+/* campos do gate */
+.campo { display: flex; flex-direction: column; gap: 5px; }
+.campo label { font-family: var(--label); font-size: .54rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); }
+.campo input { width: 100%; min-height: 40px; padding: 0 10px; border-radius: var(--radius); border: 1px solid var(--line); background: var(--card); color: var(--ink); font-family: var(--sans); font-size: .76rem; }
+.campo input::placeholder { color: var(--ink2); }
+.campo input:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+.privacidade { font-size: .62rem; line-height: 1.45; color: var(--ink2); }
+.rodape-tela { font-family: var(--serif); font-style: italic; font-size: .82rem; color: var(--ink2); text-align: center; margin-top: 10px; }
+
+/* entrada da vertente depois da escolha na tela 2 */
+.screen .camada { transition: opacity 600ms var(--ease); }
+.screen.entrando .camada { opacity: 0; }
+
+/* ---------- Posicionamento: padrão da prancha ---------- */
+.w-pos .phone { background: #0B0B0C; box-shadow: 0 0 0 1px rgba(200,147,94,.55), 0 0 0 1px rgba(200,147,94,.25) inset, 0 24px 48px -28px rgba(0,0,0,.8); }
+.w-pos .cta { border-radius: var(--r-cta); }
+.w-pos .faixa-pos { border-bottom: 0; margin-bottom: 8px; padding-bottom: 0; }
+.progresso-pos { height: 2px; background: rgba(236,230,218,.12); border-radius: 2px; overflow: hidden; margin-bottom: 14px; }
+.progresso-pos i { display: block; height: 100%; background: var(--fill); transform-origin: left; transform: scaleX(.333); transition: transform 700ms var(--ease); }
+.templo { width: 64px; height: 54px; align-self: center; overflow: visible; }
+.templo .planta { fill: none; stroke: #3A3834; stroke-width: .7; stroke-dasharray: 2 2; }
+.templo .partes > * { fill: none; stroke: var(--cobre); stroke-width: 1.1; stroke-linejoin: round; transition: opacity 520ms var(--ease), transform 520ms var(--ease); }
+.templo .partes > .baixo { opacity: 0; transform: translateY(4px); }
+.w-pos .op-ic { align-items: center; padding: 11px 12px; gap: 12px; }
+.w-pos .op-ic > * { position: relative; z-index: 1; }
+.w-pos .op-ic::before { content: ""; position: absolute; inset: 0; background: var(--fill); opacity: 0; transition: opacity 240ms ease; }
+.w-pos .op-ic .ic { color: var(--cobre); width: 22px; height: 22px; margin: 0; }
+.w-pos .op-ic[aria-checked="true"] { border-color: transparent; color: #111315; }
+.w-pos .op-ic[aria-checked="true"]::before { opacity: 1; }
+.w-pos .op-ic[aria-checked="true"] .ic { color: #111315; }
+.w-pos .op-ic:focus-visible { outline-color: #ECE6DA; }
+.w-pos .desk .folha .linha.sel { background: var(--fill); color: #111315; border-color: transparent; }
+.w-pos .desk .mini-cta { border-radius: var(--r-cta); }
+.campo-linha { position: relative; }
+.campo-linha svg { position: absolute; left: 10px; top: 50%; width: 16px; height: 16px; margin-top: -8px; color: var(--cobre); }
+.campo-linha input { padding-left: 34px; }
+.acabamento { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; width: max-content; max-width: 100%; }
+.acabamento button { border: 0; background: none; cursor: pointer; min-height: 36px; padding: 0 14px; border-radius: 999px; font-family: var(--label); font-size: .64rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); }
+.acabamento button[aria-pressed="true"] { background: var(--cobre); color: #111315; }
+.acabamento button:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.nota-regra { font-size: .82rem; color: var(--ink2); }
+
+
+/* ---------- logo (pedido da Renilza: nome em estilo luxo, dourado em degradê) ---------- */
+.logo { display: inline-flex; flex-direction: column; align-items: center; gap: 10px; }
+.logo .nome-logo { font-family: "Bodoni Moda", "Didot", "Bodoni 72", Georgia, serif; font-weight: 400; font-size: 2.1rem; letter-spacing: .2em; text-transform: uppercase; line-height: 1; padding-left: .2em; background: linear-gradient(100deg, #9C7A30 0%, #D8B563 28%, #F1DFA6 50%, #D8B563 72%, #B08A3A 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.logo .filete-logo { width: 100%; height: 1px; background: linear-gradient(90deg, transparent, #D8B563 20%, #D8B563 80%, transparent); }
+.logo .sub-logo { font-family: var(--label); font-weight: 500; font-size: .6rem; letter-spacing: .32em; text-transform: uppercase; color: #B08A3A; padding-left: .32em; }
+.logo.pequena .nome-logo { font-size: 1.05rem; letter-spacing: .18em; }
+.logo.pequena .sub-logo { font-size: .42rem; letter-spacing: .28em; }
+.logo.entra .nome-logo, .logo.entra .sub-logo { animation: logoEntra 1100ms var(--ease) both; }
+.logo.entra .filete-logo { animation: filete 900ms var(--ease) 250ms both; transform-origin: center; }
+.logo.entra .sub-logo { animation-delay: 450ms; }
+@keyframes logoEntra { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+@keyframes filete { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+
+/* ---------- protótipo navegável ---------- */
+.proto-grid { display: grid; grid-template-columns: minmax(0, 330px) 1fr; gap: 40px; margin-top: 36px; align-items: start; }
+@media (max-width: 820px) { .proto-grid { grid-template-columns: 1fr; justify-items: center; } }
+.proto-phone { width: min(100%, 330px); }
+.proto-phone .phone { transition: box-shadow 600ms var(--ease); }
+.proto-phone .screen { transition: background-color 0ms; }
+.proto-phone .screen .miolo { display: flex; flex-direction: column; gap: 12px; flex: 1; min-height: 0; overflow-y: auto; scrollbar-width: none; }
+.proto-phone .screen .miolo::-webkit-scrollbar { display: none; }
+.proto-phone .miolo.vira { animation: vira 520ms var(--ease) both; }
+@keyframes vira { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
+.recibo { min-height: 1.3em; margin: -4px 0 0; font-family: var(--serif); font-style: italic; font-size: .92rem; color: var(--acc); text-align: center; opacity: 0; pointer-events: none; }
+.recibo.mostra { animation: recibo 1600ms var(--ease) both; }
+@keyframes recibo { 0% { opacity: 0; transform: translateY(6px); } 18% { opacity: 1; transform: none; } 75% { opacity: 1; } 100% { opacity: 0; transform: translateY(-4px); } }
+.meta-linha { font-family: var(--label); font-size: .54rem; letter-spacing: .14em; text-transform: uppercase; color: var(--acc); min-height: 1em; }
+.proto-phone textarea { width: 100%; min-height: 110px; resize: none; border-radius: var(--radius); border: 1px solid var(--line); background: var(--card); color: var(--ink); font-family: var(--sans); font-size: .8rem; line-height: 1.5; padding: 10px; }
+.proto-phone textarea:focus-visible { outline: 2px solid var(--acc); outline-offset: 1px; }
+.audio-conv { align-self: flex-start; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; background: none; border: 0; padding: 0; cursor: pointer; font-family: var(--label); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); }
+.regua-campo { display: grid; gap: 4px; }
+.regua-campo label { font-size: .74rem; color: var(--ink); line-height: 1.35; }
+.regua-campo output { font-family: var(--serif); font-size: 1.1rem; line-height: 1; color: var(--acc); font-variant-numeric: tabular-nums; }
+.regua-campo input[type=range] { width: 100%; accent-color: var(--acc); min-height: 24px; margin: 0; }
+.revela-conta { border-top: 1px solid var(--acc-soft); padding-top: 10px; font-size: .78rem; line-height: 1.5; color: var(--ink); opacity: 0; transform: translateY(6px); transition: opacity 600ms var(--ease), transform 600ms var(--ease); }
+.revela-conta.on { opacity: 1; transform: none; }
+.revela-conta b { font-family: var(--serif); font-weight: 400; font-size: 1.1rem; color: var(--acc); }
+.chips-p { display: flex; flex-wrap: wrap; gap: 8px; }
+.chip-p { min-height: 40px; padding: 0 14px; border-radius: 999px; border: 1px solid var(--line); background: var(--card); color: var(--ink); font-family: var(--serif); font-size: 1rem; cursor: pointer; }
+.chip-p[aria-pressed="true"] { border-color: var(--acc); box-shadow: 0 0 0 1px var(--acc) inset; }
+.w-pos .chip-p[aria-pressed="true"] { background: var(--fill); color: #111315; border-color: transparent; }
+.teaser { border-left: 2px solid var(--acc); padding: 4px 0 4px 12px; font-family: var(--serif); font-style: italic; font-size: .95rem; line-height: 1.35; color: var(--ink); }
+.montando p { font-family: var(--serif); font-style: italic; font-size: 1.05rem; color: var(--ink2); opacity: 0; transform: translateY(6px); transition: opacity 500ms var(--ease), transform 500ms var(--ease); }
+.montando p.on { opacity: 1; transform: none; color: var(--ink); }
+.pular { align-self: center; background: none; border: 0; min-height: 40px; cursor: pointer; font-family: var(--label); font-size: .56rem; letter-spacing: .14em; text-transform: uppercase; color: var(--ink2); text-decoration: underline; text-underline-offset: 4px; }
+.espelho-fim { display: grid; gap: 8px; font-size: .76rem; color: var(--ink2); }
+.espelho-fim b { color: var(--ink); font-weight: 500; }
+.proto-lado h3 { font-size: 1.5rem; }
+.proto-lado ol { margin: 14px 0 0; padding-left: 20px; display: grid; gap: 6px; color: #C9BFAF; font-size: .9rem; }
+.proto-lado .gami { margin-top: 26px; display: grid; gap: 10px; }
+.proto-lado .gami div { border-top: 1px solid rgba(246,239,225,.14); padding-top: 10px; font-size: .88rem; color: #C9BFAF; }
+.proto-lado .gami b { color: #F6EFE1; font-weight: 500; }
+.proto-ctrl { display: flex; flex-wrap: wrap; gap: 8px 16px; margin-top: 12px; }
+.proto-ctrl button { background: none; border: 0; min-height: 36px; padding: 0; cursor: pointer; font-family: var(--label); font-size: .62rem; letter-spacing: .14em; text-transform: uppercase; color: #A79E90; text-decoration: underline; text-underline-offset: 4px; }
+.proto-ctrl button:focus-visible { outline: 2px solid #C9A24C; outline-offset: 3px; }
+.proto-phone .faixa { position: relative; }
+
+/* ---------- desktop ---------- */
+.desk-bloco { flex: 1 1 520px; max-width: 740px; min-width: 0; display: flex; flex-direction: column; gap: 12px; }
+.desk { display: grid; grid-template-columns: 36% 1fr; aspect-ratio: 16 / 10; width: 100%; border-radius: 10px; overflow: hidden; border: 1px solid rgba(255,255,255,.08); }
+.w-est .desk { border-color: rgba(0,0,0,.1); }
+.desk .painel { background: var(--panel); color: #F6EFE1; padding: 7% 8%; display: flex; flex-direction: column; gap: 8%; --ink2p: rgba(246,239,225,.62); }
+.desk .painel .nome { font-family: var(--serif); font-weight: 300; font-size: clamp(.9rem, 1.8vw, 1.25rem); line-height: 1; }
+.desk .painel .sub { font-family: var(--label); font-size: .5rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink2p); margin-top: 6px; }
+.passos { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 14px; }
+.passos li { display: flex; align-items: center; gap: 10px; font-family: var(--label); font-size: .54rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink2p); }
+.passos li i { width: 9px; height: 9px; border-radius: 50%; border: 1px solid currentColor; flex: none; }
+.passos li.feito i { background: currentColor; }
+.passos li.ativo { color: #F6EFE1; }
+.passos li.ativo i { border-color: var(--pacc, var(--acc)); box-shadow: 0 0 0 3px color-mix(in srgb, var(--pacc, var(--acc)) 30%, transparent); }
+.desk .painel .obj { flex: 1; display: flex; align-items: center; min-height: 0; }
+.desk .painel .obj svg { width: 100%; max-height: 100%; }
+.desk .painel .rod { font-family: var(--serif); font-style: italic; font-size: .7rem; color: var(--ink2p); }
+.desk .folha { background: var(--bg); color: var(--ink); padding: 6% 8%; display: flex; flex-direction: column; gap: 5%; }
+.desk .folha .n { font-family: var(--label); font-size: .5rem; letter-spacing: .16em; color: var(--ink2); text-align: center; }
+.desk .folha .kicker { font-size: .5rem; }
+.desk .folha h4 { font-family: var(--serif); font-weight: 400; font-size: clamp(.95rem, 2vw, 1.4rem); line-height: 1.15; }
+.desk .folha .linha { border: 1px solid var(--line); border-radius: 2px; padding: 2.4% 3%; font-size: clamp(.5rem, 1vw, .7rem); background: var(--card); }
+.desk .folha .linha.sel { border-color: var(--acc); }
+.desk .folha .mini-cta { margin-top: auto; align-self: flex-end; width: 44%; padding: 2.6% 0; text-align: center; border-radius: 6px; background: var(--cta-bg); color: var(--cta-ink); font-family: var(--label); font-size: .5rem; letter-spacing: .16em; text-transform: uppercase; }
+
+/* ---------- sistema da vertente ---------- */
+.sistema { margin-top: 44px; display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 250px), 1fr)); gap: 28px 36px; border-top: 1px solid var(--acc-soft); padding-top: 28px; }
+.sistema h4 { font-family: var(--label); font-weight: 500; font-size: .66rem; letter-spacing: .16em; text-transform: uppercase; color: var(--ink2); margin-bottom: 12px; }
+.chips { display: grid; gap: 8px; }
+.chip { display: grid; grid-template-columns: 26px 1fr auto; gap: 10px; align-items: center; font-size: .8rem; }
+.chip i { width: 26px; height: 26px; border-radius: 50%; border: 1px solid rgba(128,128,128,.35); }
+.chip code { font-family: var(--label); font-size: .66rem; letter-spacing: .06em; color: var(--ink2); font-variant-numeric: tabular-nums; }
+.icones { display: flex; flex-wrap: wrap; gap: 16px; }
+.icones figure { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 6px; width: 60px; }
+.icones svg { width: 30px; height: 30px; color: var(--acc); }
+.icones figcaption { font-family: var(--label); font-size: .56rem; letter-spacing: .1em; text-transform: uppercase; color: var(--ink2); text-align: center; }
+.sistema p, .sistema li { font-size: .88rem; color: var(--ink2); }
+.sistema p b, .sistema li b { color: var(--ink); font-weight: 500; }
+.sistema ul { margin: 0; padding-left: 16px; display: grid; gap: 4px; }
+.tipos { display: grid; gap: 4px; }
+.tipos div { display: flex; align-items: baseline; gap: 10px; }
+.tipos span:first-child { font-size: 1.6rem; line-height: 1; min-width: 36px; }
+
+/* ---------- aproveitamento / decisões ---------- */
+.aprov { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr)); gap: 32px; margin-top: 36px; }
+.aprov section h3 { font-size: 1.5rem; margin-bottom: 14px; }
+.aprov dl { margin: 0; display: grid; gap: 14px; }
+.aprov dt { font-family: var(--label); font-weight: 500; font-size: .62rem; letter-spacing: .16em; text-transform: uppercase; }
+.aprov dt.m { color: #9CC4A8; } .aprov dt.a { color: #D9B96E; } .aprov dt.d { color: #E39A86; }
+.aprov dd { margin: 4px 0 0; }
+.aprov dd ul { margin: 0; padding-left: 16px; display: grid; gap: 6px; font-size: .88rem; color: #C9BFAF; }
+.aprov dd li b { color: #F6EFE1; font-weight: 500; }
+.decisoes { margin-top: 28px; padding: 0; list-style: none; counter-reset: d; display: grid; gap: 14px; max-width: 78ch; }
+.decisoes li { counter-increment: d; display: grid; grid-template-columns: 34px 1fr; gap: 12px; font-size: .95rem; color: #C9BFAF; }
+.decisoes li::before { content: counter(d, decimal-leading-zero); font-family: var(--label); font-size: .72rem; letter-spacing: .1em; color: #C9A24C; padding-top: 3px; }
+.decisoes b { color: #F6EFE1; font-weight: 500; }
+.fim { padding-block: 40px 64px; color: #A79E90; font-size: .85rem; }
+.fim .wrap { display: grid; gap: 8px; max-width: 1180px; }
+
+@media (max-width: 640px) {
+  .telas { justify-content: center; }
+  .desk .folha .linha:nth-of-type(n+3) { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { transition-duration: 0ms !important; animation-duration: 0ms !important; animation-delay: 0ms !important; }
+}
+</style>
+
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <defs>
+    <symbol id="i-agulha" viewBox="0 0 24 24"><path d="M4.5 19.5 18 6" fill="none" stroke="currentColor" stroke-width="1.25" stroke-linecap="round"/><ellipse cx="19.2" cy="4.8" rx="1.6" ry="1" transform="rotate(-45 19.2 4.8)" fill="none" stroke="currentColor" stroke-width="1.1"/></symbol>
+    <symbol id="i-coluna" viewBox="0 0 24 24"><path d="M6 20.5h12M7 18.5h10M8 18.5V7.5M16 18.5V7.5M10.7 18.5V7.5M13.3 18.5V7.5M7 7.5h10M6.5 5.5h11M8 5.5 9 3.5h6l1 2" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-maca" viewBox="0 0 24 24"><path d="M3 10.5h18v2.6H3zM5.5 13.1v6.4M18.5 13.1v6.4M8.5 13.1v3.6M15.5 13.1v3.6M4.5 10.5c.4-1.5 1.5-2.2 3-2.2" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-pontos" viewBox="0 0 24 24"><circle cx="6" cy="12" r="1.3" fill="currentColor"/><circle cx="12" cy="12" r="1.3" fill="currentColor"/><circle cx="18" cy="12" r="1.3" fill="currentColor"/></symbol>
+    <symbol id="i-linha" viewBox="0 0 24 24"><path d="M3 15c3-5 6 3 9-1s5-6 9-3" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/></symbol>
+    <symbol id="i-alfinete" viewBox="0 0 24 24"><circle cx="12" cy="5.5" r="2.3" fill="none" stroke="currentColor" stroke-width="1.15"/><path d="M12 7.8v13" stroke="currentColor" stroke-width="1.15" stroke-linecap="round"/></symbol>
+    <symbol id="i-carretel" viewBox="0 0 24 24"><path d="M6.5 4h11M6.5 20h11M8 4v16M16 4v16M8 8h8M8 11h8M8 14h8M8 17h8" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/></symbol>
+    <symbol id="i-prumo" viewBox="0 0 24 24"><path d="M12 2.5v11" stroke="currentColor" stroke-width="1.1" stroke-linecap="round"/><path d="M9 13.5h6l-3 7.5z" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/></symbol>
+    <symbol id="i-cota" viewBox="0 0 24 24"><path d="M3 12h18M3 8.5v7M21 8.5v7M6 10l-3 2 3 2M18 10l3 2-3 2" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-toque" viewBox="0 0 24 24"><circle cx="12" cy="12" r="2" fill="currentColor"/><circle cx="12" cy="12" r="5.5" fill="none" stroke="currentColor" stroke-width="1.05" opacity=".7"/><circle cx="12" cy="12" r="9" fill="none" stroke="currentColor" stroke-width="1" opacity=".4"/></symbol>
+    <symbol id="i-templo" viewBox="0 0 24 24"><path d="M3 20.5h18M4.5 18.5h15M6 18.5v-8M10 18.5v-8M14 18.5v-8M18 18.5v-8M4.5 10.5h15M4 8.5 12 3.5l8 5z" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+    <symbol id="i-aspas" viewBox="0 0 24 24"><path d="M5 17c0-4 1-7 5-9M13 17c0-4 1-7 5-9" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="7" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="15" cy="17" r="2" fill="none" stroke="currentColor" stroke-width="1.1"/></symbol>
+    <symbol id="i-doc" viewBox="0 0 24 24"><path d="M6 3.5h8l4 4v13H6z M14 3.5v4h4 M9 12h6M9 15h6M9 18h3" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round" stroke-linecap="round"/></symbol>
+    <symbol id="i-alvo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="12" cy="12" r="5" fill="none" stroke="currentColor" stroke-width="1.1"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></symbol>
+    <symbol id="i-interroga" viewBox="0 0 24 24"><path d="M9 9a3 3 0 1 1 4.2 2.8c-.8.4-1.2 1-1.2 1.9v.8" fill="none" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><circle cx="12" cy="18" r="1" fill="currentColor"/><circle cx="12" cy="12" r="9.5" fill="none" stroke="currentColor" stroke-width="1" opacity=".55"/></symbol>
+    <symbol id="i-chat" viewBox="0 0 24 24"><path d="M4 12a8 8 0 1 1 3.6 6.7L4 20l1.3-3.5A7.9 7.9 0 0 1 4 12z" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/></symbol>
+    <symbol id="i-envelope" viewBox="0 0 24 24"><rect x="3.5" y="6" width="17" height="12" rx="1" fill="none" stroke="currentColor" stroke-width="1.15"/><path d="m4 7 8 6 8-6" fill="none" stroke="currentColor" stroke-width="1.15" stroke-linejoin="round"/></symbol>
+    <symbol id="i-seta" viewBox="0 0 16 8"><path d="M0 4h14.5M11.5 1l3 3-3 3" fill="none" stroke="currentColor" stroke-width="1.1" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+  </defs>
+</svg>
+
+<header class="topo w-casa">
+  <div class="wrap">
+    <div class="logo entra"><span class="nome-logo">Renilza Miranda</span><span class="filete-logo"></span><span class="sub-logo">Do valor invisível ao valor percebido</span></div>
+    <h1>O diagnóstico, em três mundos</h1>
+    <p class="lead lede">Layout final depois de cruzar as três pranchas do GPT com a auditoria e o BRAND-VISUAL. O motor continua sendo o quiz de sempre, agora <strong>white label</strong>: nenhuma tela diz "Tailor", a marca é só a assinatura dela. As telas estão em escala de ~77% de um celular de 390px. As opções respondem ao toque; o botão avançar mostra a figura andando.</p>
+    <div class="mudancas">
+      <div><b>Uma marca só, com logo</b><p>"Renilza Miranda" em Bodoni, caixa-alta espaçada e dourado em degradê, como ela sempre quis. Na entrada e no topo; nas outras telas, o nome em Cormorant. "Tailor" não aparece.</p></div>
+      <div><b>Entrada na casa</b><p>Telas 1 e 2 no noir oficial (#141009), sem cor de vertente. As cenas trazem só o ícone em traço: quem escolhe é ela, não a cor.</p></div>
+      <div><b>Três mundos a partir da tela 3</b><p>Imagem em ameixa, Posicionamento em preto e cobre, Estética em marfim e verde: as cores das pranchas que você gostou, com as regras da marca aplicadas.</p></div>
+    </div>
+  </div>
+</header>
+
+<!-- ============ PROTÓTIPO NAVEGÁVEL ============ -->
+<section class="board w-casa" id="prototipo" aria-labelledby="t-proto">
+  <div class="wrap">
+    <div class="board-topo">
+      <div><p class="kicker">O fluxo inteiro · navegável</p><h2 id="t-proto">Responda como ela responderia</h2></div>
+      <p class="tese">Do nome ao WhatsApp, nos três ramos, com todas as perguntas, animações e mecânicas para ela ir até o fim. Nada é salvo; é só o celular.</p>
+    </div>
+    <div class="proto-grid">
+      <div class="proto-phone">
+        <div class="w-casa" id="proto-mundo">
+          <div class="phone"><div class="screen" id="proto-tela" aria-live="polite"></div></div>
+        </div>
+        <div class="proto-ctrl">
+          <button type="button" id="proto-voltar">Voltar</button>
+          <button type="button" id="proto-recomecar">Recomeçar</button>
+          <button type="button" data-ir="imagem">Pular para Imagem</button>
+          <button type="button" data-ir="posicionamento">Pular para Posicionamento</button>
+          <button type="button" data-ir="estetica">Pular para Estética</button>
+        </div>
+      </div>
+      <div class="proto-lado">
+        <h3>O roteiro</h3>
+        <ol>
+          <li>Nome, na entrada da casa, com a logo.</li>
+          <li>A cena que decide a vertente. A partir daqui, o mundo muda.</li>
+          <li>Três perguntas de reconhecimento, em toque.</li>
+          <li>Uma pergunta aberta: a frase dela, que volta como citação no final.</li>
+          <li>As medidas: a conta é dela, com os números que ela mesma arrasta.</li>
+          <li>O investimento, como teto de abertura.</li>
+          <li>O contato, que já mostra como a leitura dela começa.</li>
+          <li>Depois do contato: o prazo em um toque (opcional) e a leitura sendo montada.</li>
+        </ol>
+        <div class="gami">
+          <div><b>Progresso dotado.</b> Ela já chega na tela 2 com o nome contado ("2 de 9"). Começar com peças prontas aumenta a chance de terminar.</div>
+          <div><b>A figura que anda.</b> A agulha, o templo e o toque avançam a cada resposta. O fim fica visível e cada toque aproxima ela dele.</div>
+          <div><b>Recibo de cada resposta.</b> Uma linha curta confirma que a resposta foi guardada ("Guardei.", "Anotado na sua leitura."). É recompensa imediata, sem pontos nem troféu.</div>
+          <div><b>Recompensa no meio.</b> Na tela 6, a conta dela aparece na hora, feita com os números que ela arrastou. É o primeiro "como ela sabe disso?".</div>
+          <div><b>Reta final nomeada.</b> "Faltam duas" e "Última pergunta" aparecem só perto do fim. Sem cronômetro, sem escassez (§8).</div>
+          <div><b>Curiosidade no gate.</b> Antes de pedir o WhatsApp, mostra a primeira linha da leitura dela, com a frase que ela mesma escreveu.</div>
+          <div><b>Pergunta extra depois do compromisso.</b> O prazo vem depois do contato, em um toque, enquanto a leitura é montada. Não conta nas 9 telas (C1).</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ENTRADA COMPARTILHADA ============ -->
+<section class="board w-casa" id="entrada" aria-labelledby="t-entrada">
+  <div class="wrap">
+    <div class="board-topo">
+      <div><p class="kicker">Telas 1 e 2 · compartilhadas</p><h2 id="t-entrada">A entrada é da casa, não de uma vertente</h2></div>
+      <p class="tese">Antes da escolha não existe vertente, então nenhuma tela pode vestir uma delas. Toque numa cena e avance: a página leva até o mundo que ela escolheu.</p>
+    </div>
+    <div class="telas">
+      <div class="tela-bloco">
+        <div class="phone"><div class="screen">
+          <div class="corpo" style="gap:14px">
+            <div class="logo pequena" style="align-self:center;margin-top:12px"><span class="nome-logo">Renilza Miranda</span><span class="filete-logo"></span><span class="sub-logo">Do valor invisível ao valor percebido</span></div>
+            <h3 style="font-size:1.6rem;margin-top:18px">Antes de tudo, uma pergunta.</h3>
+            <p class="apoio">Poucas perguntas, menos de três minutos. No final, você recebe um diagnóstico feito sob medida, não um resultado genérico.</p>
+            <div class="campo" style="margin-top:10px"><label for="nome-demo">Como você se chama?</label><input id="nome-demo" type="text" placeholder="Seu primeiro nome" autocomplete="off"></div>
+            <p class="nota" style="font-size:.52rem">Nenhuma resposta certa. Só a sua.</p>
+            <button class="cta" type="button">Começar <svg class="seta" aria-hidden="true"><use href="#i-seta"/></svg></button>
+            <p class="nota" style="font-size:.5rem;text-align:center;margin-top:4px">Do valor invisível ao valor percebido</p>
+          </div>
+        </div></div>
+        <p class="legenda-tela"><b>Tela 1</b> · boas-vindas e nome</p>
+      </div>
+
+      <div class="tela-bloco">
+        <div class="phone"><div class="screen">
+          <div class="faixa">
+            <div><div class="nome">Renilza Miranda</div><div class="n">2 de 9</div></div>
+            <svg width="110" height="10" viewBox="0 0 110 10" aria-hidden="true">
+              <g stroke="#736A60" stroke-width="1"><line x1="2" y1="5" x2="108" y2="5" stroke-dasharray="1 5"/></g>
+              <g fill="#F6EFE1"><circle cx="3" cy="5" r="2"/><circle cx="16" cy="5" r="2"/></g>
+            </svg>
+          </div>
+          <div class="corpo">
+            <p class="kicker">Escolha uma cena</p>
+            <h3>O que mais parece com o seu momento?</h3>
+            <div class="opcoes" role="radiogroup" aria-label="Cenas" id="cenas">
+              <button class="op" type="button" role="radio" aria-checked="false" data-v="imagem"><svg class="ic" aria-hidden="true"><use href="#i-agulha"/></svg><span>Tenho o armário cheio, mas não me reconheço em quase nada dele.</span></button>
+              <button class="op" type="button" role="radio" aria-checked="false" data-v="posicionamento"><svg class="ic" aria-hidden="true"><use href="#i-templo"/></svg><span>Entrego mais do que muita gente que aparece mais — e continuo sendo a última lembrada.</span></button>
+              <button class="op" type="button" role="radio" aria-checked="false" data-v="estetica"><svg class="ic" aria-hidden="true"><use href="#i-maca"/></svg><span>Atendo o dia inteiro, mas ainda parece que estou só trabalhando — não construindo um negócio.</span></button>
+              <button class="op" type="button" role="radio" aria-checked="false" data-v="livre"><svg class="ic" aria-hidden="true"><use href="#i-pontos"/></svg><span>Nenhuma dessas.</span></button>
+            </div>
+            <button class="cta" type="button" id="cta-cena" aria-disabled="true">Avançar <svg class="seta" aria-hidden="true"><use href="#i-seta"/></svg></button>
+          </div>
+        </div></div>
+        <p class="legenda-tela"><b>Tela 2</b> · a cena decide a vertente</p>
+        <p class="nota" id="aviso-livre" hidden style="text-transform:none;letter-spacing:.02em;font-size:.8rem">"Nenhuma dessas" abre um campo livre (texto ou áudio) e segue pelo ramo de Imagem, marcado pra leitura manual.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ IMAGEM ============ -->
+<section class="board w-img" id="imagem" aria-labelledby="t-imagem" data-mundo="imagem">
+  <div class="wrap">
+    <div class="board-topo">
+      <div><p class="kicker">Mundo 1 · alfaiataria</p><h2 id="t-imagem">Imagem: a linha que se costura com as respostas dela</h2></div>
+      <p class="tese">Ameixa, rosa-argila e areia, como na prancha. A agulha anda sobre a linha e pausa em cada resposta; a escolha desenha um fio sob a opção.</p>
+    </div>
+    <div class="telas">
+      <div class="tela-bloco">
+        <div class="phone"><div class="screen" data-tela="3">
+          <div class="camada faixa">
+            <div><div class="nome">Renilza Miranda</div><div class="n" data-n>3 de 9</div></div>
+            <svg width="120" height="24" viewBox="0 0 120 24" aria-hidden="true" data-trilho>
+              <line x1="4" y1="14" x2="116" y2="14" stroke="#806C86" stroke-width="1" stroke-dasharray="3 3"/>
+              <line x1="4" y1="14" x2="116" y2="14" stroke="#C17B83" stroke-width="1.25" style="transform-origin:4px 14px;transform:scaleX(.25);transition:transform 700ms var(--ease)" data-costura/>
+              <g style="transition:transform 700ms var(--ease);transform:translateX(28px)" data-agulha>
+                <circle cx="4" cy="14" r="4.5" fill="none" stroke="#C17B83" stroke-width="1"/>
+                <path d="M-3 21 11 5" stroke="#F6EFE1" stroke-width="1.1" stroke-linecap="round"/>
+                <ellipse cx="11.6" cy="4.4" rx="1.4" ry=".8" transform="rotate(-48 11.6 4.4)" fill="none" stroke="#F6EFE1" stroke-width=".9"/>
+              </g>
+            </svg>
+          </div>
+          <div class="corpo camada">
+            <p class="kicker">O seu armário hoje</p>
+            <h3>Quando você abre o armário de manhã, o que acontece primeiro?</h3>
+            <div class="opcoes" role="radiogroup" aria-label="Opções da pergunta de Imagem">
+              <button class="op" type="button" role="radio" aria-checked="false"><span class="radio"></span><span>Pego as mesmas peças de sempre, sem pensar muito.</span><i class="fio"></i></button>
+              <button class="op" type="button" role="radio" aria-checked="false"><span class="radio"></span><span>Troco de roupa duas, três vezes antes de sair.</span><i class="fio"></i></button>
+              <button class="op" type="button" role="radio" aria-checked="false"><span class="radio"></span><span>Vejo peças que nunca usei e deixo pra outro dia.</span><i class="fio"></i></button>
+              <button class="op" type="button" role="radio" aria-checked="false"><span class="radio"></span><span>Nenhuma dessas.</span><i class="fio"></i></button>
+            </div>
+            <button class="cta" type="button" data-avancar aria-disabled="true">Avançar <svg class="seta" aria-hidden="true"><use href="#i-seta"/></svg></button>
+          </div>
+        </div></div>
+        <p class="legenda-tela"><b>Tela 3</b> · primeira pergunta do ramo</p>
+        <div class="controle"><button type="button" data-reiniciar>Reiniciar a linha</button></div>
+      </div>
+
+      <div class="tela-bloco">
+        <div class="phone"><div class="screen">
+          <div class="faixa">
+            <div><div class="nome">Renilza Miranda</div><div class="n">9 de 9</div></div>
+            <svg width="120" height="24" viewBox="0 0 120 24" aria-hidden="true">
+              <line x1="4" y1="14" x2="116" y2="14" stroke="#C17B83" stroke-width="1.25"/>
+              <circle cx="116" cy="14" r="4.5" fill="none" stroke="#C17B83" stroke-width="1"/>
+            </svg>
+          </div>
+          <div class="corpo">
+            <p class="kicker">Contato</p>
+            <h3>Agora, me conta como posso te enviar o seu diagnóstico.</h3>
+            <div class="campo"><label for="wa-img">WhatsApp</label><input id="wa-img" type="tel" placeholder="DDD e número"></div>
+            <div class="campo"><label for="em-img">E-mail (opcional)</label><input id="em-img" type="email" placeholder="seu@email.com"></div>
+            <p class="privacidade">Seus dados são usados só para montar e te enviar este diagnóstico. Sem spam, sem compartilhar com terceiros.</p>
+            <button class="cta" type="button">Receber meu diagnóstico <svg class="seta" aria-hidden="true"><use href="#i-seta"/></svg></button>
+            <p class="rodape-tela">No final, uma proposta feita para você.</p>
+          </div>
+        </div></div>
+        <p class="legenda-tela"><b>Tela 9</b> · gate de contato</p>
+      </div>
+
+      <div class="desk-bloco">
+        <div class="desk" role="img" aria-label="Tela de Imagem no desktop: painel ameixa à esquerda com assinatura, etapas e a linha costurada; pergunta à direita.">
+          <div class="painel" style="--pacc:#C17B83">
+            <div><div class="nome">Renilza Miranda</div><div class="sub">Do valor invisível ao valor percebido</div></div>
+            <ul class="passos"><li class="feito"><i></i>Nome</li><li class="feito"><i></i>Cena</li><li class="ativo"><i></i>Aprofundamento</li><li><i></i>Contato</li></ul>
+            <div class="obj"><svg viewBox="0 0 200 60" aria-hidden="true"><path d="M6 40c30-24 48 12 76-6s46-30 76-10 30 8 36 4" fill="none" stroke="#806C86" stroke-dasharray="3 3"/><path d="M6 40c30-24 48 12 76-6" fill="none" stroke="#C17B83" stroke-width="1.3"/><circle cx="82" cy="34" r="6" fill="none" stroke="#C17B83"/><path d="M72 48 96 20" stroke="#F6EFE1" stroke-width="1.2" stroke-linecap="round"/><g color="#B8ABBE"><use href="#i-carretel" x="164" y="30" width="26" height="26"/></g></svg></div>
+            <p class="rod">No final, uma proposta feita para você.</p>
+          </div>
+          <div class="folha">
+            <p class="n">3 DE 9</p>
+            <p class="kicker">O seu armário hoje</p>
+            <h4>Quando você abre o armário de manhã, o que acontece primeiro?</h4>
+            <div class="linha">Pego as mesmas peças de sempre, sem pensar muito.</div>
+            <div class="linha sel">Troco de roupa duas, três vezes antes de sair.</div>
+            <div class="linha">Vejo peças que nunca usei e deixo pra outro dia.</div>
+            <div class="mini-cta">Avançar →</div>
+          </div>
+        </div>
+        <p class="legenda-tela"><b>Desktop</b> · painel persistente + pergunta em foco (estrutura do wireframe aprovado)</p>
+      </div>
+    </div>
+
+    <div class="sistema">
+      <div><h4>Paleta</h4><div class="chips">
+        <div class="chip"><i style="background:#1C1229"></i><span>Ameixa · fundo</span><code>#1C1229</code></div>
+        <div class="chip"><i style="background:#C17B83"></i><span>Rosa-argila · fio, seleção, agulha</span><code>5,50:1</code></div>
+        <div class="chip"><i style="background:#EADBC8"></i><span>Areia · botão</span><code>13,2:1</code></div>
+        <div class="chip"><i style="background:#C9A24C"></i><span>Ouro · só o filete</span><code>7,50:1</code></div>
+      </div></div>
+      <div><h4>Ícones · traço, sem preenchimento</h4><div class="icones">
+        <figure><svg aria-hidden="true"><use href="#i-agulha"/></svg><figcaption>Agulha · a figura</figcaption></figure>
+        <figure><svg aria-hidden="true"><use href="#i-linha"/></svg><figcaption>Linha · o trilho</figcaption></figure>
+        <figure><svg aria-hidden="true"><use href="#i-alfinete"/></svg><figcaption>Alfinete · foco</figcaption></figure>
+        <figure><svg aria-hidden="true"><use href="#i-carretel"/></svg><figcaption>Carretel · rodapé</figcaption></figure>
+      </div></div>
+      <div><h4>Movimento</h4><ul>
+        <li><b>Gesto:</b> o fio se desenha sob a opção (scaleX, 360ms).</li>
+        <li><b>Figura:</b> a agulha anda até o próximo ponto da linha e pausa (translateX, 700ms).</li>
+        <li><b>Níveis</b> (só na proposta): Primeiro Corte · Ajuste · Alta-Costura.</li>
+      </ul></div>
+      <div class="tipos"><h4>Tipografia · a mesma nos três mundos</h4>
+        <div><span style="font-family:var(--serif);font-weight:300">Aa</span><p>Cormorant Garamond · títulos e assinatura</p></div>
+        <div><span style="font-family:var(--sans)">Aa</span><p>Hanken Grotesk · opções e texto</p></div>
+        <div><span style="font-family:var(--label);font-size:1.2rem">AA</span><p>Jost · rótulos em caixa-alta</p></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ POSICIONAMENTO ============ -->
+<section class="board w-pos" id="posicionamento" aria-labelledby="t-pos" data-mundo="posicionamento" data-acabamento="prancha">
+  <div class="wrap">
+    <div class="board-topo">
+      <div><p class="kicker">Mundo 2 · construção</p><h2 id="t-pos">Posicionamento: o templo que se levanta a cada resposta</h2></div>
+      <div class="tese" style="display:grid;gap:14px">
+        <p>O padrão da prancha que você escolheu: preto, cobre-dourado, um ícone em cada opção, a escolha preenchida de cobre e o botão cobre. A cada resposta, uma parte do templo sobe.</p>
+        <div class="acabamento" role="group" aria-label="Acabamento do cobre">
+          <button type="button" data-acab="prancha" aria-pressed="true">Como na prancha</button>
+          <button type="button" data-acab="regra" aria-pressed="false">Na regra da marca</button>
+        </div>
+        <p class="nota-regra" data-nota-acab>Degradê cobre e botão em pílula, como na prancha. Contraria o BRAND-VISUAL §2.4 (regra 3: "gradiente dourado é o sinal nº 1 de coach de internet") e o §4 (cantos). Para adotar, é preciso registrar pelo §10.</p>
+      </div>
+    </div>
+    <div class="telas">
+      <div class="tela-bloco">
+        <div class="phone"><div class="screen" data-tela="3">
+          <div class="camada faixa faixa-pos">
+            <div><div class="nome">Renilza Miranda</div><div class="n" data-n>3 de 9</div></div>
+          </div>
+          <div class="camada progresso-pos" aria-hidden="true"><i data-progresso></i></div>
+          <div class="corpo camada">
+            <svg class="templo" viewBox="0 0 60 50" aria-hidden="true" data-templo>
+              <g class="planta"><rect x="4" y="44" width="52" height="4"/><rect x="8" y="40" width="44" height="4"/><rect x="12" y="19" width="4" height="21"/><rect x="22" y="19" width="4" height="21"/><rect x="34" y="19" width="4" height="21"/><rect x="44" y="19" width="4" height="21"/><rect x="8" y="14" width="44" height="5"/><path d="M8 14 30 4 52 14z"/></g>
+              <g class="partes">
+                <rect data-parte="1" x="4" y="44" width="52" height="4"/>
+                <rect data-parte="2" x="8" y="40" width="44" height="4"/>
+                <rect data-parte="3" x="12" y="19" width="4" height="21"/>
+                <rect data-parte="4" x="22" y="19" width="4" height="21"/>
+                <rect data-parte="5" x="34" y="19" width="4" height="21"/>
+                <rect data-parte="6" x="44" y="19" width="4" height="21"/>
+                <rect data-parte="7" x="8" y="14" width="44" height="5"/>
+                <path data-parte="8" d="M8 14 30 4 52 14z"/>
+              </g>
+            </svg>
+            <p class="kicker">Como o seu trabalho é dito</p>
+            <h3>Quando alguém fala do seu trabalho para outra pessoa, o que costuma dizer?</h3>
+            <div class="opcoes" role="radiogroup" aria-label="Opções da pergunta de Posicionamento">
+              <button class="op op-ic" type="button" role="radio" aria-checked="false"><svg class="ic" aria-hidden="true"><use href="#i-aspas"/></svg><span>Que eu sou muito competente — sem dizer em quê.</span></button>
+              <button class="op op-ic" type="button" role="radio" aria-checked="false"><svg class="ic" aria-hidden="true"><use href="#i-doc"/></svg><span>Falam do resultado; o meu nome quase não aparece.</span></button>
+              <button class="op op-ic" type="button" role="radio" aria-checked="false"><svg class="ic" aria-hidden="true"><use href="#i-alvo"/></svg><span>Um assunto específico: "fala com ela sobre isso".</span></button>
+              <button class="op op-ic" type="button" role="radio" aria-checked="false"><svg class="ic" aria-hidden="true"><use href="#i-interroga"/></svg><span>Não sei — quase nunca fico sabendo.</span></button>
+            </div>
+            <button class="cta" type="button" data-avancar aria-disabled="true">Avançar <svg class="seta" aria-hidden="true"><use href="#i-seta"/></svg></button>
+          </div>
+        </div></div>
+        <p class="legenda-tela"><b>Tela 3</b> · primeira pergunta do ramo</p>
+        <div class="controle"><button type="button" data-reiniciar>Reiniciar o templo</button></div>
+      </div>
+
+      <div class="tela-bloco">
+        <div class="phone"><div class="screen">
+          <div class="faixa faixa-pos">
+            <div><div class="nome">Renilza Miranda</div><div class="n">9 de 9</div></div>
+          </div>
+          <div class="progresso-pos" aria-hidden="true"><i style="transform:scaleX(1)"></i></div>
+          <div class="corpo">
+            <svg class="templo completo" viewBox="0 0 60 50" aria-hidden="true">
+              <g class="partes"><rect x="4" y="44" width="52" height="4"/><rect x="8" y="40" width="44" height="4"/><rect x="12" y="19" width="4" height="21"/><rect x="22" y="19" width="4" height="21"/><rect x="34" y="19" width="4" height="21"/><rect x="44" y="19" width="4" height="21"/><rect x="8" y="14" width="44" height="5"/><path d="M8 14 30 4 52 14z"/></g>
+            </svg>
+            <p class="kicker" style="justify-content:center">Contato</p>
+            <h3 style="text-align:center">Agora, me conta como posso te enviar o seu diagnóstico.</h3>
+            <div class="campo"><label for="wa-pos">WhatsApp</label><div class="campo-linha"><svg aria-hidden="true"><use href="#i-chat"/></svg><input id="wa-pos" type="tel" placeholder="DDD e número"></div></div>
+            <div class="campo"><label for="em-pos">E-mail (opcional)</label><div class="campo-linha"><svg aria-hidden="true"><use href="#i-envelope"/></svg><input id="em-pos" type="email" placeholder="seu@email.com"></div></div>
+            <button class="cta" type="button">Receber meu diagnóstico <svg class="seta" aria-hidden="true"><use href="#i-seta"/></svg></button>
+            <p class="privacidade" style="text-align:center">Seus dados são usados só para montar e te enviar este diagnóstico. Sem spam, sem compartilhar com terceiros.</p>
+          </div>
+        </div></div>
+        <p class="legenda-tela"><b>Tela 9</b> · gate de contato</p>
+      </div>
+
+      <div class="desk-bloco">
+        <div class="desk" role="img" aria-label="Tela de Posicionamento no desktop: painel preto à esquerda com assinatura, etapas e o templo sendo levantado; pergunta à direita com a opção escolhida preenchida de cobre.">
+          <div class="painel" style="--pacc:#C8935E">
+            <div><div class="nome">Renilza Miranda</div><div class="sub">Do valor invisível ao valor percebido</div></div>
+            <ul class="passos"><li class="feito"><i></i>Nome</li><li class="feito"><i></i>Cena</li><li class="ativo"><i></i>Aprofundamento</li><li><i></i>Contato</li></ul>
+            <div class="obj"><svg viewBox="0 0 120 70" aria-hidden="true">
+              <g fill="none" stroke="#3A3834" stroke-width=".7" stroke-dasharray="2 2"><rect x="50" y="26" width="6" height="30"/><rect x="64" y="26" width="6" height="30"/><rect x="78" y="26" width="6" height="30"/><rect x="31" y="19" width="60" height="7"/><path d="M31 19 61 6 91 19z"/></g>
+              <g fill="none" stroke="#C8935E" stroke-width="1"><rect x="26" y="62" width="70" height="5"/><rect x="31" y="56" width="60" height="6"/><rect x="36" y="26" width="6" height="30"/></g>
+            </svg></div>
+            <p class="rod">No final, uma leitura feita com o que você me contar.</p>
+          </div>
+          <div class="folha">
+            <p class="n">3 DE 9</p>
+            <p class="kicker">Como o seu trabalho é dito</p>
+            <h4>Quando alguém fala do seu trabalho para outra pessoa, o que costuma dizer?</h4>
+            <div class="linha">Que eu sou muito competente — sem dizer em quê.</div>
+            <div class="linha sel">Falam do resultado; o meu nome quase não aparece.</div>
+            <div class="linha">Um assunto específico: "fala com ela sobre isso".</div>
+            <div class="mini-cta">Avançar →</div>
+          </div>
+        </div>
+        <p class="legenda-tela"><b>Desktop</b> · o templo em traço; a planta tracejada mostra o que ainda vai subir</p>
+      </div>
+    </div>
+
+    <div class="sistema">
+      <div><h4>Paleta</h4><div class="chips">
+        <div class="chip"><i style="background:#111315"></i><span>Grafite · fundo</span><code>#111315</code></div>
+        <div class="chip"><i style="background:#C8935E"></i><span>Cobre-dourado · ícones, seleção, botão</span><code>6,91:1</code></div>
+        <div class="chip"><i style="background:linear-gradient(135deg,#E3B888,#C48A55 55%,#A8733F)"></i><span>Degradê · só no acabamento "prancha"</span><code>≥ 4,60:1</code></div>
+        <div class="chip"><i style="background:#ECE6DA"></i><span>Marfim · texto</span><code>14,98:1</code></div>
+      </div></div>
+      <div><h4>Ícones · traço cobre</h4><div class="icones">
+        <figure><svg aria-hidden="true"><use href="#i-templo"/></svg><figcaption>Templo · símbolo</figcaption></figure>
+        <figure><svg aria-hidden="true"><use href="#i-aspas"/></svg><figcaption>Aspas</figcaption></figure>
+        <figure><svg aria-hidden="true"><use href="#i-doc"/></svg><figcaption>Resultado</figcaption></figure>
+        <figure><svg aria-hidden="true"><use href="#i-alvo"/></svg><figcaption>Alvo</figcaption></figure>
+      </div></div>
+      <div><h4>Movimento</h4><ul>
+        <li><b>Gesto:</b> a opção escolhida se preenche de cobre (camada por opacity, 240ms).</li>
+        <li><b>Figura:</b> o templo. A cada resposta sobe uma parte (base, colunas, entablamento, frontão), por translateY e opacity; a planta tracejada mostra o que falta.</li>
+        <li><b>Níveis</b> (só na proposta): Alicerce · Estrutura · Cúpula.</li>
+      </ul></div>
+      <div><h4>Contraste</h4><p>Texto escuro sobre o cobre chapado: 6,91:1. No degradê, o ponto mais escuro ficou em #A8733F para não cair abaixo de 4,5:1 (fica em 4,60:1).</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ESTÉTICA ============ -->
+<section class="board w-est" id="estetica" aria-labelledby="t-est" data-mundo="estetica">
+  <div class="wrap">
+    <div class="board-topo">
+      <div><p class="kicker">Mundo 3 · o ofício</p><h2 id="t-est">Estética: o toque que revela, a maca como assinatura do ofício</h2></div>
+      <p class="tese">Marfim, verde-escuro e sálvia, como na prancha. A maca fica: o BRAND-VISUAL §5 cita a maca como narrativa canônica da marca. As folhas saem. Cada escolha é um toque que se abre em ondas.</p>
+    </div>
+    <div class="telas">
+      <div class="tela-bloco">
+        <div class="phone"><div class="screen" data-tela="3">
+          <div class="camada faixa">
+            <div><div class="nome">Renilza Miranda</div><div class="n" data-n>3 de 9</div></div>
+            <svg width="120" height="24" viewBox="0 0 120 24" aria-hidden="true" data-pontos>
+              <g data-marcas></g>
+              <g style="transition:transform 700ms var(--ease)" data-ponto>
+                <circle cx="4" cy="12" r="3" fill="#4A6D5B"/>
+                <circle cx="4" cy="12" r="3" fill="none" stroke="#4A6D5B" stroke-width="1" data-onda style="transform-origin:4px 12px;transform-box:view-box"/>
+              </g>
+            </svg>
+          </div>
+          <div class="corpo camada">
+            <p class="kicker">Sobre preço</p>
+            <h3>Quando uma cliente pergunta o preço, o que acontece <em>do seu lado</em>?</h3>
+            <p class="apoio">Marque o que acontece na maioria das vezes, não o que deveria acontecer.</p>
+            <div class="opcoes" role="radiogroup" aria-label="Opções da pergunta de Estética">
+              <button class="op" type="button" role="radio" aria-checked="false"><span class="radio"><i class="toque"></i><i class="toque t2"></i></span><span>Explico tudo o que está incluído antes de dizer o valor.</span></button>
+              <button class="op" type="button" role="radio" aria-checked="false"><span class="radio"><i class="toque"></i><i class="toque t2"></i></span><span>Ofereço um desconto antes mesmo de ela pedir.</span></button>
+              <button class="op" type="button" role="radio" aria-checked="false"><span class="radio"><i class="toque"></i><i class="toque t2"></i></span><span>Respondo na hora e sustento o valor, sem desconto.</span></button>
+              <button class="op" type="button" role="radio" aria-checked="false"><span class="radio"><i class="toque"></i><i class="toque t2"></i></span><span>Mando o valor e fico torcendo pra ela não sumir.</span></button>
+            </div>
+            <button class="cta" type="button" data-avancar aria-disabled="true">Avançar <svg class="seta" aria-hidden="true"><use href="#i-seta"/></svg></button>
+          </div>
+        </div></div>
+        <p class="legenda-tela"><b>Tela 3</b> · primeira pergunta do ramo</p>
+        <div class="controle"><button type="button" data-reiniciar>Reiniciar os toques</button></div>
+      </div>
+
+      <div class="tela-bloco">
+        <div class="phone"><div class="screen">
+          <div class="faixa">
+            <div><div class="nome">Renilza Miranda</div><div class="n">9 de 9</div></div>
+            <svg width="120" height="24" viewBox="0 0 120 24" aria-hidden="true">
+              <g fill="#4A6D5B"><circle cx="4" cy="12" r="2.4"/><circle cx="18" cy="12" r="2.4"/><circle cx="32" cy="12" r="2.4"/><circle cx="46" cy="12" r="2.4"/><circle cx="60" cy="12" r="2.4"/><circle cx="74" cy="12" r="2.4"/><circle cx="88" cy="12" r="2.4"/><circle cx="102" cy="12" r="2.4"/></g>
+              <circle cx="116" cy="12" r="3" fill="#4A6D5B"/><circle cx="116" cy="12" r="7" fill="none" stroke="#4A6D5B" stroke-width=".8" opacity=".5"/>
+            </svg>
+          </div>
+          <div class="corpo">
+            <p class="kicker">Contato</p>
+            <h3>Agora, me conta como posso te enviar o seu diagnóstico.</h3>
+            <div class="campo"><label for="wa-est">WhatsApp</label><input id="wa-est" type="tel" placeholder="DDD e número"></div>
+            <div class="campo"><label for="em-est">E-mail (opcional)</label><input id="em-est" type="email" placeholder="seu@email.com"></div>
+            <p class="privacidade">Seus dados são usados só para montar e te enviar este diagnóstico. Sem spam, sem compartilhar com terceiros.</p>
+            <button class="cta" type="button">Receber meu diagnóstico <svg class="seta" aria-hidden="true"><use href="#i-seta"/></svg></button>
+            <p class="rodape-tela">No fim, uma proposta feita com o que você me contar.</p>
+          </div>
+        </div></div>
+        <p class="legenda-tela"><b>Tela 9</b> · gate de contato</p>
+      </div>
+
+      <div class="desk-bloco">
+        <div class="desk" role="img" aria-label="Tela de Estética no desktop: painel verde-escuro à esquerda com assinatura, etapas, a maca e os nove toques; pergunta à direita em marfim.">
+          <div class="painel" style="--pacc:#A8C4B4">
+            <div><div class="nome">Renilza Miranda</div><div class="sub">Do valor invisível ao valor percebido</div></div>
+            <ul class="passos"><li class="feito"><i></i>Nome</li><li class="feito"><i></i>Cena</li><li class="ativo"><i></i>Aprofundamento</li><li><i></i>Contato</li></ul>
+            <div class="obj"><svg viewBox="0 0 200 70" aria-hidden="true">
+              <g color="#A8C4B4"><use href="#i-maca" x="68" y="0" width="64" height="44"/></g>
+              <g fill="#A8C4B4"><circle cx="20" cy="58" r="2.4"/><circle cx="40" cy="58" r="2.4"/></g>
+              <circle cx="60" cy="58" r="3" fill="#F6EFE1"/><circle cx="60" cy="58" r="8" fill="none" stroke="#F6EFE1" stroke-width=".7" opacity=".5"/>
+              <g fill="none" stroke="#A8C4B4" stroke-width=".8" opacity=".6"><circle cx="80" cy="58" r="2.4"/><circle cx="100" cy="58" r="2.4"/><circle cx="120" cy="58" r="2.4"/><circle cx="140" cy="58" r="2.4"/><circle cx="160" cy="58" r="2.4"/><circle cx="180" cy="58" r="2.4"/></g>
+            </svg></div>
+            <p class="rod">No fim, uma proposta feita com o que você me contar.</p>
+          </div>
+          <div class="folha">
+            <p class="n">3 DE 9</p>
+            <p class="kicker">Sobre preço</p>
+            <h4>Quando uma cliente pergunta o preço, o que acontece do seu lado?</h4>
+            <div class="linha">Explico tudo o que está incluído antes de dizer o valor.</div>
+            <div class="linha sel">Ofereço um desconto antes mesmo de ela pedir.</div>
+            <div class="linha">Respondo na hora e sustento o valor, sem desconto.</div>
+            <div class="mini-cta">Avançar →</div>
+          </div>
+        </div>
+        <p class="legenda-tela"><b>Desktop</b> · o painel verde separa o ofício da folha clara</p>
+      </div>
+    </div>
+
+    <div class="sistema">
+      <div><h4>Paleta</h4><div class="chips">
+        <div class="chip"><i style="background:#F6EFE1"></i><span>Marfim · fundo</span><code>#F6EFE1</code></div>
+        <div class="chip"><i style="background:#2E4A3B"></i><span>Verde-escuro · botão e painel</span><code>8,50:1</code></div>
+        <div class="chip"><i style="background:#4A6D5B"></i><span>Sálvia densa · seleção, toque</span><code>5,06:1</code></div>
+        <div class="chip"><i style="background:#6F9B85"></i><span>Sálvia · só decorativo</span><code>2,74:1</code></div>
+      </div></div>
+      <div><h4>Ícones · traço, sem preenchimento</h4><div class="icones">
+        <figure><svg aria-hidden="true"><use href="#i-maca"/></svg><figcaption>Maca · assinatura</figcaption></figure>
+        <figure><svg aria-hidden="true"><use href="#i-toque"/></svg><figcaption>Toque · a figura</figcaption></figure>
+      </div></div>
+      <div><h4>Movimento</h4><ul>
+        <li><b>Gesto:</b> o toque que revela, com duas ondas saindo do rádio (scale + opacity, 620ms).</li>
+        <li><b>Figura:</b> o ponto de toque anda até a próxima marca e ondula uma vez (translateX, 700ms).</li>
+        <li><b>Níveis:</b> em aberto. "Maca" como nome de nível colide com o produto "Da Maca ao Alto Padrão"; a auditoria sugeriu Preparo · Protocolo · Autoria.</li>
+      </ul></div>
+      <div><h4>Por que claro</h4><p>A auditoria tinha apontado o risco de a Estética sumir no celular ao lado da Imagem escura (as duas quase com a mesma luminância). O mundo claro da prancha resolve isso: é o único dos três que vira de escuro para claro na tela 3.</p></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ APROVEITAMENTO ============ -->
+<section class="board w-casa" id="aproveitamento" aria-labelledby="t-aprov">
+  <div class="wrap">
+    <div class="board-topo">
+      <div><p class="kicker">Pranchas do GPT × auditoria</p><h2 id="t-aprov">O que ficou, o que mudou, o que saiu</h2></div>
+      <p class="tese">Cada item passou pelas regras escritas: BRAND-VISUAL §1.2, §2.4, §3, §4, §5, §8 e §10.1, e pelas condições C2 e C3 do Conselho.</p>
+    </div>
+    <div class="aprov" id="aprov-conteudo">
+      <section aria-labelledby="ap-img"><h3 id="ap-img">Imagem</h3><dl>
+        <dt class="m">Mantido</dt><dd><ul>
+          <li><b>Paleta ameixa, rosa-argila, areia e ouro:</b> é a mesma dos acentos já aprovados.</li>
+          <li><b>Agulha, linha e alfinete</b> como ícones, e a agulha sobre a linha tracejada como figura.</li>
+          <li><b>"Traço que se desenha":</b> vira o fio por scaleX sob a opção escolhida.</li>
+        </ul></dd>
+        <dt class="a">Adaptado</dt><dd><ul>
+          <li><b>"TAILOR" vira a assinatura "Renilza Miranda"</b> (white label, §1.2).</li>
+          <li><b>Botão rosa em pílula vira bloco areia com canto de 10px.</b> Motivos: o §10.1 proíbe preencher com a cor da vertente e o §4 veta pílula.</li>
+          <li><b>Fotos de tecido e carretel:</b> ficam só como foto real do banco de ofício (§5, pendência #8), fora do quiz.</li>
+          <li><b>Tela 2:</b> sai do mundo de Imagem e vai para a casa, com a copy aprovada das cenas. O GPT tinha reescrito a cena de Posicionamento falando de imagem.</li>
+        </ul></dd>
+        <dt class="d">Descartado</dt><dd><ul>
+          <li><b>Manequim:</b> lê como corpo.</li>
+          <li><b>"Como você se sente quando se olha no espelho?":</b> convida vergonha (C3) e empilha duas perguntas abertas.</li>
+          <li><b>"Quase lá!" e "Seus dados estão seguros":</b> a segunda é uma alegação que o fluxo não sustenta (achado A29).</li>
+        </ul></dd>
+      </dl></section>
+
+      <section aria-labelledby="ap-pos"><h3 id="ap-pos">Posicionamento</h3><dl>
+        <dt class="m">Mantido</dt><dd><ul>
+          <li><b>Preto e cobre:</b> o cobre é o âmbar-terra #BC7C4E já aprovado, que volta no lugar do azul-aço da auditoria.</li>
+          <li><b>Coluna e "estrutura que sobe":</b> é a metáfora Construção (Alicerce · Estrutura · Cúpula) que as três auditorias de produto já tinham decidido.</li>
+        </ul></dd>
+        <dt class="a">Adaptado</dt><dd><ul>
+          <li><b>Templo, ícones nas opções, seleção preenchida e botão cobre: mantidos por escolha sua (22/09).</b> O templo fica em traço fino, e a planta tracejada mostra o que falta subir.</li>
+          <li><b>Render 3D vira traço fino.</b> O §5 veta mockup 3D e "luxo genérico de fundo".</li>
+          <li><b>Degradê e pílula:</b> ficam como na prancha, com um seletor para comparar com a versão chapada. Adotar exige registro no §10, porque contraria o §2.4 regra 3 e o §4.</li>
+          <li><b>A figura que anda é o próprio templo:</b> a cada resposta sobe uma parte (base, colunas, entablamento, frontão).</li>
+        </ul></dd>
+        <dt class="d">Descartado</dt><dd><ul>
+          <li><b>"Conheça. Construa. Conquiste.", "Presença que abre caminhos", "Novos horizontes amanhã", "Resultados", "Liberdade":</b> todos prometem resultado (C2).</li>
+          <li><b>Ícones de pessoa e gráfico de barras.</b> O alvo ficou, na opção do assunto específico.</li>
+          <li><b>Cenas internas na tela 2</b> ("quero ser referência", "monetizar").</li>
+          <li><b>"Pedra de Toque" da auditoria:</b> fica arquivada como alternativa.</li>
+        </ul></dd>
+      </dl></section>
+
+      <section aria-labelledby="ap-est"><h3 id="ap-est">Estética</h3><dl>
+        <dt class="m">Mantido</dt><dd><ul>
+          <li><b>Marfim, verde-escuro e sálvia:</b> a sálvia é o acento já aprovado; a variante densa #4A6D5B serve para seleção sobre o claro.</li>
+          <li><b>Maca como ícone:</b> é narrativa canônica pelo §5 e dá nome ao produto "Da Maca".</li>
+          <li><b>"Toque que revela"</b> como gesto.</li>
+          <li><b>Mundo claro:</b> resolve o risco de sumir no celular ao lado da Imagem.</li>
+        </ul></dd>
+        <dt class="a">Adaptado</dt><dd><ul>
+          <li><b>Playfair Display e Source Sans 3 viram Cormorant, Hanken e Jost</b> (§3: quarta fonte é problema da peça).</li>
+          <li><b>Botões em pílula passam a canto de 10px.</b></li>
+          <li><b>Pedra e linho:</b> ficam só como foto real de ofício, fora do quiz.</li>
+          <li><b>A pergunta genérica da tela 3</b> vira a pergunta concreta sobre preço, da auditoria.</li>
+        </ul></dd>
+        <dt class="d">Descartado</dt><dd><ul>
+          <li><b>Folhas e botânica:</b> clichê saturado do nicho, segundo a pesquisa.</li>
+          <li><b>Ícone de grupo de pessoas.</b></li>
+          <li><b>"Estética é plano, processo e resultado", "Um negócio com futuro" e o erro "Consultoria de futuro".</b></li>
+          <li><b>Cenas internas na tela 2.</b></li>
+        </ul></dd>
+      </dl></section>
+    </div>
+
+    <h3 style="font-size:1.6rem;margin-top:56px">Decidido em 22/09 · planejamento encerrado</h3>
+    <ol class="decisoes">
+      <li><span><b>Produto:</b> o motor (Tailor) é um SaaS white label. Hoje o desenvolvimento é 100% para a Renilza, mas a estrutura nasce parametrizável: marca, logo, cores de cada mundo, vertentes, perguntas, faixas, produtos e textos vêm de configuração por cliente, nunca de código.</span></li>
+      <li><span><b>Posicionamento segue a prancha:</b> templo que se levanta, ícone em cada opção, seleção e botão em cobre-dourado com degradê e pílula. Exceção registrada ao §2.4 regra 3, §4 e §10.1. Só nesta vertente.</span></li>
+      <li><span><b>Logo:</b> "Renilza Miranda" em Bodoni Moda, caixa-alta espaçada, dourado em degradê, na entrada do quiz e no topo. É pedido antigo dela; entra como exceção registrada ao §2.4 e ao §3 (quarta família só para a logo).</span></li>
+      <li><span><b>Níveis de Estética, por estágio de carreira:</b> Colaboradora · Autônoma · Empresária. Mostram evolução sem presumir clínica (a Empresária pode ter espaço próprio ou equipe). Na proposta aparecem como "para quem é", nunca como "você vai virar" (C2).</span></li>
+      <li><span><b>Botões:</b> Imagem em areia, Estética em verde-escuro, Posicionamento em cobre com degradê. Canto de 10px nas duas primeiras; pílula em Posicionamento.</span></li>
+      <li><span><b>Fotografia:</b> só macro real do ofício, fora do quiz, quando o banco da pendência #8 existir. Nenhuma foto gerada por IA.</span></li>
+      <li><span><b>Entrada direta por vertente:</b> aprovada. Link de campanha abre direto na tela 3 do mundo, pulando a tela 2.</span></li>
+      <li><span><b>Roteiro, gamificação e animações:</b> os do protótipo navegável acima. A copy ainda passa pela leitura em voz alta com a Renilza antes de ir ao ar.</span></li>
+    </ol>
+  </div>
+</section>
+
+<footer class="fim">
+  <div class="wrap">
+    <p>Fontes: <code>docs/holding/identidade-por-vertente.md</code>, <code>planejamento-holding-3-vertentes.md</code>, BRAND-VISUAL v1.1 e as três pranchas do GPT. Todas as cores de texto passam de 4,5:1 e as bordas de componente passam de 3:1, conferido por cálculo.</p>
+    <p>Copy das perguntas de exemplo: rascunho, a passar pelo deck com a Renilza.</p>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var reduz = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  function grupoDe(btn) { return btn.closest('[role="radiogroup"]'); }
+  function marcar(btn) {
+    var g = grupoDe(btn);
+    g.querySelectorAll('[role="radio"]').forEach(function (b) { b.setAttribute("aria-checked", b === btn ? "true" : "false"); b.classList.remove("revela"); });
+    if (btn.querySelector(".toque") && !reduz) { void btn.offsetWidth; btn.classList.add("revela"); }
+    var tela = btn.closest(".screen");
+    var cta = tela.querySelector("[data-avancar], #cta-cena");
+    if (cta) cta.setAttribute("aria-disabled", "false");
+  }
+  document.querySelectorAll('[role="radio"]').forEach(function (b) {
+    b.addEventListener("click", function () { marcar(b); });
+    b.addEventListener("keydown", function (e) {
+      if (["ArrowDown", "ArrowRight", "ArrowUp", "ArrowLeft"].indexOf(e.key) < 0) return;
+      e.preventDefault();
+      var itens = Array.prototype.slice.call(grupoDe(b).querySelectorAll('[role="radio"]'));
+      var i = itens.indexOf(b) + (e.key === "ArrowDown" || e.key === "ArrowRight" ? 1 : -1);
+      var alvo = itens[(i + itens.length) % itens.length];
+      alvo.focus(); marcar(alvo);
+    });
+  });
+
+  /* ---- mundos: estado de avanço de 3 a 9 ---- */
+  var MUNDOS = {};
+  function passoX(p) { return 4 + (p - 1) * 14; }
+
+  function montarImagem(sec) {
+    var st = { pos: 3 };
+    var ag = sec.querySelector("[data-agulha]"), cost = sec.querySelector("[data-costura]"), n = sec.querySelector("[data-n]");
+    function pintar() {
+      ag.style.transform = "translateX(" + (passoX(st.pos) - 4) + "px)";
+      cost.style.transform = "scaleX(" + ((passoX(st.pos) - 4) / 112) + ")";
+      n.textContent = st.pos + " de 9";
+    }
+    st.pintar = pintar; pintar(); return st;
+  }
+  function montarPos(sec) {
+    var st = { pos: 3 };
+    var partes = sec.querySelectorAll("[data-templo] [data-parte]"), barra = sec.querySelector("[data-progresso]"), n = sec.querySelector("[data-n]");
+    function pintar() {
+      partes.forEach(function (p) { p.classList.toggle("baixo", +p.dataset.parte > st.pos - 1); });
+      barra.style.transform = "scaleX(" + (st.pos / 9) + ")";
+      n.textContent = st.pos + " de 9";
+    }
+    st.pintar = pintar; pintar();
+    sec.querySelectorAll("[data-acab]").forEach(function (b) {
+      b.addEventListener("click", function () {
+        sec.dataset.acabamento = b.dataset.acab;
+        sec.querySelectorAll("[data-acab]").forEach(function (x) { x.setAttribute("aria-pressed", x === b ? "true" : "false"); });
+        sec.querySelector("[data-nota-acab]").textContent = b.dataset.acab === "prancha"
+          ? "Degradê cobre e botão em pílula, como na prancha. Contraria o BRAND-VISUAL §2.4 (regra 3: \"gradiente dourado é o sinal nº 1 de coach de internet\") e o §4 (cantos). Para adotar, é preciso registrar pelo §10."
+          : "Cobre chapado e canto de 10px: o mesmo padrão (ícone, seleção preenchida, botão cobre) dentro das regras de cor e forma. Preencher com a cor da vertente ainda pede o registro do §10.1.";
+      });
+    });
+    return st;
+  }
+  function montarEst(sec) {
+    var st = { pos: 3 };
+    var marcas = sec.querySelector("[data-marcas]"), ponto = sec.querySelector("[data-ponto]"), onda = sec.querySelector("[data-onda]"), n = sec.querySelector("[data-n]");
+    var NS = "http://www.w3.org/2000/svg";
+    for (var i = 1; i <= 9; i++) {
+      var c = document.createElementNS(NS, "circle");
+      c.setAttribute("cx", passoX(i)); c.setAttribute("cy", 12); c.setAttribute("r", 2.4);
+      c.style.transition = "opacity 300ms ease";
+      c.dataset.i = i; marcas.appendChild(c);
+    }
+    function pintar() {
+      marcas.querySelectorAll("circle").forEach(function (c) {
+        var i = +c.dataset.i;
+        if (i < st.pos) { c.setAttribute("fill", "#4A6D5B"); c.setAttribute("stroke", "none"); c.style.opacity = "1"; }
+        else { c.setAttribute("fill", "none"); c.setAttribute("stroke", "#6B7A72"); c.setAttribute("stroke-width", ".8"); c.style.opacity = i === st.pos ? "0" : "1"; }
+      });
+      ponto.style.transform = "translateX(" + (passoX(st.pos) - 4) + "px)";
+      n.textContent = st.pos + " de 9";
+      if (!reduz && onda.animate) onda.animate([{ transform: "scale(1)", opacity: .6 }, { transform: "scale(3.2)", opacity: 0 }], { duration: 620, delay: 380, easing: "cubic-bezier(0.16,1,0.3,1)" });
+    }
+    st.pintar = pintar; pintar(); return st;
+  }
+
+  [["imagem", montarImagem], ["posicionamento", montarPos], ["estetica", montarEst]].forEach(function (par) {
+    var sec = document.getElementById(par[0]);
+    var st = par[1](sec);
+    MUNDOS[par[0]] = { sec: sec, st: st };
+    var tela = sec.querySelector('.screen[data-tela="3"]');
+    var cta = tela.querySelector("[data-avancar]");
+    cta.addEventListener("click", function () {
+      if (cta.getAttribute("aria-disabled") === "true") return;
+      st.pos = st.pos >= 8 ? 3 : st.pos + 1;
+      st.pintar();
+      tela.querySelectorAll('[role="radio"]').forEach(function (b) { b.setAttribute("aria-checked", "false"); b.classList.remove("revela"); });
+      cta.setAttribute("aria-disabled", "true");
+    });
+    sec.querySelector("[data-reiniciar]").addEventListener("click", function () {
+      st.pos = 3; st.pintar();
+      tela.querySelectorAll('[role="radio"]').forEach(function (b) { b.setAttribute("aria-checked", "false"); b.classList.remove("revela"); });
+      cta.setAttribute("aria-disabled", "true");
+    });
+  });
+
+  /* ---- tela 2: a escolha leva ao mundo ---- */
+  var ctaCena = document.getElementById("cta-cena"), aviso = document.getElementById("aviso-livre");
+  ctaCena.addEventListener("click", function () {
+    if (ctaCena.getAttribute("aria-disabled") === "true") return;
+    var sel = document.querySelector('#cenas [aria-checked="true"]');
+    if (!sel) return;
+    var v = sel.dataset.v;
+    aviso.hidden = v !== "livre";
+    if (v === "livre") v = "imagem";
+    var m = MUNDOS[v]; if (!m) return;
+    var tela = m.sec.querySelector('.screen[data-tela="3"]');
+    tela.classList.add("entrando");
+    m.sec.scrollIntoView({ behavior: reduz ? "auto" : "smooth", block: "start" });
+    setTimeout(function () { tela.classList.remove("entrando"); }, reduz ? 0 : 420);
+  });
+})();
+(function () {
+  "use strict";
+  var tela = document.getElementById("proto-tela");
+  var mundo = document.getElementById("proto-mundo");
+  if (!tela) return;
+  var reduz = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var BRL = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL", maximumFractionDigits: 0 });
+  function esc(s) { return String(s).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
+  function seta() { return '<svg class="seta" aria-hidden="true"><use href="#i-seta"/></svg>'; }
+
+  var CENAS = [
+    { v: "imagem", ic: "agulha", t: "Tenho o armário cheio, mas não me reconheço em quase nada dele." },
+    { v: "posicionamento", ic: "templo", t: "Entrego mais do que muita gente que aparece mais — e continuo sendo a última lembrada." },
+    { v: "estetica", ic: "maca", t: "Atendo o dia inteiro, mas ainda parece que estou só trabalhando — não construindo um negócio." },
+    { v: "livre", ic: "pontos", t: "Nenhuma dessas." }
+  ];
+
+  var FAIXA_APOIO = "Não é o meu preço. É o seu teto de abertura.";
+  var ROTEIRO = {
+    imagem: [
+      { id: "armario", t: "escolha", k: "O seu armário hoje", h: "Quando você abre o armário de manhã, o que acontece primeiro?", o: ["Pego as mesmas peças de sempre, sem pensar muito.", "Troco de roupa duas, três vezes antes de sair.", "Vejo peças que nunca usei e deixo pra outro dia.", "Nenhuma dessas."] },
+      { id: "onde", t: "escolha", k: "Onde isso aparece", h: "Em que momento a sua imagem mais pesa?", o: ["No trabalho, quando preciso me apresentar.", "Em eventos, quando não sei o que é adequado.", "Nas fotos, quando me vejo depois.", "No dia a dia, só comigo mesma."] },
+      { id: "frase", t: "aberta", k: "A única coisa", h: "Se uma coisa mudasse na forma como você se veste, o que seria?", apoio: "Escreve do seu jeito. É essa frase que eu vou te devolver no final.", ph: "Uma coisa só." },
+      { id: "medida", t: "medida", k: "As suas medidas", h: "Agora, o seu armário em números.", apoio: "Arraste até chegar perto do real. Ninguém além de você vê estes números.", calc: "armario", campos: [
+        { id: "pct", r: "Que fatia do seu armário você realmente usa?", min: 5, max: 100, step: 5, v: 30, fmt: "pct" },
+        { id: "parado", r: "Nos últimos 12 meses, quanto você gastou em peças que ficaram penduradas?", min: 500, max: 40000, step: 500, v: 4000, fmt: "brl" }] },
+      { id: "palavras", t: "palavras", k: "O futuro", h: "Daqui a seis meses, quando você sai de uma sala, como quer ser descrita?", apoio: "Escolha de 2 a 3 palavras.", o: ["elegante", "autêntica", "segura", "memorável", "sofisticada", "leve", "marcante", "coerente"] },
+      { id: "faixa", t: "faixa", k: "O investimento", h: "Qual faixa de investimento faz sentido para cuidar disso agora?", apoio: FAIXA_APOIO, o: ["Até R$ 500", "De R$ 500 a R$ 3.500", "De R$ 3.500 a R$ 7.000", "Acima de R$ 7.000", "Prefiro não dizer agora"] }
+    ],
+    posicionamento: [
+      { id: "dito", t: "escolha", k: "Como o seu trabalho é dito", h: "Quando alguém fala do seu trabalho para outra pessoa, o que costuma dizer?", o: ["Que eu sou muito competente — sem dizer em quê.", "Falam do resultado; o meu nome quase não aparece.", "Um assunto específico: \"fala com ela sobre isso\".", "Não sei — quase nunca fico sabendo."], ic: ["aspas", "doc", "alvo", "interroga"] },
+      { id: "espaco", t: "escolha", k: "Onde você fica para trás", h: "Onde você mais sente que perde espaço hoje?", o: ["Nas propostas e nos orçamentos.", "Nas indicações, que vão para outra pessoa.", "Nas redes, onde quase não apareço.", "Em reuniões e eventos, onde falo pouco."], ic: ["doc", "chat", "tela", "aspas"] },
+      { id: "frase", t: "aberta", k: "A frase certa", h: "Complete: \"Eu queria ser lembrada como a pessoa que…\"", apoio: "Escreve do seu jeito. É essa frase que eu vou te devolver no final.", ph: "…" },
+      { id: "medida", t: "medida", k: "As suas medidas", h: "Agora, o seu trabalho em números.", apoio: "Arraste até chegar perto do real. Ninguém além de você vê estes números.", calc: "preco", campos: [
+        { id: "atual", r: "Hoje, quanto você cobra pelo seu principal serviço?", min: 100, max: 5000, step: 50, v: 400, fmt: "brl" },
+        { id: "desejado", r: "E quanto ele deveria valer?", min: 100, max: 10000, step: 50, v: 700, fmt: "brl" },
+        { id: "volume", r: "Em média, quantos desses você faz por mês?", min: 1, max: 80, step: 1, v: 10, fmt: "n" }] },
+      { id: "trava", t: "escolha", k: "O que trava", h: "O que mais te trava na hora de se apresentar?", o: ["Não sei o que dizer primeiro.", "Parece que estou me gabando.", "Falo demais do técnico.", "Prefiro nem aparecer."], ic: ["interroga", "aspas", "doc", "pontos"] },
+      { id: "faixa", t: "faixa", k: "O investimento", h: "Qual faixa de investimento faz sentido para cuidar disso agora?", apoio: FAIXA_APOIO, o: ["Até R$ 200 por mês", "De R$ 200 a R$ 5.000", "De R$ 5.000 a R$ 12.000", "Acima de R$ 12.000", "Prefiro não dizer agora"], ic: ["pontos", "doc", "alvo", "templo", "interroga"] }
+    ],
+    estetica: [
+      { id: "preco", t: "escolha", k: "Sobre preço", h: "Quando uma cliente pergunta o preço, o que acontece <em>do seu lado</em>?", apoio: "Marque o que acontece na maioria das vezes, não o que deveria acontecer.", o: ["Explico tudo o que está incluído antes de dizer o valor.", "Ofereço um desconto antes mesmo de ela pedir.", "Respondo na hora e sustento o valor, sem desconto.", "Mando o valor e fico torcendo pra ela não sumir."] },
+      { id: "antes", t: "escolha", k: "O que chega antes de você", h: "Antes da primeira sessão, o que uma cliente nova já sabe sobre o seu atendimento?", o: ["Só o preço e o endereço.", "O que a amiga que indicou contou.", "O que ela viu no meu Instagram.", "Quase nada — ela descobre na hora."] },
+      { id: "local", t: "escolha", k: "Onde você atende", h: "Onde acontecem os seus atendimentos hoje?", o: ["Na casa das minhas clientes.", "Na minha casa, num canto que preparei.", "Em sala alugada ou compartilhada.", "Em um espaço só meu.", "Em mais de um desses lugares."] },
+      { id: "medida", t: "medida", k: "As suas medidas", h: "Agora, o seu atendimento em números.", apoio: "Arraste até chegar perto do real. Ninguém além de você vê estes números.", calc: "preco", campos: [
+        { id: "atual", r: "Hoje, quanto você cobra pelo seu atendimento principal?", min: 50, max: 1500, step: 10, v: 150, fmt: "brl" },
+        { id: "desejado", r: "E quanto ele deveria valer?", min: 50, max: 3000, step: 10, v: 250, fmt: "brl" },
+        { id: "volume", r: "Em média, quantos atendimentos assim você faz por mês?", min: 5, max: 200, step: 5, v: 40, fmt: "n" }] },
+      { id: "frase", t: "aberta", k: "A única coisa", h: "Se o seu negócio mudasse uma coisa nos próximos meses, qual seria?", apoio: "Escreve do seu jeito. É essa frase que eu vou te devolver no final.", ph: "Uma coisa só." },
+      { id: "faixa", t: "faixa", k: "O investimento", h: "Qual faixa de investimento faz sentido para cuidar disso agora?", apoio: FAIXA_APOIO, o: ["Até R$ 1.000", "De R$ 1.000 a R$ 5.000", "De R$ 5.000 a R$ 10.000", "Acima de R$ 10.000", "Prefiro não dizer agora"] }
+    ]
+  };
+  var PRAZO = ["Quero começar essa semana.", "Nas próximas duas a quatro semanas.", "Ainda este trimestre.", "Sem pressa, estou me informando."];
+  var RECIBO = { escolha: ["Guardei.", "Anotado na sua leitura.", "Isso já diz muito.", "Guardei. Seguimos."], aberta: ["Guardei. Palavra por palavra."], medida: ["Suas medidas estão na leitura."], palavras: ["Anotado. É assim que vou te descrever."], faixa: ["Guardei."], cena: ["Seu ponto de partida está guardado."] };
+  var CLASSE = { casa: "w-casa", imagem: "w-img", posicionamento: "w-pos", estetica: "w-est" };
+
+  var st;
+  function novo() { st = { i: 0, v: null, r: {}, hist: [], prev: 2, recibo: null, livre: "" }; }
+  function ramo() { return ROTEIRO[st.v === "livre" ? "imagem" : st.v] || []; }
+  function vert() { return st.v === "livre" ? "imagem" : st.v; }
+  function passo() { return Math.min(st.i + 1, 9); }
+
+  /* ---------- faixa com a figura de cada mundo ---------- */
+  function x(p) { return 4 + (p - 1) * 14; }
+  function faixaHTML(p) {
+    var v = st.i >= 2 ? vert() : "casa";
+    var n = st.i >= 8 ? "9 de 9" : passo() + " de 9";
+    var nome = '<div><div class="nome">Renilza Miranda</div><div class="n">' + n + '</div></div>';
+    if (v === "imagem") {
+      return '<div class="faixa">' + nome + '<svg width="120" height="24" viewBox="0 0 120 24" aria-hidden="true"><line x1="4" y1="14" x2="116" y2="14" stroke="#806C86" stroke-dasharray="3 3"/><line x1="4" y1="14" x2="116" y2="14" stroke="#C17B83" stroke-width="1.25" data-costura style="transform-origin:4px 14px;transition:transform 700ms var(--ease);transform:scaleX(' + ((x(p) - 4) / 112) + ')"/><g data-agulha style="transition:transform 700ms var(--ease);transform:translateX(' + (x(p) - 4) + 'px)"><circle cx="4" cy="14" r="4.5" fill="none" stroke="#C17B83"/><path d="M-3 21 11 5" stroke="#F6EFE1" stroke-width="1.1" stroke-linecap="round"/><ellipse cx="11.6" cy="4.4" rx="1.4" ry=".8" transform="rotate(-48 11.6 4.4)" fill="none" stroke="#F6EFE1" stroke-width=".9"/></g></svg></div>';
+    }
+    if (v === "posicionamento") {
+      return '<div class="faixa faixa-pos">' + nome + '</div><div class="progresso-pos" aria-hidden="true"><i data-prog style="transform:scaleX(' + (p / 9) + ')"></i></div>';
+    }
+    if (v === "estetica") {
+      var c = "";
+      for (var i = 1; i <= 9; i++) c += '<circle cx="' + x(i) + '" cy="12" r="2.4" data-m="' + i + '"/>';
+      return '<div class="faixa">' + nome + '<svg width="120" height="24" viewBox="0 0 120 24" aria-hidden="true"><g data-marcas>' + c + '</g><g data-ponto style="transition:transform 700ms var(--ease);transform:translateX(' + (x(p) - 4) + 'px)"><circle cx="4" cy="12" r="3" fill="#4A6D5B"/><circle cx="4" cy="12" r="3" fill="none" stroke="#4A6D5B" data-onda style="transform-origin:4px 12px;transform-box:view-box"/></g></svg></div>';
+    }
+    var d = "";
+    for (var j = 1; j <= 9; j++) d += '<circle cx="' + (3 + (j - 1) * 13) + '" cy="5" r="' + (j <= p - 1 ? 2 : 1) + '" fill="' + (j <= p - 1 ? "#F6EFE1" : "#736A60") + '"/>';
+    return '<div class="faixa">' + nome + '<svg width="110" height="10" viewBox="0 0 110 10" aria-hidden="true">' + d + '</svg></div>';
+  }
+  function templo(p) {
+    var partes = ['<rect x="4" y="44" width="52" height="4"/>', '<rect x="8" y="40" width="44" height="4"/>', '<rect x="12" y="19" width="4" height="21"/>', '<rect x="22" y="19" width="4" height="21"/>', '<rect x="34" y="19" width="4" height="21"/>', '<rect x="44" y="19" width="4" height="21"/>', '<rect x="8" y="14" width="44" height="5"/>', '<path d="M8 14 30 4 52 14z"/>'];
+    var planta = partes.join("");
+    var g = partes.map(function (s, k) { return s.replace(/^<(\w+)/, '<$1 data-parte="' + (k + 1) + '"' + (k + 1 > p - 1 ? ' class="baixo"' : "")); }).join("");
+    return '<svg class="templo" viewBox="0 0 60 50" aria-hidden="true"><g class="planta">' + planta + '</g><g class="partes">' + g + '</g></svg>';
+  }
+  function pintarEstetica(p) {
+    tela.querySelectorAll("[data-m]").forEach(function (c) {
+      var i = +c.getAttribute("data-m");
+      if (i < p) { c.setAttribute("fill", "#4A6D5B"); c.setAttribute("stroke", "none"); c.style.opacity = "1"; }
+      else { c.setAttribute("fill", "none"); c.setAttribute("stroke", "#6B7A72"); c.setAttribute("stroke-width", ".8"); c.style.opacity = i === p ? "0" : "1"; }
+    });
+  }
+  function moverFigura(p) {
+    var v = st.i >= 2 ? vert() : "casa";
+    if (v === "imagem") {
+      var ag = tela.querySelector("[data-agulha]"), co = tela.querySelector("[data-costura]");
+      if (ag) ag.style.transform = "translateX(" + (x(p) - 4) + "px)";
+      if (co) co.style.transform = "scaleX(" + ((x(p) - 4) / 112) + ")";
+    } else if (v === "posicionamento") {
+      var b = tela.querySelector("[data-prog]"); if (b) b.style.transform = "scaleX(" + (p / 9) + ")";
+      tela.querySelectorAll(".templo [data-parte]").forEach(function (e) { e.classList.toggle("baixo", +e.getAttribute("data-parte") > p - 1); });
+    } else if (v === "estetica") {
+      pintarEstetica(p);
+      var pt = tela.querySelector("[data-ponto]"); if (pt) pt.style.transform = "translateX(" + (x(p) - 4) + "px)";
+      var o = tela.querySelector("[data-onda]");
+      if (o && o.animate && !reduz) o.animate([{ transform: "scale(1)", opacity: .6 }, { transform: "scale(3.2)", opacity: 0 }], { duration: 620, delay: 420, easing: "cubic-bezier(0.16,1,0.3,1)" });
+    }
+  }
+
+  /* ---------- opções por mundo ---------- */
+  function opcao(v, txt, k, ic) {
+    var attrs = ' type="button" role="radio" aria-checked="false" data-k="' + k + '"';
+    if (v === "posicionamento") return '<button class="op op-ic"' + attrs + '><svg class="ic" aria-hidden="true"><use href="#i-' + (ic || "pontos") + '"/></svg><span>' + esc(txt) + '</span></button>';
+    if (v === "estetica") return '<button class="op"' + attrs + '><span class="radio"><i class="toque"></i><i class="toque t2"></i></span><span>' + esc(txt) + '</span></button>';
+    if (v === "imagem") return '<button class="op"' + attrs + '><span class="radio"></span><span>' + esc(txt) + '</span><i class="fio"></i></button>';
+    return '<button class="op"' + attrs + '><svg class="ic" aria-hidden="true"><use href="#i-' + ic + '"/></svg><span>' + esc(txt) + '</span></button>';
+  }
+  function cta(txt, liberado) { return '<button class="cta" type="button" data-cta aria-disabled="' + (liberado ? "false" : "true") + '">' + txt + " " + seta() + "</button>"; }
+  function meta(p) {
+    if (p === 3) return "Sua leitura tem 9 peças. Você já montou 2.";
+    if (p === 7) return "Faltam duas.";
+    if (p === 8) return "Última pergunta antes da sua leitura.";
+    return "";
+  }
+  function fmt(c, val) { return c.fmt === "brl" ? BRL.format(val) : c.fmt === "pct" ? val + "%" : String(val); }
+  function conta(q) {
+    var r = st.r[q.id] || {};
+    if (q.calc === "armario") return "<b>" + r.pct + "%</b> do seu armário trabalha por você hoje. Os outros " + (100 - r.pct) + "% não sumiram: estão adormecidos. São <b>" + BRL.format(r.parado) + "</b> em peças que ainda estão lá, esperando alguém dizer com o que combinam.";
+    var dif = Math.max(0, r.desejado - r.atual);
+    if (!dif) return "A sua meta ficou igual ao que você já cobra. Arrasta a segunda medida até onde ela deveria estar.";
+    return "Com base no que você me contou: <b>" + BRL.format(dif) + "</b> de diferença em cada atendimento. Pela sua própria agenda, " + BRL.format(dif * r.volume) + " por mês. Em doze meses, <b>" + BRL.format(dif * r.volume * 12) + "</b>. A conta é sua: foram os seus números que a fizeram.";
+  }
+  function fraseDela() {
+    var q = ramo().filter(function (x) { return x.t === "aberta"; })[0];
+    var f = q && st.r[q.id];
+    if (f && f.trim()) return f.trim();
+    var c = CENAS.filter(function (x) { return x.v === st.v; })[0];
+    return c ? c.t : "";
+  }
+
+  /* ---------- telas ---------- */
+  function conteudo() {
+    var i = st.i;
+    if (i === 0) {
+      return '<div class="logo pequena entra" style="align-self:center;margin-top:12px"><span class="nome-logo">Renilza Miranda</span><span class="filete-logo"></span><span class="sub-logo">Do valor invisível ao valor percebido</span></div>' +
+        '<h3 style="font-size:1.55rem;margin-top:14px">Antes de tudo, uma pergunta.</h3>' +
+        '<p class="apoio">Poucas perguntas, menos de três minutos. No final, você recebe um diagnóstico feito sob medida, não um resultado genérico.</p>' +
+        '<div class="campo"><label for="p-nome">Como você se chama?</label><input id="p-nome" type="text" autocomplete="off" placeholder="Seu primeiro nome" value="' + esc(st.r.nome || "") + '"></div>' +
+        '<p class="nota" style="font-size:.52rem">Nenhuma resposta certa. Só a sua.</p>' + cta("Começar", (st.r.nome || "").trim().length > 1);
+    }
+    if (i === 1) {
+      var ops = CENAS.map(function (c) { return opcao("casa", c.t, c.v, c.ic); }).join("");
+      return '<p class="kicker">Escolha uma cena</p><h3>' + esc(st.r.nome || "") + (st.r.nome ? ", o" : "O") + ' que mais parece com o seu momento?</h3>' +
+        '<div class="opcoes" role="radiogroup" aria-label="Cenas">' + ops + '</div>' +
+        '<div data-livre ' + (st.v === "livre" ? "" : "hidden") + '><textarea id="p-livre" rows="2" placeholder="Me conta em uma linha." style="min-height:60px">' + esc(st.livre) + '</textarea></div>' + cta("Avançar", !!st.v);
+    }
+    if (i >= 2 && i <= 7) {
+      var q = ramo()[i - 2], v = vert(), p = passo(), html = "";
+      if (v === "posicionamento") html += templo(st.prev);
+      var m = meta(p); if (m) html += '<p class="meta-linha">' + m + "</p>";
+      html += '<p class="kicker">' + esc(q.k) + "</p><h3>" + q.h + "</h3>";
+      if (q.apoio) html += '<p class="apoio">' + esc(q.apoio) + "</p>";
+      var r = st.r[q.id];
+      if (q.t === "escolha" || q.t === "faixa") {
+        html += '<div class="opcoes" role="radiogroup" aria-label="' + esc(q.k) + '">' + q.o.map(function (t, k) { return opcao(v, t, k, q.ic && q.ic[k]); }).join("") + "</div>";
+        html += cta(p === 8 ? "Ver como fica" : "Avançar", r != null);
+      } else if (q.t === "aberta") {
+        html += '<textarea id="p-aberta" placeholder="' + esc(q.ph) + '" aria-label="' + esc(q.k) + '">' + esc(r || "") + "</textarea>" +
+          '<button class="audio-conv" type="button" data-audio><svg width="14" height="14" aria-hidden="true"><use href="#i-toque"/></svg><span>Prefere me contar por áudio?</span></button>' + cta("Avançar", (r || "").trim().length > 2);
+      } else if (q.t === "medida") {
+        var val = st.r[q.id] || {};
+        html += q.campos.map(function (c) {
+          var vv = val[c.id] != null ? val[c.id] : c.v;
+          return '<div class="regua-campo"><label for="p-' + c.id + '">' + esc(c.r) + '</label><output id="o-' + c.id + '">' + fmt(c, vv) + '</output><input id="p-' + c.id + '" type="range" min="' + c.min + '" max="' + c.max + '" step="' + c.step + '" value="' + vv + '" data-campo="' + c.id + '"></div>';
+        }).join("");
+        var pronto = val._toque && q.campos.every(function (c) { return val._toque[c.id]; });
+        html += '<p class="revela-conta' + (pronto ? " on" : "") + '" data-conta>' + (pronto ? conta(q) : "Mexa nas medidas para ver a sua conta.") + "</p>" + cta("Avançar", pronto);
+      } else if (q.t === "palavras") {
+        var sel = r || [];
+        html += '<div class="chips-p" role="group" aria-label="Palavras">' + q.o.map(function (w) { return '<button class="chip-p" type="button" aria-pressed="' + (sel.indexOf(w) >= 0) + '" data-w="' + esc(w) + '">' + esc(w) + "</button>"; }).join("") + "</div>" +
+          '<p class="apoio" data-resta>' + (sel.length >= 2 ? (sel.length === 3 ? "Três marcadas. Toque numa para trocar." : "Mais uma, se quiser.") : "Escolha pelo menos duas.") + "</p>" + cta("Avançar", sel.length >= 2);
+      }
+      return html;
+    }
+    if (i === 8) {
+      var v2 = vert();
+      return (v2 === "posicionamento" ? templo(9) : "") + '<p class="kicker">Contato</p><h3>' + esc(st.r.nome || "Pronto") + ", a sua leitura já começa assim:</h3>" +
+        '<p class="teaser">"' + esc(fraseDela()) + '"</p>' +
+        '<p class="apoio">Me diz onde te enviar o restante.</p>' +
+        '<div class="campo"><label for="p-wa">WhatsApp</label><div class="campo-linha"><svg aria-hidden="true"><use href="#i-chat"/></svg><input id="p-wa" type="tel" inputmode="tel" placeholder="DDD e número" value="' + esc(st.r.wa || "") + '"></div></div>' +
+        '<div class="campo"><label for="p-em">E-mail (opcional)</label><div class="campo-linha"><svg aria-hidden="true"><use href="#i-envelope"/></svg><input id="p-em" type="email" placeholder="seu@email.com"></div></div>' +
+        '<p class="privacidade">Seus dados são usados só para montar e te enviar este diagnóstico. Sem spam, sem compartilhar com terceiros.</p>' + cta("Receber meu diagnóstico", (st.r.wa || "").replace(/\D/g, "").length >= 10);
+    }
+    if (i === 9) {
+      return '<p class="kicker">Enquanto monto a sua leitura</p><h3>Pra quando você quer isso resolvido?</h3><p class="apoio">Um toque. Isso só muda o convite do final, nunca o diagnóstico.</p>' +
+        '<div class="opcoes" role="radiogroup" aria-label="Prazo">' + PRAZO.map(function (t, k) { return opcao(vert(), t, k, ["alvo", "doc", "templo", "pontos"][k]); }).join("") + "</div>" +
+        cta("Ver a minha leitura", st.r.prazo != null) + '<button class="pular" type="button" data-pular>Pular</button>';
+    }
+    if (i === 10) {
+      return '<p class="kicker">A sua leitura</p><div class="montando" style="display:grid;gap:14px;margin-top:20px"><p>Lendo o que você escreveu…</p><p>Cruzando com as suas medidas…</p><p>Pronto.</p></div>';
+    }
+    var q2 = ramo().filter(function (z) { return z.t === "medida"; })[0];
+    var cena = CENAS.filter(function (c) { return c.v === st.v; })[0];
+    return '<p class="kicker">A sua leitura</p><h3>' + esc(st.r.nome || "") + ", aqui está o mapa do que você me contou.</h3>" +
+      '<div class="espelho-fim"><p>Você começou pela cena <b>"' + esc(cena ? cena.t : "") + '"</b></p><p>A frase que é sua: <b>"' + esc(fraseDela()) + '"</b></p>' + (q2 && st.r[q2.id] && st.r[q2.id]._toque ? "<p>" + conta(q2) + "</p>" : "") + "</div>" +
+      cta("Continuar no WhatsApp", true) + '<p class="apoio" style="text-align:center">A proposta completa chega por lá, feita com o que você me contou.</p>';
+  }
+
+  function render(anim) {
+    var v = st.i >= 2 ? vert() : "casa";
+    mundo.className = CLASSE[v];
+    if (v === "posicionamento") mundo.setAttribute("data-acabamento", "prancha"); else mundo.removeAttribute("data-acabamento");
+    var p = st.i >= 8 ? 9 : passo();
+    var faixa = st.i === 0 ? "" : faixaHTML(st.prev);
+    tela.innerHTML = faixa + '<div class="miolo' + (anim && !reduz ? " vira" : "") + '">' + (st.recibo ? '<p class="recibo" data-recibo>' + esc(st.recibo) + "</p>" : "") + conteudo() + "</div>";
+    if (v === "estetica") pintarEstetica(st.prev);
+    requestAnimationFrame(function () { requestAnimationFrame(function () { moverFigura(p); st.prev = p; }); });
+    if (st.recibo) { var rc = tela.querySelector("[data-recibo]"); if (!reduz) rc.classList.add("mostra"); st.recibo = null; }
+    marcarSelecionados();
+    if (st.i === 10) {
+      var ps = tela.querySelectorAll(".montando p");
+      ps.forEach(function (e, k) { setTimeout(function () { e.classList.add("on"); }, reduz ? 0 : 500 + k * 900); });
+      setTimeout(function () { if (st.i === 10) { st.i = 11; render(true); } }, reduz ? 300 : 3400);
+    }
+  }
+  function marcarSelecionados() {
+    var i = st.i, val = null;
+    if (i === 1) val = st.v;
+    else if (i >= 2 && i <= 7) val = st.r[ramo()[i - 2].id];
+    else if (i === 9) val = st.r.prazo;
+    if (val == null) return;
+    tela.querySelectorAll('[role="radio"]').forEach(function (b) { if (String(b.getAttribute("data-k")) === String(val)) b.setAttribute("aria-checked", "true"); });
+  }
+  function liberar(ok) { var c = tela.querySelector("[data-cta]"); if (c) c.setAttribute("aria-disabled", ok ? "false" : "true"); }
+  function avancar() {
+    var tipo = st.i === 1 ? "cena" : (st.i >= 2 && st.i <= 7 ? ramo()[st.i - 2].t : null);
+    st.hist.push(st.i);
+    if (tipo) { var l = RECIBO[tipo] || RECIBO.escolha; st.recibo = l[(st.i) % l.length]; }
+    st.i = Math.min(st.i + 1, 11);
+    render(true);
+    tela.scrollTop = 0;
+  }
+
+  tela.addEventListener("click", function (e) {
+    var op = e.target.closest('[role="radio"]');
+    if (op) {
+      op.parentNode.querySelectorAll('[role="radio"]').forEach(function (b) { b.setAttribute("aria-checked", b === op ? "true" : "false"); b.classList.remove("revela"); });
+      if (op.querySelector(".toque") && !reduz) { void op.offsetWidth; op.classList.add("revela"); }
+      var k = op.getAttribute("data-k");
+      if (st.i === 1) { st.v = k; var lv = tela.querySelector("[data-livre]"); if (lv) lv.hidden = k !== "livre"; }
+      else if (st.i >= 2 && st.i <= 7) st.r[ramo()[st.i - 2].id] = +k;
+      else if (st.i === 9) st.r.prazo = +k;
+      liberar(true); return;
+    }
+    var chip = e.target.closest("[data-w]");
+    if (chip) {
+      var q = ramo()[st.i - 2], sel = (st.r[q.id] || []).slice(), w = chip.getAttribute("data-w"), at = sel.indexOf(w);
+      if (at >= 0) sel.splice(at, 1); else { if (sel.length >= 3) sel.shift(); sel.push(w); }
+      st.r[q.id] = sel;
+      tela.querySelectorAll("[data-w]").forEach(function (c) { c.setAttribute("aria-pressed", sel.indexOf(c.getAttribute("data-w")) >= 0 ? "true" : "false"); });
+      tela.querySelector("[data-resta]").textContent = sel.length >= 2 ? (sel.length === 3 ? "Três marcadas. Toque numa para trocar." : "Mais uma, se quiser.") : "Escolha pelo menos duas.";
+      liberar(sel.length >= 2); return;
+    }
+    if (e.target.closest("[data-audio]")) { e.target.closest("[data-audio]").querySelector("span").textContent = "No produto, grava e transcreve aqui."; return; }
+    if (e.target.closest("[data-pular]")) { st.hist.push(st.i); st.i = 10; render(true); return; }
+    var c = e.target.closest("[data-cta]");
+    if (c && c.getAttribute("aria-disabled") !== "true") {
+      if (st.i === 11) { c.innerHTML = "No produto, abre o WhatsApp " + seta(); return; }
+      avancar();
+    }
+  });
+  tela.addEventListener("input", function (e) {
+    var t = e.target;
+    if (t.id === "p-nome") { st.r.nome = t.value; liberar(t.value.trim().length > 1); }
+    else if (t.id === "p-livre") st.livre = t.value;
+    else if (t.id === "p-aberta") { st.r[ramo()[st.i - 2].id] = t.value; liberar(t.value.trim().length > 2); }
+    else if (t.id === "p-wa") { st.r.wa = t.value; liberar(t.value.replace(/\D/g, "").length >= 10); }
+    else if (t.hasAttribute("data-campo")) {
+      var q = ramo()[st.i - 2], val = st.r[q.id] || (st.r[q.id] = {}), cid = t.getAttribute("data-campo");
+      val._toque = val._toque || {};
+      q.campos.forEach(function (c) { if (val[c.id] == null) val[c.id] = c.v; });
+      val[cid] = +t.value; val._toque[cid] = true;
+      if (q.calc === "preco" && val.desejado < val.atual) { val.desejado = val.atual; var d = tela.querySelector("#p-desejado"); if (d) d.value = val.atual; }
+      q.campos.forEach(function (c) { var o = tela.querySelector("#o-" + c.id); if (o) o.textContent = fmt(c, val[c.id]); });
+      var pronto = q.campos.every(function (c) { return val._toque[c.id]; });
+      var cc = tela.querySelector("[data-conta]");
+      if (pronto) { cc.innerHTML = conta(q); cc.classList.add("on"); }
+      liberar(pronto);
+    }
+  });
+  tela.addEventListener("keydown", function (e) {
+    if (e.key === "Enter" && e.target.id === "p-nome") { var c = tela.querySelector("[data-cta]"); if (c) c.click(); }
+  });
+
+  document.getElementById("proto-voltar").addEventListener("click", function () { if (!st.hist.length) return; st.i = st.hist.pop(); st.prev = st.i >= 8 ? 9 : passo(); render(true); });
+  document.getElementById("proto-recomecar").addEventListener("click", function () { novo(); render(true); });
+  document.querySelectorAll("[data-ir]").forEach(function (b) {
+    b.addEventListener("click", function () { novo(); st.r.nome = "Juliana"; st.v = b.getAttribute("data-ir"); st.hist = [0, 1]; st.i = 2; render(true); document.getElementById("prototipo").scrollIntoView({ behavior: reduz ? "auto" : "smooth", block: "start" }); });
+  });
+  novo(); render(false);
+})();
+
+</script>

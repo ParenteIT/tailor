@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { Quiz } from "@/components/quiz";
+import { ControlesTopo } from "@/components/controles-topo";
 import { carregarPreenchimento } from "@/lib/confirmacao-server";
 import { tokenPlausivel } from "@/lib/token";
 
@@ -34,9 +35,28 @@ export default async function DiagnosticoConfirmacao({
   // Link inválido, expirado ou já removido não vira erro: vira o quiz frio.
   // Ela veio responder — mandar de volta para uma página de erro custaria o
   // lead por um problema que é nosso.
-  if (!preenchimento) return <QuizFrioComAviso />;
+  const t = await getTranslations({ locale, namespace: "controles" });
+  const controles = (
+    <ControlesTopo
+      textos={{ idioma: t("idioma"), tema: t("tema"), claro: t("claro"), escuro: t("escuro") }}
+    />
+  );
 
-  return <Quiz confirmacao={preenchimento} />;
+  if (!preenchimento) {
+    return (
+      <>
+        {controles}
+        <QuizFrioComAviso />
+      </>
+    );
+  }
+
+  return (
+    <>
+      {controles}
+      <Quiz confirmacao={preenchimento} />
+    </>
+  );
 }
 
 async function QuizFrioComAviso() {

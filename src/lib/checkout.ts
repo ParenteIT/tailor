@@ -1,5 +1,6 @@
 import "server-only";
 import { PRODUTOS, type Moeda, type ProdutoKey } from "@/content/config";
+import { CLIENTE } from "@/content/clientes";
 import { asaasConfigurado, criarLinkDePagamento } from "@/lib/asaas";
 import { dinheiro } from "@/lib/gap";
 
@@ -21,7 +22,13 @@ import { dinheiro } from "@/lib/gap";
  * com o aviso de demonstração. Nenhum preço é inventado em lugar nenhum.
  */
 
-/** Preço em CENTAVOS, por env. Ausente ou inválido ⇒ produto ainda é ◆. */
+/**
+ * Preço em CENTAVOS, por env. Ausente ou inválido ⇒ produto ainda é ◆.
+ * Os quatro produtos do quiz de personas têm env com nome próprio; um produto
+ * da configuração de cliente usa `PRECO_<ID_EM_CAIXA_ALTA>_CENTAVOS` — o
+ * Dossiê de Imagem da holding (`dossieImagem`) não herda, de propósito, a env
+ * do Dossiê antigo, que guardava outro preço.
+ */
 const ENV_DE_PRECO: Record<ProdutoKey, string> = {
   jornada: "PRECO_JORNADA_CENTAVOS",
   dossie: "PRECO_DOSSIE_CENTAVOS",
@@ -29,8 +36,12 @@ const ENV_DE_PRECO: Record<ProdutoKey, string> = {
   prismaCompleto: "PRECO_PRISMA_COMPLETO_CENTAVOS",
 };
 
-export function precoEmCentavos(produto: ProdutoKey): number | null {
-  const bruto = process.env[ENV_DE_PRECO[produto]];
+function envDePreco(produto: string): string {
+  return (ENV_DE_PRECO as Record<string, string>)[produto] ?? `PRECO_${chaveEnv(produto)}_CENTAVOS`;
+}
+
+export function precoEmCentavos(produto: string): number | null {
+  const bruto = process.env[envDePreco(produto)];
   const n = bruto ? Number(bruto) : Number.NaN;
   return Number.isSafeInteger(n) && n > 0 ? n : null;
 }
@@ -41,19 +52,24 @@ export function precoEmCentavos(produto: ProdutoKey): number | null {
  * divergir. Sem env, devolve null e o chamador mantém o ◆ — nenhum valor é
  * inventado para ficar bonito em demo.
  */
-export function precoExibido(produto: ProdutoKey, moeda: Moeda = "BRL"): string | null {
+export function precoExibido(produto: string, moeda: Moeda = "BRL"): string | null {
   const centavos = precoEmCentavos(produto);
   if (centavos === null) return null;
   return dinheiro(centavos / 100, moeda);
 }
 
 /** Nome de exibição, sobrescrevível por env (`PRODUTO_<CHAVE>_NOME`). */
-export function nomeExibido(produto: ProdutoKey): string {
+export function nomeExibido(produto: string, idioma: string = "pt"): string {
   const env = process.env[`PRODUTO_${chaveEnv(produto)}_NOME`];
-  return env?.trim() || PRODUTOS[produto].nome;
+  if (env?.trim()) return env.trim();
+  const legado = (PRODUTOS as Record<string, { nome: string }>)[produto];
+  if (legado) return legado.nome;
+  const doCliente = CLIENTE.produtos.find((p) => p.id === produto);
+  if (!doCliente) return produto;
+  return (doCliente.nome as Record<string, string>)[idioma] ?? doCliente.nome[CLIENTE.idiomaPadrao];
 }
 
-function chaveEnv(produto: ProdutoKey): string {
+function chaveEnv(produto: string): string {
   return produto.replace(/([A-Z])/g, "_$1").toUpperCase();
 }
 
@@ -69,7 +85,7 @@ export type ResultadoCheckout =
   | { estado: "erro" };
 
 export async function abrirCheckout(opcoes: {
-  produto: ProdutoKey;
+  produto: string;
   leadId: string;
   primeiroNome: string;
   expiraEm: Date;
@@ -80,8 +96,8 @@ export async function abrirCheckout(opcoes: {
 
   try {
     const link = await criarLinkDePagamento({
-      nome: PRODUTOS[opcoes.produto].nome,
-      descricao: `${PRODUTOS[opcoes.produto].nome} — proposta de ${opcoes.primeiroNome}`,
+      nome: nomeExibido(opcoes.produto),
+      descricao: `${nomeExibido(opcoes.produto)} — proposta de ${opcoes.primeiroNome}`,
       centavos,
       referenciaExterna: opcoes.leadId,
       expiraEm: opcoes.expiraEm,

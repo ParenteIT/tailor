@@ -14,6 +14,9 @@ export default createMiddleware(routing);
 export const config = {
   // Fora do matcher de propósito: /api (rotas de servidor não têm locale de
   // caminho) e /p (o link da proposta é curto e compartilhável — não carrega
-  // prefixo de idioma; o idioma dela vem gravado no lead).
-  matcher: "/((?!api|p|_next|_vercel|.*\\..*).*)",
+  // prefixo de idioma; o idioma dela vem gravado no lead). `p/` com a barra:
+  // sem ela, `/pt/...` também ficava de fora e o idioma da página só batia
+  // com o da URL enquanto o padrão era pt (visto em 22/09/2026, quando o
+  // padrão virou en).
+  matcher: "/((?!api|p/|_next|_vercel|.*\\..*).*)",
 };

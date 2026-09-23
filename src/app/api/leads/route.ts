@@ -4,6 +4,12 @@ import { PERSONA_KEYS } from "@/content/personas";
 import { getStore } from "@/lib/store";
 import { identificarChamador, verificarLimiteDuravel } from "@/lib/rate-limit";
 import { normalizarWhatsapp } from "@/lib/quiz-state";
+import {
+  CorpoLeadHolding,
+  dadosDasRespostas,
+  ehCorpoDaHolding,
+  validarRespostas,
+} from "@/lib/holding-servidor";
 
 export const runtime = "nodejs";
 
@@ -68,6 +74,8 @@ export async function POST(req: Request) {
     return NextResponse.json({ erro: "json_invalido" }, { status: 400 });
   }
 
+  if (ehCorpoDaHolding(bruto)) return salvarDaHolding(bruto);
+
   const analise = Corpo.safeParse(bruto);
   if (!analise.success) {
     return NextResponse.json(
@@ -115,6 +123,37 @@ export async function POST(req: Request) {
     return NextResponse.json({ leadId: id });
   } catch (erro) {
     console.error("[tailor] falha ao salvar lead", erro);
+    return NextResponse.json({ erro: "falha_ao_salvar" }, { status: 500 });
+  }
+}
+
+/**
+ * Autosave do diagnóstico da holding. Nome entra desde a tela 1 (decisão de
+ * 10/09); WhatsApp e e-mail nunca passam por aqui — só no gate.
+ */
+async function salvarDaHolding(bruto: unknown) {
+  const corpo = CorpoLeadHolding.safeParse(bruto);
+  if (!corpo.success) {
+    return NextResponse.json({ erro: "corpo_invalido", detalhes: corpo.error.issues }, { status: 400 });
+  }
+  const { leadId, nome, idioma, utm } = corpo.data;
+  const respostas = validarRespostas(corpo.data.respostas, idioma);
+  if (!respostas.ok) {
+    return NextResponse.json({ erro: "respostas_invalidas", detalhes: respostas.detalhes }, { status: 400 });
+  }
+
+  const store = getStore();
+  try {
+    const id = await store.upsertLead(leadId ?? null, {
+      persona: null,
+      nome: nome?.trim() || null,
+      idioma,
+      utm,
+    });
+    await store.salvarRespostas(id, dadosDasRespostas(respostas.respostas, idioma));
+    return NextResponse.json({ leadId: id });
+  } catch (erro) {
+    console.error("[tailor] falha ao salvar lead da holding", erro);
     return NextResponse.json({ erro: "falha_ao_salvar" }, { status: 500 });
   }
 }

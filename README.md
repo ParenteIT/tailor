@@ -14,32 +14,17 @@ Sucesso é ela ler o diagnóstico e pensar *"como ela sabe disso?"*.
 confirmação por link (F5), modo áudio com transcrição trocável Groq/Deepgram
 (F6) e acionamento direto por WhatsApp (mensagem chega, vira lead, devolve link
 de confirmação). Pendente: o restante de F7 (qualidade e segurança seguem em
-auditoria contínua) e a parte que não é código — checkout real, conta
-WhatsApp Cloud API verificada, nota fiscal. Ver `CLAUDE.md` para o log
-detalhado da sessão, decisão por decisão.
+auditoria contínua) e a parte que não é código — ver
+[`docs/PENDING.md`](docs/PENDING.md). Histórico completo, decisão por
+decisão, sessão por sessão, em [`docs/history/CHANGELOG.md`](docs/history/CHANGELOG.md).
 
 ## Próximos passos
 
 Caminho crítico para a Renilza vender de ponta a ponta. Nenhum é código —
-todos dependem de conta, credencial ou decisão. Detalhe e histórico no
-`CLAUDE.md` (entradas de 24/08 e 10/09).
-
-1. **Ativar o webhook do Asaas no painel deles.** O código está pronto
-   (`src/app/api/webhooks/asaas/route.ts`) e desativado de propósito — ativar
-   antes da conta nova (CNPJ da Renilza) ser aprovada faz o Asaas desligar a
-   fila sozinho. Depende da Renilza enviar a documentação pendente ao Asaas.
-2. **Preços reais nas envs `PRECO_*_CENTAVOS`.** `src/content/config.ts` mostra
-   ◆ em tudo; só `PRECO_DOSSIE_CENTAVOS` está documentado como real. Sem env, a
-   proposta assume o aviso de demonstração — nada é inventado.
-3. **Nota fiscal.** Sair da plataforma para checkout próprio tira a emissão
-   automática. Requer contratar um serviço (NFe.io, eNotas) ou processo manual
-   com contador — custo recorrente, decisão do Willian/Renilza.
-4. **Conta WhatsApp Cloud API.** Empresa verificada; falta um número novo (o
-   oficial não migra agora — risco de perder conversas ativas, decisão de
-   24/08) e o merge do fluxo de acionamento quando o número estiver conectado.
-5. **URL canônica.** `sobmedida.renilzamiranda.com` está no ar com HTTPS
-   válido; trocar a URL canônica de `tailor-renilza.netlify.app` para ela é
-   mudança em sistema em uso — cabe ao Willian confirmar quando quiser.
+todos dependem de conta, credencial ou decisão. **Lista completa e sempre
+atual em [`docs/PENDING.md`](docs/PENDING.md)** — os dois maiores bloqueios
+hoje são ativar o webhook do Asaas (código pronto, desligado de propósito) e
+os preços reais em `PRECO_*_CENTAVOS`.
 
 **Prioridade:** entregar o produto da Renilza antes de qualquer trabalho de
 SaaS multi-tenant. A visão de SaaS vive fora deste repo, em

@@ -1,0 +1,918 @@
+/* ==========================================================================
+   Diagnóstico da holding (22/09/2026)
+   ==========================================================================
+   Os componentes genéricos leem só `--v-*`. Os valores de cada mundo são
+   gerados da configuração do cliente (`lib/mundos-css.ts`) e aplicados por
+   `[data-vertente]`; o gesto da escolha, por `[data-gesto]`. Nenhuma cor de
+   vertente mora neste arquivo. Movimento só por transform e opacity — a
+   regra global de `prefers-reduced-motion` em globals.css zera tudo aqui.
+   ========================================================================= */
+
+.h-mundo {
+  --h-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  min-height: 100svh;
+  background: var(--v-fundo);
+  color: var(--v-tinta);
+  font-family: var(--font-read);
+}
+
+.h-grade {
+  min-height: 100svh;
+}
+
+.h-folha {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  max-width: 480px;
+  min-height: 100svh;
+  margin: 0 auto;
+  padding: 12px 20px 28px;
+}
+
+.h-topo {
+  display: flex;
+  justify-content: flex-end;
+  min-height: 40px;
+  margin-bottom: 10px;
+}
+
+.h-faixa {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding-bottom: 14px;
+  margin-bottom: 18px;
+  border-bottom: 1px solid var(--v-acento-suave);
+}
+
+.h-faixa-nome {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 1.25rem;
+  line-height: 1;
+  letter-spacing: -0.01em;
+}
+
+.h-faixa-n,
+.h-contador-desk {
+  margin-top: 5px;
+  font-family: var(--font-rigor);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--v-apoio);
+  font-variant-numeric: tabular-nums;
+}
+
+.h-contador-desk {
+  display: none;
+}
+
+.h-fig {
+  flex: none;
+  width: 132px;
+  height: auto;
+}
+
+.h-fig-casa {
+  width: 116px;
+}
+
+.h-barra {
+  height: 2px;
+  margin: -8px 0 18px;
+  overflow: hidden;
+  border-radius: 2px;
+  background: var(--v-acento-suave);
+}
+
+.h-barra i {
+  display: block;
+  height: 100%;
+  background: var(--v-preenchimento);
+  transform-origin: left;
+}
+
+.h-miolo {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.h-vira {
+  animation: h-vira 520ms var(--h-ease) both;
+}
+
+.h-recibo {
+  margin: -4px 0 0;
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.1rem;
+  text-align: center;
+  color: var(--v-acento);
+  opacity: 0;
+  animation: h-recibo 1600ms var(--h-ease) both;
+}
+
+.h-kicker {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-rigor);
+  font-weight: 500;
+  font-size: 0.72rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--v-apoio);
+}
+
+.h-kicker::before {
+  content: "";
+  flex: none;
+  width: 36px;
+  height: 1px;
+  background: var(--v-ouro);
+}
+
+.h-meta {
+  font-family: var(--font-rigor);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--v-acento);
+}
+
+.h-mundo .h-titulo {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: clamp(1.7rem, 6.8vw, 2.3rem);
+  line-height: 1.16;
+  letter-spacing: -0.005em;
+  color: var(--v-tinta);
+  text-wrap: balance;
+}
+
+.h-mundo .h-titulo em {
+  font-style: italic;
+  color: inherit;
+}
+
+.h-titulo-abertura {
+  margin-top: 8px;
+}
+
+.h-apoio {
+  font-size: 0.98rem;
+  line-height: 1.5;
+  color: var(--v-apoio);
+}
+
+.h-centro {
+  text-align: center;
+}
+
+.h-nota {
+  font-family: var(--font-rigor);
+  font-size: 0.66rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--v-apoio);
+}
+
+/* ---------------------------------------------------------------- opções */
+
+.h-opcoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.h-op {
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  width: 100%;
+  min-height: 48px;
+  padding: 13px 14px;
+  overflow: hidden;
+  text-align: left;
+  font-family: var(--font-read);
+  font-size: 1rem;
+  line-height: 1.4;
+  color: var(--v-tinta);
+  background: var(--v-cartao);
+  border: 1px solid var(--v-linha);
+  border-radius: 2px;
+  cursor: pointer;
+}
+
+.h-op:focus-visible {
+  outline: 2px solid var(--v-acento);
+  outline-offset: 2px;
+}
+
+.h-op[aria-checked="true"] {
+  border-color: var(--v-acento);
+}
+
+.h-op > * {
+  position: relative;
+  z-index: 1;
+}
+
+.h-op-icone {
+  margin-top: -1px;
+  color: var(--v-apoio);
+}
+
+.h-op[aria-checked="true"] .h-op-icone {
+  color: var(--v-tinta);
+}
+
+.h-op-radio {
+  position: relative;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  margin-top: 1px;
+  border: 1px solid var(--v-apoio);
+  border-radius: 50%;
+}
+
+.h-op-radio::after {
+  content: "";
+  position: absolute;
+  inset: 4px;
+  border-radius: 50%;
+  background: var(--v-acento);
+  opacity: 0;
+  transform: scale(0.4);
+  transition:
+    opacity 180ms ease,
+    transform 180ms var(--h-ease);
+}
+
+.h-op[aria-checked="true"] .h-op-radio {
+  border-color: var(--v-acento);
+}
+
+.h-op[aria-checked="true"] .h-op-radio::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.h-op .h-op-fio,
+.h-op .h-op-toques {
+  display: none;
+}
+
+/* Gesto `contorno` (casa): a escolha ganha um segundo fio por dentro. */
+[data-gesto="contorno"] .h-op[aria-checked="true"] {
+  border-color: var(--v-tinta);
+  box-shadow: 0 0 0 1px var(--v-tinta) inset;
+}
+
+/* Gesto `fio`: o fio se desenha sob a opção. */
+[data-gesto="fio"] .h-op .h-op-fio {
+  display: block;
+  position: absolute;
+  left: 14px;
+  right: 14px;
+  bottom: 6px;
+  height: 1px;
+  background: var(--v-acento);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 360ms var(--h-ease);
+}
+
+[data-gesto="fio"] .h-op[aria-checked="true"] .h-op-fio {
+  transform: scaleX(1);
+}
+
+/* Gesto `preenchimento`: a opção se enche da cor da vertente. */
+[data-gesto="preenchimento"] .h-op {
+  align-items: center;
+}
+
+[data-gesto="preenchimento"] .h-op::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--v-preenchimento);
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+[data-gesto="preenchimento"] .h-op .h-op-icone {
+  color: var(--v-acento);
+}
+
+[data-gesto="preenchimento"] .h-op[aria-checked="true"] {
+  border-color: transparent;
+  color: var(--v-tinta-preenchida);
+}
+
+[data-gesto="preenchimento"] .h-op[aria-checked="true"]::before {
+  opacity: 1;
+}
+
+[data-gesto="preenchimento"] .h-op[aria-checked="true"] .h-op-icone,
+[data-gesto="preenchimento"] .h-op[aria-checked="true"] .h-op-radio {
+  color: var(--v-tinta-preenchida);
+  border-color: var(--v-tinta-preenchida);
+}
+
+[data-gesto="preenchimento"] .h-op[aria-checked="true"] .h-op-radio::after {
+  background: var(--v-tinta-preenchida);
+}
+
+[data-gesto="preenchimento"] .h-op:focus-visible {
+  outline-color: var(--v-tinta);
+}
+
+/* Gesto `onda`: o toque que revela, dois anéis que se abrem. */
+[data-gesto="onda"] .h-op .h-op-toques {
+  display: block;
+}
+
+.h-op-toques i {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 18px;
+  height: 18px;
+  margin: -9px 0 0 -9px;
+  border: 1px solid var(--v-acento);
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  animation: h-revela 620ms var(--h-ease) forwards;
+}
+
+.h-op-toques i + i {
+  animation-delay: 110ms;
+}
+
+/* ---------------------------------------------------------------- campos */
+
+.h-campo-grupo {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.h-campo-grupo > label {
+  font-family: var(--font-rigor);
+  font-size: 0.68rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--v-apoio);
+}
+
+.h-mundo .h-campo {
+  width: 100%;
+  min-height: 48px;
+  padding: 0 12px;
+  font-family: var(--font-read);
+  font-size: 1rem;
+  color: var(--v-tinta);
+  background: var(--v-cartao);
+  border: 1px solid var(--v-linha);
+  border-radius: 2px;
+}
+
+.h-mundo .h-campo::placeholder {
+  color: var(--v-apoio);
+}
+
+.h-mundo .h-campo:focus-visible {
+  outline: 2px solid var(--v-acento);
+  outline-offset: 1px;
+}
+
+.h-mundo .h-textarea {
+  min-height: 132px;
+  padding: 12px;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.h-mundo .h-textarea-curta {
+  min-height: 76px;
+}
+
+.h-campo-icone {
+  position: relative;
+}
+
+.h-campo-icone svg {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  margin-top: -8px;
+  color: var(--v-acento);
+  pointer-events: none;
+}
+
+.h-mundo .h-campo-icone .h-campo {
+  padding-left: 38px;
+}
+
+.h-teaser {
+  margin: 0;
+  padding: 4px 0 4px 14px;
+  border-left: 2px solid var(--v-acento);
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.25rem;
+  line-height: 1.35;
+  color: var(--v-tinta);
+}
+
+.h-privacidade {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--v-apoio);
+}
+
+/* Erro sem cor de alerta: nenhum vermelho passa 4,5:1 nos três mundos; o
+   sinal é o filete de acento e o texto na tinta principal. */
+.h-erro {
+  padding-left: 10px;
+  border-left: 2px solid var(--v-acento);
+  font-size: 0.95rem;
+  color: var(--v-tinta);
+}
+
+/* ---------------------------------------------------------------- medida */
+
+.h-reguas {
+  display: grid;
+  gap: 18px;
+}
+
+.h-regua {
+  display: grid;
+  gap: 6px;
+}
+
+.h-regua label {
+  font-size: 0.98rem;
+  line-height: 1.35;
+  color: var(--v-tinta);
+}
+
+.h-regua output {
+  font-family: var(--font-display);
+  font-size: 1.45rem;
+  line-height: 1;
+  color: var(--v-acento);
+}
+
+.h-regua input[type="range"] {
+  width: 100%;
+  min-height: 32px;
+  margin: 0;
+  accent-color: var(--v-acento);
+}
+
+.h-conta {
+  padding-top: 12px;
+  border-top: 1px solid var(--v-acento-suave);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--v-apoio);
+}
+
+.h-conta[data-visivel="sim"] {
+  color: var(--v-tinta);
+  animation: h-vira 600ms var(--h-ease) both;
+}
+
+.h-conta b,
+.h-espelho p > b > b {
+  font-family: var(--font-display);
+  font-weight: 500;
+  font-size: 1.25rem;
+  color: var(--v-acento);
+}
+
+/* ---------------------------------------------------------------- palavras */
+
+.h-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.h-chip {
+  min-height: 44px;
+  padding: 0 16px;
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  color: var(--v-tinta);
+  background: var(--v-cartao);
+  border: 1px solid var(--v-linha);
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+.h-chip:focus-visible {
+  outline: 2px solid var(--v-acento);
+  outline-offset: 2px;
+}
+
+.h-chip[aria-pressed="true"] {
+  border-color: var(--v-acento);
+  box-shadow: 0 0 0 1px var(--v-acento) inset;
+}
+
+[data-gesto="preenchimento"] .h-chip[aria-pressed="true"] {
+  color: var(--v-tinta-preenchida);
+  background: var(--v-preenchimento);
+  border-color: transparent;
+  box-shadow: none;
+}
+
+/* ---------------------------------------------------------------- ações */
+
+.h-acoes {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: auto;
+  padding-top: 18px;
+}
+
+.h-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 54px;
+  padding: 0 22px;
+  font-family: var(--font-rigor);
+  font-weight: 500;
+  font-size: 0.78rem;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: var(--v-botao-tinta);
+  background: var(--v-botao);
+  border: 0;
+  border-radius: var(--v-raio-botao);
+  cursor: pointer;
+  transition: opacity 180ms ease;
+}
+
+.h-cta[aria-disabled="true"] {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.h-cta:focus-visible {
+  outline: 2px solid var(--v-acento);
+  outline-offset: 3px;
+}
+
+.h-link {
+  align-self: center;
+  min-height: 44px;
+  padding: 0 8px;
+  font-family: var(--font-rigor);
+  font-size: 0.7rem;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--v-apoio);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+  cursor: pointer;
+}
+
+.h-link:focus-visible {
+  outline: 2px solid var(--v-acento);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------- pós-gate */
+
+.h-montando {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.h-montando p {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-size: 1.4rem;
+  color: var(--v-apoio);
+  opacity: 0;
+  transform: translateY(6px);
+  transition:
+    opacity 500ms var(--h-ease),
+    transform 500ms var(--h-ease);
+}
+
+.h-montando p[data-acesa="sim"] {
+  color: var(--v-tinta);
+  opacity: 1;
+  transform: none;
+}
+
+.h-espelho {
+  display: grid;
+  gap: 12px;
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--v-apoio);
+}
+
+.h-espelho b {
+  font-weight: 500;
+  color: var(--v-tinta);
+}
+
+/* ---------------------------------------------------------------- figuras */
+
+.h-templo {
+  width: 78px;
+  height: auto;
+}
+
+.h-templo-corpo {
+  display: flex;
+  justify-content: center;
+}
+
+.h-templo-grande {
+  width: 100%;
+  max-width: 260px;
+}
+
+/* ---------------------------------------------------------------- logo */
+
+.h-logo {
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  align-self: center;
+  gap: 10px;
+  margin: 18px 0 10px;
+}
+
+/* Bodoni só na logo (exceção assinada, handoff §5 e §6). O arquivo da fonte
+   ainda não está no repo: até entrar em src/fonts, a pilha cai nas Didone
+   do sistema. */
+.h-logo-nome {
+  padding-left: 0.2em;
+  font-family: "Bodoni Moda", "Bodoni 72", "Bodoni MT", Didot, "Didot LT STD", Georgia, serif;
+  font-weight: 400;
+  font-size: clamp(1.4rem, 6.4vw, 2.1rem);
+  line-height: 1;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: h-logo 1100ms var(--h-ease) both;
+}
+
+.h-logo-filete {
+  width: 100%;
+  height: 1px;
+  transform-origin: center;
+  animation: h-filete 900ms var(--h-ease) 250ms both;
+}
+
+.h-logo-sub {
+  padding-left: 0.32em;
+  font-family: var(--font-rigor);
+  font-weight: 500;
+  font-size: 0.6rem;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  text-align: center;
+  animation: h-logo 1100ms var(--h-ease) 450ms both;
+}
+
+/* ---------------------------------------------------------------- desktop */
+
+.h-painel {
+  display: none;
+}
+
+@media (min-width: 1024px) {
+  .h-grade {
+    display: grid;
+    grid-template-columns: minmax(340px, 36%) 1fr;
+  }
+
+  .h-painel {
+    /* Dentro do painel a figura usa a tinta dele, não a da folha. */
+    --v-acento: var(--v-painel-acento);
+    --v-tinta: var(--v-painel-tinta);
+    --v-linha: var(--v-painel-apoio);
+    --v-trilho: var(--v-painel-apoio);
+    position: sticky;
+    top: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 44px;
+    height: 100svh;
+    padding: 56px 48px 48px;
+    color: var(--v-painel-tinta);
+    background: var(--v-painel);
+    border-right: 1px solid var(--v-acento-suave);
+  }
+
+  .h-painel-nome {
+    font-family: var(--font-display);
+    font-weight: 300;
+    font-size: 1.9rem;
+    line-height: 1;
+    letter-spacing: -0.02em;
+  }
+
+  .h-painel-sub {
+    margin-top: 8px;
+    font-family: var(--font-rigor);
+    font-size: 0.64rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--v-painel-apoio);
+  }
+
+  .h-passos {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .h-passos li {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-family: var(--font-rigor);
+    font-size: 0.7rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--v-painel-apoio);
+  }
+
+  .h-passos i {
+    flex: none;
+    width: 10px;
+    height: 10px;
+    border: 1px solid currentColor;
+    border-radius: 50%;
+  }
+
+  .h-passos li[data-estado="feito"] i {
+    background: currentColor;
+  }
+
+  .h-passos li[data-estado="ativo"] {
+    color: var(--v-painel-tinta);
+  }
+
+  .h-passos li[data-estado="ativo"] i {
+    border-color: var(--v-painel-acento);
+    box-shadow: 0 0 0 3px color-mix(in srgb, var(--v-painel-acento) 30%, transparent);
+  }
+
+  .h-painel-obj {
+    display: flex;
+    flex: 1;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+  }
+
+  .h-painel-figura {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 28px;
+    width: 100%;
+  }
+
+  .h-painel-figura .h-fig {
+    width: 100%;
+    max-width: 320px;
+  }
+
+  .h-painel-icone {
+    color: var(--v-painel-acento);
+  }
+
+  .h-painel-rodape {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-size: 1rem;
+    color: var(--v-painel-apoio);
+  }
+
+  .h-folha {
+    max-width: 620px;
+    padding: 28px 56px 48px;
+  }
+
+  .h-folha-sozinha {
+    max-width: 560px;
+  }
+
+  .h-faixa,
+  .h-barra,
+  .h-templo-corpo {
+    display: none;
+  }
+
+  .h-contador-desk {
+    display: block;
+    margin: 0 0 22px;
+    text-align: center;
+  }
+
+  .h-acoes {
+    align-items: flex-end;
+  }
+
+  .h-cta {
+    width: auto;
+    min-width: 260px;
+  }
+
+  .h-link {
+    align-self: flex-end;
+  }
+}
+
+@keyframes h-vira {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes h-recibo {
+  0% {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  18% {
+    opacity: 1;
+    transform: none;
+  }
+  75% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes h-revela {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.5);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.6);
+  }
+}
+
+@keyframes h-logo {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+@keyframes h-filete {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}

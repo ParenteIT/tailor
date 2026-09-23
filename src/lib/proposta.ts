@@ -6,7 +6,6 @@ import {
   moedaDoIdioma,
   type FaixaInvestimento,
   type Moeda,
-  type ProdutoKey,
 } from "@/content/config";
 import { PERSONAS, type PersonaKey } from "@/content/personas";
 import { analisarRespostas, type Analise } from "@/lib/analise";
@@ -21,6 +20,17 @@ import {
 } from "@/lib/gap";
 import { PROMPT_DIAGNOSTICO, VERSAO_PROMPT } from "../../prompts/v1";
 import mensagensPt from "../../messages/pt.json";
+import { moedaDe, txt, type Cliente, type Idioma, type Moeda as MoedaCliente, type Pergunta } from "@/content/clientes";
+import {
+  CENA_LIVRE,
+  contaDaMedida,
+  escolherOferta as escolherOfertaDaHolding,
+  leituraManual,
+  opcoesDaFaixa,
+  perguntaDeFaixa,
+  vertenteDaCena,
+  type RespostasHolding,
+} from "@/lib/fluxo";
 
 /**
  * As palavras da Q6 são gravadas como CHAVE ("memoravel"); o exibível, com
@@ -32,6 +42,22 @@ const PALAVRA_LEGIVEL: Record<string, string> = mensagensPt.futuro.palavras;
 
 function palavrasLegiveis(palavras: string[]): string[] {
   return palavras.map((p) => PALAVRA_LEGIVEL[p] ?? p);
+}
+
+/**
+ * A27 (auditoria 19/09): a situação também passou a ser gravada como CHAVE
+ * (s1..s4, por persona), não mais o texto — mesma razão da palavra acima.
+ * "outro" nunca passa por aqui: já chega como texto livre dela.
+ */
+const SITUACAO_LEGIVEL: Record<string, Record<string, string>> =
+  mensagensPt.espelho.situacoes;
+
+function situacaoLegivel(
+  persona: PersonaKey,
+  situacao: string | null | undefined
+): string | null {
+  if (!situacao) return null;
+  return SITUACAO_LEGIVEL[persona]?.[situacao] ?? situacao;
 }
 
 export interface RespostasProposta {
@@ -55,7 +81,13 @@ export interface RespostasProposta {
 
 export interface ConteudoProposta {
   versaoPrompt: string;
-  persona: PersonaKey;
+  /** Só nas propostas do quiz de personas (modo confirmação legado). */
+  persona?: PersonaKey;
+  /** Só nas propostas da holding: a vertente e o cliente que a geraram. */
+  vertente?: string;
+  cliente?: string;
+  /** "Nenhuma dessas" na cena: a Renilza lê à mão antes de responder. */
+  leituraManual?: boolean;
   nome: string;
   /** Bloco 2 — a única parte escrita por modelo. */
   diagnostico: string;
@@ -73,7 +105,7 @@ export interface ConteudoProposta {
    * O que o Bloco 7 oferta, escolhido pela faixa que ela marcou na Q9.
    * Gravado junto com a proposta para que reabrir o link não mude a oferta.
    */
-  oferta: { produto: ProdutoKey; nome: string; preco: string };
+  oferta: { produto: string; nome: string; preco: string; nivel?: string } | null;
   /** Moeda em que ela declarou — a proposta reabre sempre igual. */
   moeda: Moeda;
   /** Idioma em que ela respondeu — decide a língua da proposta ao reabrir. */
@@ -103,15 +135,16 @@ export async function montarProposta(
   const gap = calcularGap(respostas, persona.trilha);
   const analise = await analisarRespostas({
     persona: respostas.persona,
-    situacao: respostas.situacaoOutro?.trim() || respostas.situacao,
+    situacao:
+      respostas.situacaoOutro?.trim() ||
+      situacaoLegivel(respostas.persona, respostas.situacao),
     q3: respostas.q3,
     palavras: respostas.palavras,
   });
 
   const { texto: diagnostico, degradado } = await escreverDiagnostico(
-    respostas,
-    analise,
-    gap
+    entradaDoDiagnostico(respostas, gap),
+    () => diagnosticoDeReserva(respostas, analise)
   );
 
   return {
@@ -165,23 +198,22 @@ function escolherOferta(faixa: string | null | undefined, moeda: Moeda) {
   };
 }
 
-async function escreverDiagnostico(
-  respostas: RespostasProposta,
-  analise: Analise,
-  gap: Gap | null
-): Promise<{ texto: string; degradado: boolean }> {
-  if (!llmDisponivel()) {
-    return { texto: diagnosticoDeReserva(respostas, analise), degradado: true };
-  }
-
-  const entrada = [
+function entradaDoDiagnostico(respostas: RespostasProposta, gap: Gap | null): string {
+  return [
     `Primeiro nome: ${respostas.nome.trim()}`,
     `Frase-espelho escolhida: ${respostas.persona}`,
-    `Situação marcada: ${respostas.situacaoOutro?.trim() || respostas.situacao || "(não informada)"}`,
+    `Situação marcada: ${respostas.situacaoOutro?.trim() || situacaoLegivel(respostas.persona, respostas.situacao) || "(não informada)"}`,
     `O que ela escreveu sobre a única coisa que mudaria tudo: "${respostas.q3.trim()}"`,
     `Palavras de identidade escolhidas: ${palavrasLegiveis(respostas.palavras).join(", ") || "(nenhuma)"}`,
     gap ? `Números que ela declarou: ${JSON.stringify(gap)}` : "Ela não declarou números.",
   ].join("\n");
+}
+
+async function escreverDiagnostico(
+  entrada: string,
+  reserva: () => string
+): Promise<{ texto: string; degradado: boolean }> {
+  if (!llmDisponivel()) return { texto: reserva(), degradado: true };
 
   try {
     const { texto, recusado } = await escreverTexto({
@@ -192,15 +224,13 @@ async function escreverDiagnostico(
 
     if (recusado) {
       console.warn("[tailor] diagnóstico recusado pelos classificadores");
-      return { texto: diagnosticoDeReserva(respostas, analise), degradado: true };
+      return { texto: reserva(), degradado: true };
     }
-    if (!texto) {
-      return { texto: diagnosticoDeReserva(respostas, analise), degradado: true };
-    }
+    if (!texto) return { texto: reserva(), degradado: true };
     return { texto, degradado: false };
   } catch (erro) {
     console.error("[tailor] falha ao gerar diagnóstico", erro);
-    return { texto: diagnosticoDeReserva(respostas, analise), degradado: true };
+    return { texto: reserva(), degradado: true };
   }
 }
 
@@ -225,4 +255,136 @@ function diagnosticoDeReserva(
     );
   }
   return partes.join(" ");
+}
+
+/* ==========================================================================
+   Proposta da holding — a vertente decide o mundo, a faixa decide a oferta
+   ========================================================================= */
+
+/** A resposta como ela leu na tela, na língua em que respondeu. */
+function respostaLegivel(p: Pergunta, valor: unknown, idioma: Idioma, moeda: MoedaCliente): string | null {
+  if (valor === undefined || valor === null) return null;
+  switch (p.tipo) {
+    case "escolha": {
+      const o = p.opcoes.find((x) => x.id === valor);
+      return o ? txt(o.texto, idioma) : null;
+    }
+    case "faixa": {
+      const o = opcoesDaFaixa(p, moeda).find((x) => x.id === valor);
+      return o ? txt(o.texto, idioma) : null;
+    }
+    case "aberta":
+      return typeof valor === "string" && valor.trim() ? `"${valor.trim()}"` : null;
+    case "palavras":
+      return Array.isArray(valor) ? palavrasDaHolding(p, valor, idioma).join(", ") || null : null;
+    case "medida":
+      return null;
+  }
+}
+
+function palavrasDaHolding(p: Pergunta & { tipo: "palavras" }, ids: unknown[], idioma: Idioma): string[] {
+  return ids
+    .map((w) => p.opcoes.find((o) => o.id === w))
+    .filter((o): o is NonNullable<typeof o> => Boolean(o))
+    .map((o) => txt(o.texto, idioma));
+}
+
+/**
+ * Chamado só depois de a rota validar as respostas contra a configuração e
+ * conferir o ramo completo — aqui nada é revalidado, só lido.
+ */
+export async function montarPropostaHolding(opcoes: {
+  cliente: Cliente;
+  respostas: RespostasHolding;
+  idioma: Idioma;
+}): Promise<ConteudoProposta> {
+  const { cliente, respostas: r, idioma } = opcoes;
+  const moeda = moedaDe(cliente, idioma);
+  const vertente = vertenteDaCena(cliente, r.cena);
+  if (!vertente) throw new Error("[tailor] proposta sem vertente");
+
+  const nome = r.nome.trim();
+  const primeiroNome = nome.split(/\s+/)[0] ?? nome;
+  const aberta = vertente.perguntas.find((p) => p.tipo === "aberta");
+  const escrita = aberta ? r.ramo[aberta.id] : undefined;
+  const frase = typeof escrita === "string" ? escrita.trim() : "";
+  const medida = vertente.perguntas.find((p): p is Pergunta & { tipo: "medida" } => p.tipo === "medida");
+  const gap = medida ? contaDaMedida(medida, r.ramo[medida.id]) : null;
+  const perguntaPalavras = vertente.perguntas.find(
+    (p): p is Pergunta & { tipo: "palavras" } => p.tipo === "palavras"
+  );
+  const idsPalavras = perguntaPalavras ? r.ramo[perguntaPalavras.id] : undefined;
+  const palavras =
+    perguntaPalavras && Array.isArray(idsPalavras) ? palavrasDaHolding(perguntaPalavras, idsPalavras, idioma) : [];
+  const faixa = perguntaDeFaixa(vertente);
+  const marcada = faixa ? r.ramo[faixa.id] : undefined;
+  const faixaId = typeof marcada === "string" ? marcada : null;
+  const cena = r.cena === CENA_LIVRE ? r.livre.trim() : txt(vertente.cena.texto, idioma);
+
+  const linhas = vertente.perguntas
+    .map((p) => {
+      const lida = respostaLegivel(p, r.ramo[p.id], idioma, moeda);
+      return lida ? `${txt(p.titulo, idioma).replace(/\*/g, "")} → ${lida}` : null;
+    })
+    .filter((l): l is string => Boolean(l));
+
+  const analise = await analisarRespostas({ cena, q3: frase, respostas: linhas, palavras });
+
+  const entrada = [
+    `Primeiro nome: ${primeiroNome}`,
+    `Cena em que ela se reconheceu: "${cena}"`,
+    ...linhas,
+    gap ? `Números que ela declarou: ${JSON.stringify(gap)}` : "Ela não declarou números.",
+  ].join("\n");
+
+  const reserva = () => {
+    const partes = [
+      txt(cliente.textos.reserva.frase, idioma, {
+        nome: primeiroNome,
+        // A frase dela já costuma terminar em ponto; o texto fecha a citação
+        // com outro. Sem isto sai `escuras.".`.
+        frase: (analise.verbatimQ3 || frase || cena).replace(/[.!?…\s]+$/u, ""),
+      }),
+      txt(cliente.textos.reserva.guardei, idioma),
+    ];
+    if (palavras.length) {
+      partes.push(txt(cliente.textos.reserva.palavras, idioma, { palavras: palavras.join(", ") }));
+    }
+    return partes.join(" ");
+  };
+
+  const { texto: diagnostico, degradado } = await escreverDiagnostico(entrada, reserva);
+  const produto = escolherOfertaDaHolding(cliente, vertente.id, faixaId, moeda);
+  const nivel = produto ? vertente.niveis[produto.nivel] : undefined;
+
+  return {
+    versaoPrompt: VERSAO_PROMPT,
+    vertente: vertente.id,
+    cliente: cliente.id,
+    leituraManual: leituraManual(r),
+    nome,
+    diagnostico,
+    diagnosticoDegradado: degradado,
+    analise: { ...analise, verbatimQ3: analise.verbatimQ3 || frase },
+    gap,
+    // A fita métrica é a esteira antiga (Jornada → Dossiê → Prisma), que a
+    // holding desmembrou; o desenho da proposta por vertente ainda não
+    // existe (handoff §10). Sem fita até existir.
+    fita: null,
+    palavras,
+    q9: faixaId,
+    // Preço exibido: a mesma env que cobra, ou ◆. O preço de referência da
+    // configuração só decide QUAL produto cabe, nunca aparece na tela.
+    oferta: produto
+      ? {
+          produto: produto.id,
+          nome: nomeExibido(produto.id, idioma),
+          preco: precoExibido(produto.id, moeda) ?? "◆",
+          nivel: nivel ? txt(nivel, idioma) : undefined,
+        }
+      : null,
+    moeda,
+    idioma,
+    geradoEm: new Date().toISOString(),
+  };
 }

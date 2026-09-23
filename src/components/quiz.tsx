@@ -141,7 +141,39 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
 
   useEffect(() => {
     rolarAte(topo.current, "start");
+    // A26 (auditoria 19/09): trocar de peça só rolava — foco e leitor de
+    // tela ficavam na pergunta anterior. tabIndex={-1} no <div ref={topo}>
+    // deixa focar sem entrar na ordem normal de Tab.
+    topo.current?.focus({ preventScroll: true });
   }, [indice]);
+
+  /**
+   * A22 (auditoria 19/09): com o teclado do celular aberto sob uma
+   * `CampoAberto` (textarea), o Continuar ficava fora do alcance — ela
+   * precisava fechar o teclado, rolar e só então tocar. `visualViewport` é a
+   * única forma confiável de saber quanto o teclado cobre: a altura do
+   * viewport de layout não muda, só a do visual. Ainda pede confirmação num
+   * aparelho real (iOS in-app browser inclusive) — não dá pra simular teclado
+   * de software neste ambiente.
+   */
+  const [pisoTeclado, setPisoTeclado] = useState<number | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const medir = () => {
+      const emCampoAberto = document.activeElement instanceof HTMLTextAreaElement;
+      const coberto = window.innerHeight - vv.height - vv.offsetTop;
+      setPisoTeclado(emCampoAberto && coberto > 120 ? coberto : null);
+    };
+    vv.addEventListener("resize", medir);
+    vv.addEventListener("scroll", medir);
+    document.addEventListener("focusout", medir, true);
+    return () => {
+      vv.removeEventListener("resize", medir);
+      vv.removeEventListener("scroll", medir);
+      document.removeEventListener("focusout", medir, true);
+    };
+  }, []);
 
   /**
    * Retomada — declarada ANTES do efeito que guarda, para rodar primeiro no
@@ -375,7 +407,16 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
           úteis, 104px de topo empurravam a revelação do espelho e o CTA para
           fora da dobra. */}
       <main className="mx-auto flex min-h-svh w-full max-w-[var(--container-leitura)] flex-col justify-center px-p4 pt-p5 pb-p4 sm:px-p5 sm:py-p6">
-        <div ref={topo} />
+        <div
+          ref={topo}
+          tabIndex={-1}
+          aria-label={
+            etapa !== "abertura" && etapa !== "pico"
+              ? t(`peca.${etapa}`)
+              : undefined
+          }
+          style={{ outline: "none" }}
+        />
         {avisoMoeda && etapa === "gap" ? (
           <p className="notacao surgir mb-p3">{t("retomada.moeda")}</p>
         ) : null}
@@ -479,7 +520,24 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
 
         {etapa !== "pico" ? (
           <>
-            <div className="mt-p4 flex flex-wrap items-center gap-p3 sm:mt-p5">
+            <div
+              className="mt-p4 flex flex-wrap items-center gap-p3 sm:mt-p5"
+              style={
+                pisoTeclado != null
+                  ? {
+                      position: "fixed",
+                      left: 0,
+                      right: 0,
+                      bottom: pisoTeclado,
+                      margin: 0,
+                      padding: "12px var(--spacing-p4)",
+                      background: "var(--surface)",
+                      borderTop: "1px solid var(--rule)",
+                      zIndex: 40,
+                    }
+                  : undefined
+              }
+            >
               {/* Confirmando, quem avança é o cartão: dois botões para a mesma
                   ação seria pedir a decisão duas vezes. O voltar continua. */}
               {verbatim ? null : etapa === "gate" ? (
@@ -716,13 +774,16 @@ function Espelho({
           </p>
 
           <h3 className="mb-p3">{t(`espelho.situacaoTitulo.${escolhida}`)}</h3>
-          {(t.raw(`espelho.situacoes.${escolhida}`) as string[]).map((opcao) => (
+          {/* A27: chave estável (s1..s4), não o texto — ver comentário na Q7. */}
+          {Object.entries(
+            t.raw(`espelho.situacoes.${escolhida}`) as Record<string, string>
+          ).map(([chave, texto]) => (
             <LinhaOpcao
-              key={opcao}
-              selecionada={r.situacao === opcao}
-              onClick={() => atualizar({ situacao: opcao })}
+              key={chave}
+              selecionada={r.situacao === chave}
+              onClick={() => atualizar({ situacao: chave })}
             >
-              {opcao}
+              {texto}
             </LinhaOpcao>
           ))}
           <LinhaOpcao
@@ -1262,16 +1323,20 @@ function Q7({
   atualizar: (p: Partial<Respostas>) => void;
 }) {
   const t = useTranslations();
+  // A27 (auditoria 19/09): a resposta grava a CHAVE ("compras", "nada"…),
+  // não o texto — sobrevive à troca de idioma e permite Q7 por persona no
+  // futuro sem reler o valor salvo como se fosse a pergunta de outra língua.
+  const opcoes = t.raw("q7.opcoes") as Record<string, string>;
   return (
     <>
       <h2 className="mb-p4">{t("q7.titulo")}</h2>
-      {(t.raw("q7.opcoes") as string[]).map((opcao) => (
+      {Object.entries(opcoes).map(([chave, texto]) => (
         <LinhaOpcao
-          key={opcao}
-          selecionada={r.q7 === opcao}
-          onClick={() => atualizar({ q7: opcao })}
+          key={chave}
+          selecionada={r.q7 === chave}
+          onClick={() => atualizar({ q7: chave })}
         >
-          {opcao}
+          {texto}
         </LinhaOpcao>
       ))}
       <LinhaOpcao
@@ -1303,21 +1368,23 @@ function Q8({
   atualizar: (p: Partial<Respostas>) => void;
 }) {
   const t = useTranslations();
-  const opcoes = t.raw("q8.opcoes") as string[];
+  // A27: mesma migração de chave estável da Q7 — ver comentário lá.
+  const opcoes = t.raw("q8.opcoes") as Record<string, string>;
+  const chaves = Object.keys(opcoes);
   return (
     <>
       <h2 className="mb-p4">{t("q8.titulo")}</h2>
-      {opcoes.map((opcao) => (
+      {chaves.map((chave) => (
         <LinhaOpcao
-          key={opcao}
-          selecionada={r.q8 === opcao}
-          onClick={() => atualizar({ q8: opcao })}
+          key={chave}
+          selecionada={r.q8 === chave}
+          onClick={() => atualizar({ q8: chave })}
         >
-          {opcao}
+          {opcoes[chave]}
         </LinhaOpcao>
       ))}
       <div className="mt-p2">
-        <CenaMarcoPrazo total={opcoes.length} indice={indiceOpcao(opcoes, r.q8)} />
+        <CenaMarcoPrazo total={chaves.length} indice={indiceOpcao(chaves, r.q8)} />
       </div>
     </>
   );
@@ -1607,7 +1674,14 @@ function Pico({
    * "% de armário desejado" nem faturamento projetado, porque ela nunca
    * declarou nenhum dos dois.
    */
-  const situacaoDita = r.situacao === "outro" ? r.situacaoOutro : r.situacao;
+  // A27: r.situacao guarda a CHAVE (s1..s4) desde a migração — resolve pro
+  // texto na língua atual aqui, não na captura.
+  const situacaoDita =
+    r.situacao === "outro"
+      ? r.situacaoOutro
+      : r.situacao && r.persona
+        ? t(`espelho.situacoes.${r.persona}.${r.situacao}`)
+        : null;
   const leituraHoje = [
     r.persona &&
       (situacaoDita
@@ -1630,7 +1704,7 @@ function Pico({
     // quebrava ("você já tinha tentado: comprei roupas").
     r.q7 &&
       t("pico.leitura.tentou", {
-        tentou: r.q7 === "outro" ? r.q7Outro : r.q7,
+        tentou: r.q7 === "outro" ? r.q7Outro : t(`q7.opcoes.${r.q7}`),
       }),
   ].filter((frase): frase is string => Boolean(frase));
 
@@ -1649,7 +1723,7 @@ function Pico({
         : t("pico.leitura.metaSemGap", { meta: fmt(gap.precoDesejado) })),
     gap?.trilha === "guarda_roupa" &&
       t("pico.leitura.adormecido", { valor: fmt(gap.valorParado) }),
-    r.q8 && t("pico.leitura.prazo", { prazo: minuscula(r.q8) }),
+    r.q8 && t("pico.leitura.prazo", { prazo: minuscula(t(`q8.opcoes.${r.q8}`)) }),
   ].filter((frase): frase is string => Boolean(frase));
 
   return (
@@ -1682,7 +1756,12 @@ function Pico({
           <a
             href={url}
             onClick={irParaProposta}
-            className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
+            // A05/A18 (auditoria 19/09): "Ver minha proposta completa" não
+            // cabe numa linha em px-p4 a 375px — encurtar o rótulo é decisão
+            // de copy (passa pela Renilza); aqui só o remédio de layout que
+            // a auditoria também aceita: padding e gap menores abaixo de
+            // 640px, mesmo texto.
+            className="notacao cta-pico inline-flex items-center gap-p1 px-p3 py-p3 sm:gap-p2 sm:px-p4"
             style={{
               background: "var(--color-cta)",
               color: "var(--color-cta-ink)",

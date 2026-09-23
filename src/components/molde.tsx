@@ -638,7 +638,7 @@ export function BotaoAudio({
         type="button"
         onClick={onParar}
         className="notacao mt-p2 inline-flex cursor-pointer items-center gap-p2"
-        style={{ color: "var(--color-alerta, var(--ink))" }}
+        style={{ color: "var(--color-alerta, var(--ink))", minHeight: 44 }}
       >
         <PulsoGravando />
         {textos.gravando} · {textos.parar}
@@ -659,8 +659,8 @@ export function BotaoAudio({
       <button
         type="button"
         onClick={onIniciar}
-        className="notacao mt-p2 cursor-pointer"
-        style={{ color: "var(--ink-3)" }}
+        className="notacao mt-p2 inline-flex cursor-pointer items-center"
+        style={{ color: "var(--ink-3)", minHeight: 44 }}
       >
         {textos.erro}
       </button>
@@ -672,7 +672,7 @@ export function BotaoAudio({
       type="button"
       onClick={onIniciar}
       className="notacao mt-p2 inline-flex cursor-pointer items-center gap-p2"
-      style={{ color: "var(--ink-3)" }}
+      style={{ color: "var(--ink-3)", minHeight: 44 }}
     >
       <IconeMic />
       {textos.convite}
