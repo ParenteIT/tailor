@@ -377,6 +377,17 @@ textarea {
   color: var(--ink-3);
 }
 
+/* A18 (auditoria 19/09): "Ver minha proposta completa" não cabe numa linha
+   em px-p4 a 375px, mesmo com padding e gap reduzidos (ver quiz.tsx). O
+   remédio de layout que a auditoria aceita sem mexer no texto — encurtar o
+   rótulo é decisão de copy, passa pela Renilza — é apertar só o tracking
+   abaixo de 640px, sem trocar peso nem caixa. */
+@media (max-width: 639px) {
+  .cta-pico {
+    letter-spacing: 0.08em;
+  }
+}
+
 /* O filete de abertura — 36×1px em ouro. Gesto-assinatura do sistema (§4).
    Aqui ele não é enfeite: marca o início da peça, como no molde impresso. */
 .filete {
@@ -600,6 +611,15 @@ textarea {
 .campo:focus {
   outline: none;
   border-bottom-color: var(--accent);
+}
+
+/* A26 (auditoria 19/09): a borda de acento acima não pode ser a única pista
+   de foco — PRODUCT.md:105 pede o anel --color-gold-hi pra navegação por
+   teclado. `:focus-visible` entra por cima só quando o foco vem do teclado;
+   o clique do mouse continua só com a borda. */
+.campo:focus-visible {
+  outline: 2px solid var(--color-gold-hi);
+  outline-offset: 3px;
 }
 
 /* Numeral tabular onde há medida — número que muda não pode dançar. */

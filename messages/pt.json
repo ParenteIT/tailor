@@ -66,24 +66,24 @@
       "carla": "E onde essa distância ficou mais evidente?"
     },
     "situacoes": {
-      "patricia": [
-        "Na frente do armário, atrasada, trocando de roupa três vezes",
-        "Num evento em que eu não sabia o que era apropriado",
-        "Numa foto que alguém postou sem me avisar",
-        "Num dia comum, só o cansaço de sempre parecer a mesma"
-      ],
-      "camila": [
-        "Numa reunião em que eu sabia mais e falaram com outra pessoa",
-        "Numa proposta que perdi pra alguém menos preparada",
-        "Num convite que não veio, e eu soube depois",
-        "Numa entrega em que meu trabalho brilhou e eu não"
-      ],
-      "carla": [
-        "Quando uma paciente comparou meu preço com o de quem entrega menos",
-        "Numa foto do consultório que não parecia o meu padrão",
-        "Num congresso em que colegas de resultado inferior tinham mais presença",
-        "Quando percebi que minha imagem não sustentava meu reajuste"
-      ]
+      "patricia": {
+        "s1": "Na frente do armário, atrasada, trocando de roupa três vezes",
+        "s2": "Num evento em que eu não sabia o que era apropriado",
+        "s3": "Numa foto que alguém postou sem me avisar",
+        "s4": "Num dia comum, só o cansaço de sempre parecer a mesma"
+      },
+      "camila": {
+        "s1": "Numa reunião em que eu sabia mais e falaram com outra pessoa",
+        "s2": "Numa proposta que perdi pra alguém menos preparada",
+        "s3": "Num convite que não veio, e eu soube depois",
+        "s4": "Numa entrega em que meu trabalho brilhou e eu não"
+      },
+      "carla": {
+        "s1": "Quando uma paciente comparou meu preço com o de quem entrega menos",
+        "s2": "Numa foto do consultório que não parecia o meu padrão",
+        "s3": "Num congresso em que colegas de resultado inferior tinham mais presença",
+        "s4": "Quando percebi que minha imagem não sustentava meu reajuste"
+      }
     },
     "outraSituacao": "Foi outra coisa",
     "outraSituacaoPlaceholder": "Me conta em uma linha."
@@ -153,23 +153,23 @@
   },
   "q7": {
     "titulo": "O que você já tentou pra resolver isso?",
-    "opcoes": [
-      "Comprei roupas e coisas novas por conta própria",
-      "Segui dicas prontas de influenciadoras",
-      "Já pensei em terapia ou trabalhar autoestima",
-      "Nunca tentei nada estruturado"
-    ],
+    "opcoes": {
+      "compras": "Comprei roupas e coisas novas por conta própria",
+      "influenciadoras": "Segui dicas prontas de influenciadoras",
+      "autoestima": "Já pensei em terapia ou trabalhar autoestima",
+      "nada": "Nunca tentei nada estruturado"
+    },
     "outro": "Outro",
     "outroPlaceholder": "O que foi?"
   },
   "q8": {
     "titulo": "Pra quando você quer isso resolvido?",
-    "opcoes": [
-      "Quero começar essa semana",
-      "Quero resolver nas próximas 2 a 4 semanas",
-      "Quero resolver esse trimestre",
-      "Sem pressa, só juntando informação por enquanto"
-    ]
+    "opcoes": {
+      "semana": "Quero começar essa semana",
+      "quatroSemanas": "Quero resolver nas próximas 2 a 4 semanas",
+      "trimestre": "Quero resolver esse trimestre",
+      "semPressa": "Sem pressa, só juntando informação por enquanto"
+    }
   },
   "q9": {
     "titulo": {

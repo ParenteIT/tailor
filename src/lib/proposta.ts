@@ -34,6 +34,22 @@ function palavrasLegiveis(palavras: string[]): string[] {
   return palavras.map((p) => PALAVRA_LEGIVEL[p] ?? p);
 }
 
+/**
+ * A27 (auditoria 19/09): a situação também passou a ser gravada como CHAVE
+ * (s1..s4, por persona), não mais o texto — mesma razão da palavra acima.
+ * "outro" nunca passa por aqui: já chega como texto livre dela.
+ */
+const SITUACAO_LEGIVEL: Record<string, Record<string, string>> =
+  mensagensPt.espelho.situacoes;
+
+function situacaoLegivel(
+  persona: PersonaKey,
+  situacao: string | null | undefined
+): string | null {
+  if (!situacao) return null;
+  return SITUACAO_LEGIVEL[persona]?.[situacao] ?? situacao;
+}
+
 export interface RespostasProposta {
   persona: PersonaKey;
   situacao: string | null;
@@ -103,7 +119,9 @@ export async function montarProposta(
   const gap = calcularGap(respostas, persona.trilha);
   const analise = await analisarRespostas({
     persona: respostas.persona,
-    situacao: respostas.situacaoOutro?.trim() || respostas.situacao,
+    situacao:
+      respostas.situacaoOutro?.trim() ||
+      situacaoLegivel(respostas.persona, respostas.situacao),
     q3: respostas.q3,
     palavras: respostas.palavras,
   });
@@ -177,7 +195,7 @@ async function escreverDiagnostico(
   const entrada = [
     `Primeiro nome: ${respostas.nome.trim()}`,
     `Frase-espelho escolhida: ${respostas.persona}`,
-    `Situação marcada: ${respostas.situacaoOutro?.trim() || respostas.situacao || "(não informada)"}`,
+    `Situação marcada: ${respostas.situacaoOutro?.trim() || situacaoLegivel(respostas.persona, respostas.situacao) || "(não informada)"}`,
     `O que ela escreveu sobre a única coisa que mudaria tudo: "${respostas.q3.trim()}"`,
     `Palavras de identidade escolhidas: ${palavrasLegiveis(respostas.palavras).join(", ") || "(nenhuma)"}`,
     gap ? `Números que ela declarou: ${JSON.stringify(gap)}` : "Ela não declarou números.",

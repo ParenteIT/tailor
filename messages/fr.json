@@ -70,24 +70,24 @@
       "carla": "Et où cet écart s'est-il le plus vu ?"
     },
     "situacoes": {
-      "patricia": [
-        "Devant l'armoire, en retard, à changer de tenue trois fois",
-        "À un événement où je ne savais pas ce qui était approprié",
-        "Sur une photo que quelqu'un a publiée sans me prévenir",
-        "Un jour ordinaire, juste la fatigue habituelle de toujours paraître la même"
-      ],
-      "camila": [
-        "Dans une réunion où j'en savais plus et où l'on s'est adressé à quelqu'un d'autre",
-        "Sur une proposition que j'ai perdue face à quelqu'un de moins préparé",
-        "Une invitation qui n'est pas venue, et je l'ai su après",
-        "Sur un livrable où mon travail a brillé et pas moi"
-      ],
-      "carla": [
-        "Quand une patiente a comparé mon prix à celui de quelqu'un qui livre moins",
-        "Sur une photo du cabinet qui ne ressemblait pas à mon standard",
-        "À un congrès où des consœurs aux résultats inférieurs avaient plus de présence",
-        "Quand j'ai compris que mon image ne soutenait pas ma hausse de tarif"
-      ]
+      "patricia": {
+        "s1": "Devant l'armoire, en retard, à changer de tenue trois fois",
+        "s2": "À un événement où je ne savais pas ce qui était approprié",
+        "s3": "Sur une photo que quelqu'un a publiée sans me prévenir",
+        "s4": "Un jour ordinaire, juste la fatigue habituelle de toujours paraître la même"
+      },
+      "camila": {
+        "s1": "Dans une réunion où j'en savais plus et où l'on s'est adressé à quelqu'un d'autre",
+        "s2": "Sur une proposition que j'ai perdue face à quelqu'un de moins préparé",
+        "s3": "Une invitation qui n'est pas venue, et je l'ai su après",
+        "s4": "Sur un livrable où mon travail a brillé et pas moi"
+      },
+      "carla": {
+        "s1": "Quand une patiente a comparé mon prix à celui de quelqu'un qui livre moins",
+        "s2": "Sur une photo du cabinet qui ne ressemblait pas à mon standard",
+        "s3": "À un congrès où des consœurs aux résultats inférieurs avaient plus de présence",
+        "s4": "Quand j'ai compris que mon image ne soutenait pas ma hausse de tarif"
+      }
     },
     "outraSituacao": "C'était autre chose",
     "outraSituacaoPlaceholder": "Dites-le-moi en une ligne."
@@ -157,23 +157,23 @@
   },
   "q7": {
     "titulo": "Qu'avez-vous déjà essayé pour régler cela ?",
-    "opcoes": [
-      "J'ai acheté des vêtements et des choses neuves de mon côté",
-      "J'ai suivi des conseils tout faits d'influenceuses",
-      "J'ai déjà pensé à une thérapie ou à travailler l'estime de soi",
-      "Je n'ai jamais rien essayé de structuré"
-    ],
+    "opcoes": {
+      "compras": "J'ai acheté des vêtements et des choses neuves de mon côté",
+      "influenciadoras": "J'ai suivi des conseils tout faits d'influenceuses",
+      "autoestima": "J'ai déjà pensé à une thérapie ou à travailler l'estime de soi",
+      "nada": "Je n'ai jamais rien essayé de structuré"
+    },
     "outro": "Autre",
     "outroPlaceholder": "C'était quoi ?"
   },
   "q8": {
     "titulo": "Pour quand voulez-vous que ce soit réglé ?",
-    "opcoes": [
-      "Je veux commencer cette semaine",
-      "Je veux régler ça dans les 2 à 4 prochaines semaines",
-      "Je veux régler ça ce trimestre",
-      "Sans urgence, je rassemble juste des informations pour l'instant"
-    ]
+    "opcoes": {
+      "semana": "Je veux commencer cette semaine",
+      "quatroSemanas": "Je veux régler ça dans les 2 à 4 prochaines semaines",
+      "trimestre": "Je veux régler ça ce trimestre",
+      "semPressa": "Sans urgence, je rassemble juste des informations pour l'instant"
+    }
   },
   "q9": {
     "titulo": {
