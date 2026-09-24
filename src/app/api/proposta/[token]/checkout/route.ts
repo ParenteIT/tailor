@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { abrirCheckout } from "@/lib/checkout";
-import { expirou, type ConteudoProposta } from "@/lib/proposta";
+import { cobrancaDaOferta, expirou, type ConteudoProposta } from "@/lib/proposta";
 import { identificarChamador, verificarLimiteDuravel } from "@/lib/rate-limit";
 import { getStore } from "@/lib/store";
+import { resolverCliente } from "@/lib/tenants";
 import { tokenPlausivel } from "@/lib/token";
 
 export const runtime = "nodejs";
@@ -46,15 +47,27 @@ export async function POST(
   }
 
   const conteudo = proposta.conteudo as unknown as ConteudoProposta;
-  const produto = conteudo.oferta?.produto;
-  if (!produto) {
+  const oferta = conteudo.oferta;
+  if (!oferta?.produto) {
     return NextResponse.json({ erro: "sem_oferta" }, { status: 409 });
   }
 
-  await store.registrarEvento(proposta.id, "checkout_iniciado", { produto });
+  // Holding: a mesma pergunta que decidiu o botão da página. Só pagamento
+  // único passa por aqui; assinatura vai direto ao link da Hotmart, e gate,
+  // conversa ou dólar nunca geram cobrança, nem chamando a rota direto.
+  const holding = Boolean(conteudo.vertente);
+  if (holding) {
+    const cobranca = cobrancaDaOferta(conteudo, await resolverCliente(req.headers.get("host")));
+    if (cobranca?.via !== "asaas") {
+      return NextResponse.json({ erro: "sem_checkout" }, { status: 409 });
+    }
+  }
+
+  await store.registrarEvento(proposta.id, "checkout_iniciado", { produto: oferta.produto });
 
   const resultado = await abrirCheckout({
-    produto,
+    produto: oferta.produto,
+    preco: holding ? { centavos: oferta.centavos!, nome: oferta.nome } : undefined,
     leadId: proposta.leadId,
     primeiroNome: (conteudo.nome ?? "").split(/\s+/)[0] ?? "",
     expiraEm: new Date(proposta.expiraEm),

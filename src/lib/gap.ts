@@ -205,3 +205,17 @@ export function dinheiro(valor: number, moeda: Moeda = "BRL"): string {
     maximumFractionDigits: 0,
   }).format(Math.round(valor));
 }
+
+/**
+ * Preço de produto, ao contrário do valor declarado, tem centavos quando a
+ * tabela tem: a Jornada é R$ 97,90, e arredondar para R$ 98 mostraria um
+ * número diferente do que o checkout cobra.
+ */
+export function precoDeProduto(valor: number, moeda: Moeda = "BRL"): string {
+  return new Intl.NumberFormat(LOCALE_DA_MOEDA[moeda], {
+    style: "currency",
+    currency: moeda,
+    minimumFractionDigits: Number.isInteger(valor) ? 0 : 2,
+    maximumFractionDigits: 2,
+  }).format(valor);
+}

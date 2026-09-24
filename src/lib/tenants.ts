@@ -64,8 +64,11 @@ export async function resolverCliente(host: string | null | undefined): Promise<
   const cache = redisCliente();
   if (cache) {
     try {
-      const guardado = await cache.get<Cliente>(chaveCache(chave));
-      if (guardado) return guardado;
+      const guardado = await cache.get<unknown>(chaveCache(chave));
+      // Revalida: uma versão guardada antes de o esquema ganhar campo novo
+      // (canal e gate, 24/09) passaria sem eles, e `!p.gate` deixaria o alto
+      // ticket virar oferta até o cache expirar. Inválida, cai no banco.
+      if (guardado) return carregarCliente(guardado);
     } catch (erro) {
       console.error("[tailor] falha ao ler tenant do cache", erro);
     }

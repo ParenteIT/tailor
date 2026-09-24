@@ -3111,6 +3111,16 @@ mesmo padrão de `asaas.ts`/`transcricao.ts`. `src/lib/tenants.ts` continua
 com o SDK — roda dentro do Next.js/Netlify Functions, onde isso nunca deu
 problema (é o mesmo cliente que `store.ts` já usa em produção).
 
+**No ar:** commit `9932293` no `develop`, PR #9 → `main`, merge `9ed351c`,
+publicado pelo Netlify às 21:55 UTC (deploy automático pela `main`, ligado
+nesta mesma data). Antes do commit: `tsc` limpo, 191 testes, `next build
+--webpack` completo — a primeira tentativa do build morreu em "Generating
+static pages" com `0xC0000005` (worker do Windows); limpar `.next` e rodar
+de novo passou. Conferido no ar: `/pt/v/posicionamento` com logo e tela de
+nome, sem erro de console. Não conferido: que a resposta vem do banco e não
+do degrau estático — os dois têm o mesmo conteúdo hoje; o teste é mudar um
+texto, `sync:tenant`, e ver aparecer em até 5 min sem deploy.
+
 ## 23/09/2026 — Keepalive do Supabase: faltava o secret, auto-restore nunca tinha sido exercitado
 
 Willian reportou a tela de erro do quiz ("Não consegui salvar agora") e

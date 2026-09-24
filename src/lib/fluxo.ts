@@ -425,7 +425,8 @@ export function perguntaDeFaixa(v: Vertente) {
  * vertente cujo preço caiba no PISO da faixa marcada (em "Até X", o piso é X,
  * o único número que ela deu); entre os que cabem, o mais alto da escada.
  * "Prefiro não dizer" não escolhe produto: presumir seria inventar. Produto
- * sem preço decidido nesta moeda nunca é ofertado.
+ * sem preço decidido nesta moeda nunca é ofertado, e produto com gate ou por
+ * convite nunca é a oferta principal (HANDOFF §7.2).
  */
 export function escolherOferta(
   cliente: Cliente,
@@ -440,7 +441,14 @@ export function escolherOferta(
   const piso = opcao.piso;
   const cabem = cliente.produtos.filter((p) => {
     const preco = p.preco[moeda];
-    return p.publicado && p.vertente === vertenteId && preco !== null && preco <= piso;
+    return (
+      p.publicado &&
+      !p.gate &&
+      p.canal !== "convite" &&
+      p.vertente === vertenteId &&
+      preco !== null &&
+      preco <= piso
+    );
   });
   if (!cabem.length) return null;
   return cabem.reduce((maior, p) => ((p.preco[moeda] ?? 0) > (maior.preco[moeda] ?? 0) ? p : maior));

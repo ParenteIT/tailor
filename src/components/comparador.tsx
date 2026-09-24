@@ -84,7 +84,7 @@ export function Comparador({
     <div
       style={{
         border: "1px solid var(--rule-2)",
-        borderRadius: "var(--radius-cta)",
+        borderRadius: "var(--radius-cartao)",
         overflow: "hidden",
       }}
     >

@@ -156,10 +156,12 @@ describe("faixa → oferta (teto de abertura, piso da faixa)", () => {
     ["imagem", "acima7000", "dossieImagem"],
     ["posicionamento", "ate200mes", "jornada"],
     ["posicionamento", "de5000a12000", "jornada"],
-    ["posicionamento", "acima12000", "posicionamento1a1"],
+    // 1:1 de Posicionamento, Turma e Signature têm gate: cabem na faixa, mas a
+    // oferta principal é sempre um produto sem gate (HANDOFF §7.2).
+    ["posicionamento", "acima12000", "jornada"],
     ["estetica", "ate1000", "daMaca"],
-    ["estetica", "de5000a10000", "turmaEstetica"],
-    ["estetica", "acima10000", "signature"],
+    ["estetica", "de5000a10000", "daMaca"],
+    ["estetica", "acima10000", "daMaca"],
   ];
   for (const [v, faixa, esperado] of casos) {
     it(`${v} · ${faixa} → ${esperado}`, () => {
@@ -175,6 +177,26 @@ describe("faixa → oferta (teto de abertura, piso da faixa)", () => {
         const produto = escolherOferta(CLIENTE, v.id, o.id, "BRL");
         if (produto) expect(produto.preco.BRL!).toBeLessThanOrEqual(o.piso!);
       }
+    }
+  });
+
+  it("produto com gate ou por convite nunca é a oferta principal", () => {
+    for (const v of CLIENTE.vertentes) {
+      const p = v.perguntas.find((x) => x.tipo === "faixa");
+      if (p?.tipo !== "faixa") continue;
+      for (const o of p.opcoesPorMoeda.BRL ?? []) {
+        const produto = escolherOferta(CLIENTE, v.id, o.id, "BRL");
+        if (produto) {
+          expect(produto.gate).toBe(false);
+          expect(produto.canal).not.toBe("convite");
+        }
+      }
+    }
+  });
+
+  it("nenhum produto com gate tem canal checkout", () => {
+    for (const p of CLIENTE.produtos) {
+      if (p.gate) expect(p.canal).not.toBe("checkout");
     }
   });
 });

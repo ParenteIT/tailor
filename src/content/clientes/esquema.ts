@@ -239,6 +239,12 @@ export const Vertente = z.object({
   perguntas: z.array(Pergunta).min(1),
   /** Nomes de nível — só na proposta, nunca no quiz. */
   niveis: z.array(Texto).min(1),
+  /**
+   * O bloco "O método" da proposta, em parágrafos. null esconde o bloco: sem
+   * texto aprovado para a vertente, nenhum texto de outra vertente entra no
+   * lugar.
+   */
+  metodo: z.object({ titulo: Texto, corpo: z.array(Texto).min(1) }).nullable().default(null),
 });
 export type Vertente = z.infer<typeof Vertente>;
 
@@ -263,6 +269,21 @@ export const Produto = z.object({
    */
   publicado: z.boolean(),
   recorrencia: z.enum(["unica", "mensal"]),
+  /**
+   * Como a venda fecha (HANDOFF §1 e §7): `checkout` gera link de pagamento,
+   * `conversa` leva ao WhatsApp, `convite` nunca é ofertado pelo quiz.
+   */
+  canal: z.enum(["checkout", "conversa", "convite"]),
+  /**
+   * Alto ticket com pré-requisito de nível anterior: nunca é a oferta
+   * principal da proposta nem abre checkout (HANDOFF §7.2).
+   */
+  gate: z.boolean(),
+  /**
+   * Assinatura mensal com canal `checkout` vende pela Hotmart, um link por
+   * produto (decisão do Willian, 24/09). Sem link, a proposta leva à conversa.
+   */
+  linkHotmart: z.string().url().startsWith("https://").nullable().default(null),
 });
 export type Produto = z.infer<typeof Produto>;
 
@@ -366,6 +387,8 @@ const Textos = z.object({
     semOferta: Texto,
     semOfertaCta: Texto,
     mensagemWhatsapp: Texto,
+    /** Preço de assinatura: "{preco}/mês". */
+    porMes: Texto,
   }),
 });
 
