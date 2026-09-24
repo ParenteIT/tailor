@@ -12,7 +12,7 @@ import { CrossSell } from "@/components/cross-sell";
 import { ControlesTopo } from "@/components/controles-topo";
 import { crossSellHotmart, maxParcelas } from "@/lib/checkout";
 import { ESTACOES_FITA, type EstacaoFita } from "@/lib/gap";
-import { expirou, type ConteudoProposta } from "@/lib/proposta";
+import { cobrancaDaOferta, expirou, type ConteudoProposta } from "@/lib/proposta";
 import { getStore } from "@/lib/store";
 import { tokenPlausivel } from "@/lib/token";
 import { idiomaValido, txt, type Cliente } from "@/content/clientes";
@@ -79,6 +79,15 @@ export default async function PaginaProposta({
   // desenho da proposta por vertente ainda não foi feito (handoff §9.7).
   const vertente = c.vertente ? cliente.vertentes.find((v) => v.id === c.vertente) : undefined;
   const idiomaCliente = idiomaValido(locale) ? locale : cliente.idiomaPadrao;
+  const cobranca = vertente ? cobrancaDaOferta(c, cliente) : null;
+  // ◆ é o marcador de "preço não decidido", nunca um valor para a tela.
+  // Assinatura mostra o período: R$ 97,90 sozinho leria como pagamento único.
+  const precoDaOferta =
+    c.oferta && c.oferta.preco !== "◆"
+      ? c.oferta.recorrencia === "mensal"
+        ? txt(cliente.textos.proposta.porMes, idiomaCliente, { preco: c.oferta.preco })
+        : c.oferta.preco
+      : null;
 
   const copyEstacoes = Object.fromEntries(
     ESTACOES_FITA.map((chave) => [
@@ -193,19 +202,44 @@ export default async function PaginaProposta({
           </Bloco>
         ) : null}
 
-        {/* B5 — O Método */}
-        <Bloco notacao={t("proposta.b5.notacao")} titulo={t("proposta.b5.titulo")} indice={4}>
-          <p className="mb-p3" style={{ color: "var(--ink-2)" }}>
-            {t("proposta.b5.corpo")}
-          </p>
-          <p style={{ color: "var(--ink-2)" }}>{t("proposta.b5.corpo2")}</p>
-        </Bloco>
+        {/* B5 — O Método. Na holding, o texto é da vertente: sem texto
+            aprovado, o bloco some em vez de falar de consultoria de imagem
+            para quem veio por Posicionamento ou Estética. */}
+        {vertente ? (
+          vertente.metodo ? (
+            <Bloco
+              notacao={t("proposta.b5.notacao")}
+              titulo={txt(vertente.metodo.titulo, idiomaCliente)}
+              indice={4}
+            >
+              {vertente.metodo.corpo.map((paragrafo, i, todos) => (
+                <p
+                  key={i}
+                  className={i < todos.length - 1 ? "mb-p3" : undefined}
+                  style={{ color: "var(--ink-2)" }}
+                >
+                  {txt(paragrafo, idiomaCliente)}
+                </p>
+              ))}
+            </Bloco>
+          ) : null
+        ) : (
+          <Bloco notacao={t("proposta.b5.notacao")} titulo={t("proposta.b5.titulo")} indice={4}>
+            <p className="mb-p3" style={{ color: "var(--ink-2)" }}>
+              {t("proposta.b5.corpo")}
+            </p>
+            <p style={{ color: "var(--ink-2)" }}>{t("proposta.b5.corpo2")}</p>
+          </Bloco>
+        )}
 
-        {/* B6 — Prova. Nada aqui foi inventado; o material real ainda não existe. */}
+        {/* B6 — Prova. Nada aqui foi inventado; o material real ainda não
+            existe. Sem número real de depoimentos, a frase que o usaria some. */}
         <Bloco notacao={t("proposta.b6.notacao")} titulo={t("proposta.b6.titulo")} indice={5}>
-          <p className="mb-p3" style={{ color: "var(--ink-2)" }}>
-            {t("proposta.b6.corpo", { numero: PRECOS.numeroDepoimentos })}
-          </p>
+          {PRECOS.numeroDepoimentos !== "◆" ? (
+            <p className="mb-p3" style={{ color: "var(--ink-2)" }}>
+              {t("proposta.b6.corpo", { numero: PRECOS.numeroDepoimentos })}
+            </p>
+          ) : null}
           <p
             className="p-p2"
             style={{
@@ -228,9 +262,29 @@ export default async function PaginaProposta({
             </p>
           ) : null}
           {/* Sem oferta ("prefiro não dizer", ou nenhum produto cabe na faixa
-              dela): o próximo passo é conversa, nunca um preço presumido. */}
-          {c.oferta === null ? (
+              dela) ou, na holding, sem cobrança possível (gate, conversa,
+              dólar, assinatura sem link, proposta anterior ao preço
+              congelado): o produto aparece, mas o próximo passo é conversa —
+              nunca um botão de pagar que a rota de checkout recusaria. */}
+          {c.oferta === null || (vertente && !cobranca) ? (
             <>
+              {c.oferta ? (
+                <>
+                  <p className="notacao mb-p1">{c.oferta.nome}</p>
+                  {precoDaOferta ? (
+                    <p
+                      className="medida mb-p3"
+                      style={{
+                        fontFamily: "var(--font-display)",
+                        fontSize: "clamp(2.4rem, 10vw, 3.4rem)",
+                        lineHeight: 1,
+                      }}
+                    >
+                      {precoDaOferta}
+                    </p>
+                  ) : null}
+                </>
+              ) : null}
               <p className="mb-p4" style={{ color: "var(--ink-2)" }}>
                 {txt(cliente.textos.proposta.semOferta, idiomaCliente)}
               </p>
@@ -256,6 +310,7 @@ export default async function PaginaProposta({
           <Oferta
             token={token}
             whatsapp={vertente ? cliente.contato.whatsapp : CONTATO.whatsapp}
+            externo={cobranca?.via === "hotmart" ? cobranca.url : undefined}
             textos={{
               produto: c.oferta?.nome ?? "",
               parcelamentoNota: t("proposta.b7.parcelamentoNota", {
@@ -265,10 +320,11 @@ export default async function PaginaProposta({
               erroAviso: t("proposta.b7.erroAviso"),
               expiradaAviso: t("proposta.b7.expiradaAviso"),
               investimento: t("proposta.b7.investimento", {
-                valor: c.oferta?.preco ?? PRECOS.investimentoFinal,
+                valor: (vertente && precoDaOferta) || c.oferta?.preco || PRECOS.investimentoFinal,
               }),
               pix: t("proposta.b7.pix"),
-              pixBonus: t("proposta.b7.pixBonus", { bonus: PRECOS.bonusPix }),
+              pixBonus:
+                PRECOS.bonusPix === "◆" ? "" : t("proposta.b7.pixBonus", { bonus: PRECOS.bonusPix }),
               cartao: t("proposta.b7.cartao"),
               ctaPrimario: t("proposta.b7.ctaPrimario"),
               ctaSecundario: t("proposta.b7.ctaSecundario"),

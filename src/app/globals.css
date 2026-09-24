@@ -45,6 +45,10 @@
   --color-cta: #e8935b;
   --color-cta-ink: #1a1015;
   --radius-cta: 10px;
+  /* O cartão não herda --radius-cta: o mundo da vertente redefine o raio do
+     botão (Posicionamento vira pílula, 999px) e um cartão com texto dentro
+     viraria círculo, cortando o conteúdo. */
+  --radius-cartao: 10px;
 
   /* --- superfícies derivadas do terra (regra 2: o calor vem do terra) --- */
   --color-noir-2: #1f1530;

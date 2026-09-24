@@ -147,6 +147,21 @@ export const renilza: z.input<typeof Cliente> = {
         { pt: "Ajuste", en: "Fitting" },
         { pt: "Alta-Costura", en: "Haute Couture" },
       ],
+      // O texto do copy deck, escrito para a consultoria de imagem. Posicionamento
+      // e Estética ficam sem o bloco até existir texto aprovado para elas.
+      metodo: {
+        titulo: { pt: "Tradução, não transformação.", en: "Translation, not transformation." },
+        corpo: [
+          {
+            pt: "Consultoria de estilo genérica troca você por outra pessoa: um arquétipo, uma paleta, um manual. A metodologia francesa faz o contrário. Ela lê o que já está ali e traduz. Você não vira outra. Você passa a ser lida como quem você já é.",
+            en: "Generic style consulting swaps you for someone else: an archetype, a palette, a manual. The French methodology does the opposite. It reads what's already there and translates it. You don't become someone else. You start being read as who you already are.",
+          },
+          {
+            pt: "Por isso o trabalho começa medindo, não comprando. Primeiro a leitura, depois a linguagem, e só então a peça.",
+            en: "That's why the work starts by measuring, not buying. First the reading, then the language, and only then the piece.",
+          },
+        ],
+      },
       perguntas: [
         {
           id: "armario",
@@ -609,17 +624,20 @@ export const renilza: z.input<typeof Cliente> = {
     // publicado: true nos 8 preços já decididos (20-22/09) — sem env separada
     // pra cobrar, o preço daqui já é o que a proposta mostra e cobra. false
     // nos 3 que ainda dependem da Renilza aprovar o número (docs/PENDING.md §1).
-    { id: "saiPronta", vertente: "imagem", nivel: 0, nome: { pt: "Sai Pronta em 7 Dias", en: "Ready in 7 Days" }, preco: { BRL: 97, USD: null }, publicado: true, recorrencia: "unica" },
-    { id: "consultoraDeBolso", vertente: "imagem", nivel: 0, nome: { pt: "Consultora de Bolso", en: "Pocket Consultant" }, preco: { BRL: 49, USD: null }, publicado: true, recorrencia: "mensal" },
-    { id: "dossieDigital", vertente: "imagem", nivel: 0, nome: { pt: "Dossiê Digital", en: "Digital Dossier" }, preco: { BRL: null, USD: null }, publicado: false, recorrencia: "unica" },
-    { id: "dossieImagem", vertente: "imagem", nivel: 1, nome: { pt: "Dossiê de Imagem", en: "Image Dossier" }, preco: { BRL: 3500, USD: null }, publicado: true, recorrencia: "unica" },
-    { id: "consultoriaInternacional", vertente: "imagem", nivel: 1, nome: { pt: "Consultoria de Imagem · Dubai & Europa", en: "Image Consulting · Dubai & Europe" }, preco: { BRL: null, USD: 1800 }, publicado: true, recorrencia: "unica" },
-    { id: "altaCostura", vertente: "imagem", nivel: 2, nome: { pt: "Alta-Costura", en: "Haute Couture" }, preco: { BRL: null, USD: null }, publicado: false, recorrencia: "unica" },
-    { id: "jornada", vertente: "posicionamento", nivel: 1, nome: { pt: "Jornada Valor Percebido", en: "Perceived Value Journey" }, preco: { BRL: 97.9, USD: null }, publicado: true, recorrencia: "mensal" },
-    { id: "posicionamento1a1", vertente: "posicionamento", nivel: 2, nome: { pt: "1:1 de Posicionamento", en: "1:1 Positioning" }, preco: { BRL: 9997, USD: 8500 }, publicado: true, recorrencia: "unica" },
-    { id: "daMaca", vertente: "estetica", nivel: 1, nome: { pt: "Da Maca ao Alto Padrão", en: "From the Treatment Bed to High End" }, preco: { BRL: 497, USD: null }, publicado: true, recorrencia: "unica" },
-    { id: "turmaEstetica", vertente: "estetica", nivel: 2, nome: { pt: "Turma de Estética", en: "Aesthetics Cohort" }, preco: { BRL: 4997, USD: 2200 }, publicado: true, recorrencia: "unica" },
-    { id: "signature", vertente: "estetica", nivel: 2, nome: { pt: "Signature", en: "Signature" }, preco: { BRL: 9997, USD: null }, publicado: true, recorrencia: "unica" },
+    // Canal e gate: tabela do HANDOFF §7.1.
+    { id: "saiPronta", vertente: "imagem", nivel: 0, nome: { pt: "Sai Pronta em 7 Dias", en: "Ready in 7 Days" }, preco: { BRL: 97, USD: null }, publicado: true, recorrencia: "unica", canal: "checkout", gate: false },
+    // Assinaturas: vendem pela Hotmart. Colar o link de checkout de cada uma em
+    // linkHotmart; enquanto for null, a proposta leva à conversa no WhatsApp.
+    { id: "consultoraDeBolso", vertente: "imagem", nivel: 0, nome: { pt: "Consultora de Bolso", en: "Pocket Consultant" }, preco: { BRL: 49, USD: null }, publicado: true, recorrencia: "mensal", canal: "checkout", gate: false, linkHotmart: null },
+    { id: "dossieDigital", vertente: "imagem", nivel: 0, nome: { pt: "Dossiê Digital", en: "Digital Dossier" }, preco: { BRL: null, USD: null }, publicado: false, recorrencia: "unica", canal: "checkout", gate: false },
+    { id: "dossieImagem", vertente: "imagem", nivel: 1, nome: { pt: "Dossiê de Imagem", en: "Image Dossier" }, preco: { BRL: 3500, USD: null }, publicado: true, recorrencia: "unica", canal: "conversa", gate: false },
+    { id: "consultoriaInternacional", vertente: "imagem", nivel: 1, nome: { pt: "Consultoria de Imagem · Dubai & Europa", en: "Image Consulting · Dubai & Europe" }, preco: { BRL: null, USD: 1800 }, publicado: true, recorrencia: "unica", canal: "conversa", gate: false },
+    { id: "altaCostura", vertente: "imagem", nivel: 2, nome: { pt: "Alta-Costura", en: "Haute Couture" }, preco: { BRL: null, USD: null }, publicado: false, recorrencia: "unica", canal: "conversa", gate: true },
+    { id: "jornada", vertente: "posicionamento", nivel: 1, nome: { pt: "Jornada Valor Percebido", en: "Perceived Value Journey" }, preco: { BRL: 97.9, USD: null }, publicado: true, recorrencia: "mensal", canal: "checkout", gate: false, linkHotmart: null },
+    { id: "posicionamento1a1", vertente: "posicionamento", nivel: 2, nome: { pt: "1:1 de Posicionamento", en: "1:1 Positioning" }, preco: { BRL: 9997, USD: 8500 }, publicado: true, recorrencia: "unica", canal: "conversa", gate: true },
+    { id: "daMaca", vertente: "estetica", nivel: 1, nome: { pt: "Da Maca ao Alto Padrão", en: "From the Treatment Bed to High End" }, preco: { BRL: 497, USD: null }, publicado: true, recorrencia: "unica", canal: "checkout", gate: false },
+    { id: "turmaEstetica", vertente: "estetica", nivel: 2, nome: { pt: "Turma de Estética", en: "Aesthetics Cohort" }, preco: { BRL: 4997, USD: 2200 }, publicado: true, recorrencia: "unica", canal: "conversa", gate: true },
+    { id: "signature", vertente: "estetica", nivel: 2, nome: { pt: "Signature", en: "Signature" }, preco: { BRL: 9997, USD: null }, publicado: true, recorrencia: "unica", canal: "conversa", gate: true },
   ],
 
   textos: {
@@ -814,6 +832,7 @@ export const renilza: z.input<typeof Cliente> = {
         en: "We'll decide the next step in a conversation, with what you told me in hand.",
       },
       semOfertaCta: { pt: "Conversar no WhatsApp", en: "Talk on WhatsApp" },
+      porMes: { pt: "{preco}/mês", en: "{preco}/month" },
       mensagemWhatsapp: {
         pt: "Oi, Renilza! Li a minha proposta e quero conversar sobre o próximo passo.",
         en: "Hi Renilza! I read my proposal and I'd like to talk about the next step.",

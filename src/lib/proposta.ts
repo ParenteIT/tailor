@@ -13,9 +13,9 @@ import { nomeExibido, precoExibido } from "@/lib/checkout";
 import { escreverTexto, llmDisponivel } from "@/lib/llm";
 import {
   calcularGap,
-  dinheiro,
   escalaDaFita,
   posicoesDasEstacoes,
+  precoDeProduto,
   type EscalaFita,
   type Gap,
 } from "@/lib/gap";
@@ -106,7 +106,20 @@ export interface ConteudoProposta {
    * O que o Bloco 7 oferta, escolhido pela faixa que ela marcou na Q9.
    * Gravado junto com a proposta para que reabrir o link não mude a oferta.
    */
-  oferta: { produto: string; nome: string; preco: string; nivel?: string } | null;
+  oferta: {
+    produto: string;
+    nome: string;
+    preco: string;
+    nivel?: string;
+    /**
+     * Só na holding (propostas de antes de 24/09 não têm): o preço que a
+     * tela mostrou, em centavos, e como a venda fecha. O checkout cobra
+     * este número, não o da configuração do dia do clique.
+     */
+    centavos?: number;
+    canal?: "checkout" | "conversa" | "convite";
+    recorrencia?: "unica" | "mensal";
+  } | null;
   /** Moeda em que ela declarou — a proposta reabre sempre igual. */
   moeda: Moeda;
   /** Idioma em que ela respondeu — decide a língua da proposta ao reabrir. */
@@ -126,6 +139,27 @@ export function calcularExpiracao(de: Date = new Date()): Date {
 export function expirou(expiraEm: string | Date): boolean {
   const limite = typeof expiraEm === "string" ? new Date(expiraEm) : expiraEm;
   return Number.isFinite(limite.getTime()) && limite.getTime() <= Date.now();
+}
+
+export type Cobranca = { via: "asaas" } | { via: "hotmart"; url: string } | null;
+
+/**
+ * Como a proposta da holding cobra, ou null quando o próximo passo é conversa.
+ * Só cobra o que a tela mostrou e a configuração de hoje ainda vende: preço
+ * congelado nela, em real (sem gateway em dólar), canal `checkout`, sem gate.
+ * Pagamento único vai ao Asaas; assinatura mensal, ao link da Hotmart do
+ * produto (24/09). A página e a rota de checkout perguntam aqui, então o botão
+ * de pagar nunca aparece para algo que a rota recusaria.
+ */
+export function cobrancaDaOferta(c: ConteudoProposta, cliente: Cliente): Cobranca {
+  const o = c.oferta;
+  if (!o || c.moeda !== "BRL" || o.canal !== "checkout") return null;
+  if (!Number.isSafeInteger(o.centavos) || o.centavos! <= 0) return null;
+  const atual = cliente.produtos.find((p) => p.id === o.produto);
+  if (!atual?.publicado || atual.canal !== "checkout" || atual.gate) return null;
+  if (o.recorrencia === "unica") return { via: "asaas" };
+  if (o.recorrencia === "mensal" && atual.linkHotmart) return { via: "hotmart", url: atual.linkHotmart };
+  return null;
 }
 
 export async function montarProposta(
@@ -384,8 +418,11 @@ export async function montarPropostaHolding(opcoes: {
       ? {
           produto: produto.id,
           nome: txt(produto.nome, idioma),
-          preco: produto.preco[moeda] != null ? dinheiro(produto.preco[moeda]!, moeda) : "◆",
+          preco: produto.preco[moeda] != null ? precoDeProduto(produto.preco[moeda]!, moeda) : "◆",
           nivel: nivel ? txt(nivel, idioma) : undefined,
+          centavos: produto.preco[moeda] != null ? Math.round(produto.preco[moeda]! * 100) : undefined,
+          canal: produto.canal,
+          recorrencia: produto.recorrencia,
         }
       : null,
     moeda,

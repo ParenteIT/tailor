@@ -1,6 +1,5 @@
 import "server-only";
 import { PRODUTOS, type Moeda, type ProdutoKey } from "@/content/config";
-import { CLIENTE } from "@/content/clientes";
 import { asaasConfigurado, criarLinkDePagamento } from "@/lib/asaas";
 import { dinheiro } from "@/lib/gap";
 
@@ -23,11 +22,10 @@ import { dinheiro } from "@/lib/gap";
  */
 
 /**
- * Preço em CENTAVOS, por env. Ausente ou inválido ⇒ produto ainda é ◆.
- * Os quatro produtos do quiz de personas têm env com nome próprio; um produto
- * da configuração de cliente usa `PRECO_<ID_EM_CAIXA_ALTA>_CENTAVOS` — o
- * Dossiê de Imagem da holding (`dossieImagem`) não herda, de propósito, a env
- * do Dossiê antigo, que guardava outro preço.
+ * Preço em CENTAVOS, por env — só o fluxo legado de personas. A holding cobra
+ * o preço congelado na proposta (`abrirCheckout({ preco })`), que saiu da
+ * configuração do cliente; o id `jornada` existe nos dois catálogos, e ler a
+ * env para a holding cobraria o preço da Jornada antiga.
  */
 const ENV_DE_PRECO: Record<ProdutoKey, string> = {
   jornada: "PRECO_JORNADA_CENTAVOS",
@@ -47,10 +45,10 @@ export function precoEmCentavos(produto: string): number | null {
 }
 
 /**
- * O preço como a proposta exibe. Mesma env que cobra (`PRECO_*_CENTAVOS`),
- * então o número da tela e o número do link de pagamento não têm como
- * divergir. Sem env, devolve null e o chamador mantém o ◆ — nenhum valor é
- * inventado para ficar bonito em demo.
+ * O preço como a proposta legada exibe. Mesma env que cobra
+ * (`PRECO_*_CENTAVOS`), então o número da tela e o número do link de
+ * pagamento não têm como divergir. Sem env, devolve null e o chamador mantém
+ * o ◆ — nenhum valor é inventado para ficar bonito em demo.
  */
 export function precoExibido(produto: string, moeda: Moeda = "BRL"): string | null {
   const centavos = precoEmCentavos(produto);
@@ -59,14 +57,11 @@ export function precoExibido(produto: string, moeda: Moeda = "BRL"): string | nu
 }
 
 /** Nome de exibição, sobrescrevível por env (`PRODUTO_<CHAVE>_NOME`). */
-export function nomeExibido(produto: string, idioma: string = "pt"): string {
+export function nomeExibido(produto: string): string {
   const env = process.env[`PRODUTO_${chaveEnv(produto)}_NOME`];
   if (env?.trim()) return env.trim();
   const legado = (PRODUTOS as Record<string, { nome: string }>)[produto];
-  if (legado) return legado.nome;
-  const doCliente = CLIENTE.produtos.find((p) => p.id === produto);
-  if (!doCliente) return produto;
-  return (doCliente.nome as Record<string, string>)[idioma] ?? doCliente.nome[CLIENTE.idiomaPadrao];
+  return legado?.nome ?? produto;
 }
 
 function chaveEnv(produto: string): string {
@@ -86,18 +81,25 @@ export type ResultadoCheckout =
 
 export async function abrirCheckout(opcoes: {
   produto: string;
+  /** Holding: o preço e o nome congelados na proposta. Sem isto, vale a env do fluxo legado. */
+  preco?: { centavos: number; nome: string };
   leadId: string;
   primeiroNome: string;
   expiraEm: Date;
 }): Promise<ResultadoCheckout> {
-  const centavos = precoEmCentavos(opcoes.produto);
+  const centavos = opcoes.preco
+    ? Number.isSafeInteger(opcoes.preco.centavos) && opcoes.preco.centavos > 0
+      ? opcoes.preco.centavos
+      : null
+    : precoEmCentavos(opcoes.produto);
   if (centavos === null) return { estado: "mock", motivo: "sem_preco" };
   if (!asaasConfigurado()) return { estado: "mock", motivo: "sem_gateway" };
 
+  const nome = opcoes.preco?.nome ?? nomeExibido(opcoes.produto);
   try {
     const link = await criarLinkDePagamento({
-      nome: nomeExibido(opcoes.produto),
-      descricao: `${nomeExibido(opcoes.produto)} — proposta de ${opcoes.primeiroNome}`,
+      nome,
+      descricao: `${nome} — proposta de ${opcoes.primeiroNome}`,
       centavos,
       referenciaExterna: opcoes.leadId,
       expiraEm: opcoes.expiraEm,

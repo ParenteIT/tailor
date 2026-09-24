@@ -46,10 +46,16 @@ type Estado = "parado" | "abrindo" | "mock" | "expirada" | "erro";
 export function Oferta({
   token,
   whatsapp,
+  externo,
   textos,
 }: {
   token: string;
   whatsapp: string;
+  /**
+   * Assinatura vendida fora (link da Hotmart do produto): o botão vira link
+   * direto, sem Asaas, e Pix/cartão somem porque quem decide é a plataforma.
+   */
+  externo?: string;
   textos: {
     produto: string;
     investimento: string;
@@ -69,6 +75,7 @@ export function Oferta({
 }) {
   const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
   const [estado, setEstado] = useState<Estado>("parado");
+  const nota = externo ? "" : metodo === "pix" ? textos.pixBonus : textos.parcelamentoNota;
 
   async function pagar() {
     setEstado("abrindo");
@@ -108,48 +115,72 @@ export function Oferta({
         {textos.investimento}
       </p>
 
-      <div className="mb-p3 flex flex-wrap gap-p3">
-        {(["pix", "cartao"] as const).map((m) => (
-          <button
-            key={m}
-            type="button"
-            onClick={() => setMetodo(m)}
-            aria-pressed={metodo === m}
-            className="notacao cursor-pointer py-p1"
+      {externo ? null : (
+        <div className="mb-p3 flex flex-wrap gap-p3">
+          {(["pix", "cartao"] as const).map((m) => (
+            <button
+              key={m}
+              type="button"
+              onClick={() => setMetodo(m)}
+              aria-pressed={metodo === m}
+              className="notacao cursor-pointer py-p1"
+              style={{
+                minHeight: 44,
+                color: metodo === m ? "var(--ink)" : "var(--ink-3)",
+                borderBottom:
+                  metodo === m ? "1px solid var(--color-gold)" : "1px solid transparent",
+              }}
+            >
+              {m === "pix" ? textos.pix : textos.cartao}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Bônus do Pix sem valor decidido (◆) chega vazio: some a frase. */}
+      {nota ? (
+        <p className="mb-p4" style={{ color: "var(--ink-2)" }}>
+          {nota}
+        </p>
+      ) : null}
+
+      <div className={`flex flex-wrap items-center gap-p3 ${nota ? "" : "mt-p4"}`}>
+        {externo ? (
+          <a
+            href={externo}
+            rel="noopener"
+            onClick={() => void registrar(token, "cta_primario_click")}
+            className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
             style={{
-              minHeight: 44,
-              color: metodo === m ? "var(--ink)" : "var(--ink-3)",
-              borderBottom:
-                metodo === m ? "1px solid var(--color-gold)" : "1px solid transparent",
+              background: "var(--ink)",
+              color: "var(--surface)",
+              border: "1px solid var(--ink)",
+              borderRadius: 2,
+              minHeight: 56,
+              textDecoration: "none",
             }}
           >
-            {m === "pix" ? textos.pix : textos.cartao}
+            {textos.ctaPrimario} <Seta />
+          </a>
+        ) : (
+          <button
+            type="button"
+            onClick={() => void pagar()}
+            disabled={estado === "abrindo"}
+            className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
+            style={{
+              background: estado === "abrindo" ? "transparent" : "var(--ink)",
+              color: estado === "abrindo" ? "var(--ink-3)" : "var(--surface)",
+              border: `1px solid ${estado === "abrindo" ? "var(--rule-2)" : "var(--ink)"}`,
+              borderRadius: 2,
+              minHeight: 56,
+              cursor: estado === "abrindo" ? "progress" : "pointer",
+            }}
+          >
+            {estado === "abrindo" ? textos.ctaAbrindo : textos.ctaPrimario}
+            {estado === "abrindo" ? null : <Seta />}
           </button>
-        ))}
-      </div>
-
-      <p className="mb-p4" style={{ color: "var(--ink-2)" }}>
-        {metodo === "pix" ? textos.pixBonus : textos.parcelamentoNota}
-      </p>
-
-      <div className="flex flex-wrap items-center gap-p3">
-        <button
-          type="button"
-          onClick={() => void pagar()}
-          disabled={estado === "abrindo"}
-          className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
-          style={{
-            background: estado === "abrindo" ? "transparent" : "var(--ink)",
-            color: estado === "abrindo" ? "var(--ink-3)" : "var(--surface)",
-            border: `1px solid ${estado === "abrindo" ? "var(--rule-2)" : "var(--ink)"}`,
-            borderRadius: 2,
-            minHeight: 56,
-            cursor: estado === "abrindo" ? "progress" : "pointer",
-          }}
-        >
-          {estado === "abrindo" ? textos.ctaAbrindo : textos.ctaPrimario}
-          {estado === "abrindo" ? null : <Seta />}
-        </button>
+        )}
 
         <a
           href={`https://wa.me/${whatsapp}?text=${encodeURIComponent(textos.mensagemWhatsapp)}`}
