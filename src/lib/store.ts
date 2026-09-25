@@ -125,8 +125,8 @@ export interface Store {
    */
   buscarLeadPorWhatsapp(numeros: string[]): Promise<LeadWhatsapp | null>;
   /**
-   * Atualização estreita, de propósito: `upsertLead` com id sobrescreve com
-   * null tudo que não foi informado, e aqui só queremos carimbar o contato.
+   * Atualização estreita, de propósito: `upsertLead` também reescreve nome,
+   * persona e idioma quando informados, e aqui só queremos carimbar o contato.
    * Lança `TokenEmUso` se o token colidir.
    */
   registrarContatoWhatsapp(
@@ -164,16 +164,23 @@ function storeSupabase(db: SupabaseClient): Store {
     backend: "supabase",
 
     async upsertLead(id, dados) {
-      const linha: Record<string, unknown> = {
-        nome: dados.nome ?? null,
-        whatsapp: dados.whatsapp ?? null,
-        email: dados.email ?? null,
-        persona: dados.persona ?? null,
-        idioma: dados.idioma ?? "pt",
-        utm_source: dados.utm?.source ?? null,
-        utm_medium: dados.utm?.medium ?? null,
-        utm_campaign: dados.utm?.campaign ?? null,
-      };
+      // Só entra na linha o que o chamador informou (`null` explícito
+      // continua limpando). Antes, `undefined` virava null: o autosave do
+      // prazo, depois do gate, apagava WhatsApp e e-mail do lead, e todo
+      // autosave sem UTM apagava a origem (auditoria A34, 24/09/2026). O
+      // backend de arquivo já se comportava assim.
+      const linha: Record<string, unknown> = Object.fromEntries(
+        Object.entries({
+          nome: dados.nome,
+          whatsapp: dados.whatsapp,
+          email: dados.email,
+          persona: dados.persona,
+          idioma: dados.idioma ?? (id ? undefined : "pt"),
+          utm_source: dados.utm?.source,
+          utm_medium: dados.utm?.medium,
+          utm_campaign: dados.utm?.campaign,
+        }).filter(([, valor]) => valor !== undefined)
+      );
 
       // `origem` só é escrita quando o chamador declara. O autosave por etapa
       // não declara — e sem esta guarda o primeiro avanço no modo confirmação

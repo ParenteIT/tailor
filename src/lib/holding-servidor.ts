@@ -10,6 +10,7 @@ import {
   perguntaDeFaixa,
   vertenteDaCena,
   vertenteDisponivel,
+  viaDaColuna,
   type RespostasHolding,
 } from "@/lib/fluxo";
 import type { DadosRespostas } from "@/lib/store";
@@ -91,9 +92,9 @@ export function dadosDasRespostas(
 
   return {
     situacao: r.cena === CENA_LIVRE ? r.livre.trim() || null : r.cena,
-    situacaoVia: r.cena === CENA_LIVRE ? "texto" : r.cena ? "opcao" : null,
+    situacaoVia: r.cena === CENA_LIVRE ? (viaDaColuna(r.viaLivre) ?? "texto") : r.cena ? "opcao" : null,
     q3: typeof escrita === "string" ? escrita : null,
-    q3Via: r.viaAberta ?? (typeof escrita === "string" && escrita ? "texto" : null),
+    q3Via: viaDaColuna(r.viaAberta) ?? (typeof escrita === "string" && escrita ? "texto" : null),
     consentimentoAudioEm: r.consentimentoAudioEm,
     precoAtual: numeros.precoAtual ?? null,
     precoDesejado: numeros.precoDesejado ?? null,
@@ -113,6 +114,9 @@ export function dadosDasRespostas(
       entrada: r.entrada,
       cena: r.cena,
       livre: r.livre,
+      // A via com "misto", que a coluna não guarda.
+      viaLivre: r.viaLivre,
+      viaAberta: r.viaAberta,
       leituraManual: leituraManual(r),
       ramo: r.ramo,
       prazo: r.prazo,

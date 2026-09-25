@@ -108,6 +108,12 @@ export const Mundo = z.object({
   trilho: cor,
   acento: cor,
   acentoSuave: corTranslucida,
+  /**
+   * Erro de validação (gate, falha ao montar). Voz do sistema, não do mundo:
+   * cada mundo tem o seu porque nenhuma cor passa 4,5:1 sobre fundo escuro e
+   * marfim ao mesmo tempo. `mundos-css.test.ts` trava o contraste.
+   */
+  alerta: cor,
   ouro: cor,
   botaoFundo: pintura,
   botaoTinta: cor,
@@ -226,8 +232,31 @@ export const Pergunta = z.discriminatedUnion("tipo", [
 export type Pergunta = z.infer<typeof Pergunta>;
 export type TipoPergunta = Pergunta["tipo"];
 
+/**
+ * A voz do texto gerado (`prompts/v2`), em duas camadas: a da autora, que
+ * vale para qualquer leitura, e a da vertente, que só entra quando a vertente
+ * foi escolhida. As instruções são em português, mesmo com saída em inglês;
+ * o termo proibido vem com o equivalente em cada idioma, porque o gate
+ * pós-saída confere a língua em que o texto saiu.
+ */
+export const VozCliente = z.object({
+  autora: texto,
+  quemE: texto,
+  comoEscreve: z.array(texto).min(1),
+});
+export type VozCliente = z.infer<typeof VozCliente>;
+
+export const VozVertente = z.object({
+  /** O que a leitura desta vertente olha — função, nunca credencial. */
+  papel: texto,
+  tom: z.array(texto).min(1),
+  proibido: z.array(Texto).min(1),
+});
+export type VozVertente = z.infer<typeof VozVertente>;
+
 export const Vertente = z.object({
   id,
+  voz: VozVertente,
   cena: z.object({
     texto: Texto,
     icone: z.enum(ICONES),
@@ -421,6 +450,7 @@ export const Cliente = z
       }),
     }),
     contato: z.object({ whatsapp: z.string().regex(/^\d{10,15}$/) }),
+    voz: VozCliente,
     casa: Mundo,
     cenaLivre: z.object({
       texto: Texto,

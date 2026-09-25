@@ -34,7 +34,6 @@ export function Reservado({
 }
 
 export const ALTURA_CENA = 72;
-export const ALTURA_CENA_DESKTOP = 96;
 
 /** Contêiner comum: reserva altura, nunca intercepta toque, nunca é a única
     portadora da informação. */
@@ -59,7 +58,6 @@ export function CenaContainer({
 }
 
 export const TRANSICAO_TRACO = "stroke 220ms ease, opacity 220ms ease";
-export const TRANSICAO_TRACO_LONGA = "stroke 380ms cubic-bezier(0.16,1,0.3,1), opacity 380ms cubic-bezier(0.16,1,0.3,1)";
 
 /**
  * Um segmento esquemático: traço sólido "aceso" (cor de acento) ou tracejado

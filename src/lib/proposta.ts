@@ -19,15 +19,17 @@ import {
   type EscalaFita,
   type Gap,
 } from "@/lib/gap";
+import { createHash } from "node:crypto";
 import { PROMPT_DIAGNOSTICO, VERSAO_PROMPT } from "../../prompts/v1";
+import * as V2 from "../../prompts/v2";
+import { verificarDiagnostico, type ContextoDaVerificacao } from "@/lib/verificar-diagnostico";
 import mensagensPt from "../../messages/pt.json";
-import { moedaDe, txt, type Cliente, type Idioma, type Moeda as MoedaCliente, type Pergunta } from "@/content/clientes";
+import { moedaDe, txt, type Cliente, type Idioma, type Pergunta } from "@/content/clientes";
 import {
   CENA_LIVRE,
   contaDaMedida,
   escolherOferta as escolherOfertaDaHolding,
   leituraManual,
-  opcoesDaFaixa,
   perguntaDeFaixa,
   vertenteDaCena,
   type RespostasHolding,
@@ -82,6 +84,11 @@ export interface RespostasProposta {
 
 export interface ConteudoProposta {
   versaoPrompt: string;
+  /**
+   * Só a partir do v2: hash da voz do cliente e da vertente usadas. A mesma
+   * `versaoPrompt` com outra voz na config é outro comportamento.
+   */
+  versaoVoz?: string;
   /** Só nas propostas do quiz de personas (modo confirmação legado). */
   persona?: PersonaKey;
   /** Só nas propostas da holding: a vertente e o cliente que a geraram. */
@@ -296,27 +303,6 @@ function diagnosticoDeReserva(
    Proposta da holding — a vertente decide o mundo, a faixa decide a oferta
    ========================================================================= */
 
-/** A resposta como ela leu na tela, na língua em que respondeu. */
-function respostaLegivel(p: Pergunta, valor: unknown, idioma: Idioma, moeda: MoedaCliente): string | null {
-  if (valor === undefined || valor === null) return null;
-  switch (p.tipo) {
-    case "escolha": {
-      const o = p.opcoes.find((x) => x.id === valor);
-      return o ? txt(o.texto, idioma) : null;
-    }
-    case "faixa": {
-      const o = opcoesDaFaixa(p, moeda).find((x) => x.id === valor);
-      return o ? txt(o.texto, idioma) : null;
-    }
-    case "aberta":
-      return typeof valor === "string" && valor.trim() ? `"${valor.trim()}"` : null;
-    case "palavras":
-      return Array.isArray(valor) ? palavrasDaHolding(p, valor, idioma).join(", ") || null : null;
-    case "medida":
-      return null;
-  }
-}
-
 function palavrasDaHolding(p: Pergunta & { tipo: "palavras" }, ids: unknown[], idioma: Idioma): string[] {
   return ids
     .map((w) => p.opcoes.find((o) => o.id === w))
@@ -339,7 +325,6 @@ export async function montarPropostaHolding(opcoes: {
   if (!vertente) throw new Error("[tailor] proposta sem vertente");
 
   const nome = r.nome.trim();
-  const primeiroNome = nome.split(/\s+/)[0] ?? nome;
   const aberta = vertente.perguntas.find((p) => p.tipo === "aberta");
   const escrita = aberta ? r.ramo[aberta.id] : undefined;
   const frase = typeof escrita === "string" ? escrita.trim() : "";
@@ -356,44 +341,19 @@ export async function montarPropostaHolding(opcoes: {
   const faixaId = typeof marcada === "string" ? marcada : null;
   const cena = r.cena === CENA_LIVRE ? r.livre.trim() : txt(vertente.cena.texto, idioma);
 
-  const linhas = vertente.perguntas
-    .map((p) => {
-      const lida = respostaLegivel(p, r.ramo[p.id], idioma, moeda);
-      return lida ? `${txt(p.titulo, idioma).replace(/\*/g, "")} → ${lida}` : null;
-    })
-    .filter((l): l is string => Boolean(l));
-
-  const analise = await analisarRespostas({ cena, q3: frase, respostas: linhas, palavras });
-
-  const entrada = [
-    `Primeiro nome: ${primeiroNome}`,
-    `Cena em que ela se reconheceu: "${cena}"`,
-    ...linhas,
-    gap ? `Números que ela declarou: ${JSON.stringify(gap)}` : "Ela não declarou números.",
-  ].join("\n");
-
-  const reserva = () => {
-    const partes = [
-      txt(cliente.textos.reserva.frase, idioma, {
-        nome: primeiroNome,
-        // A frase dela já costuma terminar em ponto; o texto fecha a citação
-        // com outro. Sem isto sai `escuras.".`.
-        frase: (analise.verbatimQ3 || frase || cena).replace(/[.!?…\s]+$/u, ""),
-      }),
-      txt(cliente.textos.reserva.guardei, idioma),
-    ];
-    if (palavras.length) {
-      partes.push(txt(cliente.textos.reserva.palavras, idioma, { palavras: palavras.join(", ") }));
-    }
-    return partes.join(" ");
-  };
-
-  const { texto: diagnostico, degradado } = await escreverDiagnostico(entrada, reserva);
+  const preparo = prepararDiagnosticoHolding(cliente, r, idioma);
+  const analise = await analisarRespostas(
+    { cena, q3: frase || (preparo.leituraNeutra ? r.livre.trim() : ""), palavras },
+    { sistema: V2.PROMPT_ANALISE, schema: V2.SCHEMA_ANALISE, entrada: preparo.entrada }
+  );
+  const reserva = () => reservaDaHolding(cliente, r, idioma, analise, preparo);
+  const { texto: diagnostico, degradado } = await escreverDiagnosticoVerificado(preparo, reserva);
   const produto = escolherOfertaDaHolding(cliente, vertente.id, faixaId, moeda);
   const nivel = produto ? vertente.niveis[produto.nivel] : undefined;
 
   return {
-    versaoPrompt: VERSAO_PROMPT,
+    versaoPrompt: V2.VERSAO_PROMPT,
+    versaoVoz: preparo.versaoVoz,
     vertente: vertente.id,
     cliente: cliente.id,
     leituraManual: leituraManual(r),
@@ -429,4 +389,157 @@ export async function montarPropostaHolding(opcoes: {
     idioma,
     geradoEm: new Date().toISOString(),
   };
+}
+
+/* ==========================================================================
+   Diagnóstico da holding — prompts/v2
+   ========================================================================= */
+
+export interface PreparoDoDiagnostico {
+  sistema: string;
+  entrada: string;
+  contexto: ContextoDaVerificacao;
+  /** Hash curto da voz do cliente e da vertente usadas nesta proposta. */
+  versaoVoz: string;
+  /** "Nenhuma dessas": só a voz geral da autora, nenhuma de vertente. */
+  leituraNeutra: boolean;
+}
+
+/**
+ * Tudo o que o modelo recebe, sem chamar modelo — o que o teste sem API
+ * confere. Cada trecho vai com a origem (escrito por ela, opção marcada,
+ * texto de pergunta). Faixa e medida ficam de fora: são dinheiro e conta,
+ * que a proposta mostra em outro bloco, formatados fora do modelo.
+ */
+export function prepararDiagnosticoHolding(
+  cliente: Cliente,
+  r: RespostasHolding,
+  idioma: Idioma
+): PreparoDoDiagnostico {
+  const vertente = vertenteDaCena(cliente, r.cena);
+  if (!vertente) throw new Error("[tailor] diagnóstico sem vertente");
+  const leituraNeutra = leituraManual(r);
+  const vozVertente = leituraNeutra ? null : vertente.voz;
+  const primeiroNome = r.nome.trim().split(/\s+/)[0] ?? "";
+  const itens: V2.ItemDaEntrada[] = [];
+
+  if (leituraNeutra) {
+    // Sem as respostas do ramo que ela seguiu: lidas ao lado do que escreveu,
+    // levariam a leitura para a lente de uma vertente que ela não escolheu.
+    if (r.livre.trim()) itens.push({ resposta: r.livre.trim(), origem: "escrito" });
+  } else {
+    itens.push({
+      pergunta: txt(cliente.textos.cena.tituloSemNome, idioma),
+      resposta: txt(vertente.cena.citacao ?? vertente.cena.texto, idioma),
+      origem: "opcao",
+    });
+    for (const p of vertente.perguntas) {
+      const valor = r.ramo[p.id];
+      const pergunta = txt(p.titulo, idioma).replace(/\*/g, "");
+      if (p.tipo === "escolha" && typeof valor === "string") {
+        const o = p.opcoes.find((x) => x.id === valor);
+        if (o) itens.push({ pergunta, resposta: txt(o.texto, idioma), origem: "opcao" });
+      } else if (p.tipo === "palavras" && Array.isArray(valor)) {
+        const escolhidas = palavrasDaHolding(p, valor, idioma);
+        if (escolhidas.length) itens.push({ pergunta, resposta: escolhidas.join(", "), origem: "opcao" });
+      } else if (p.tipo === "aberta" && typeof valor === "string" && valor.trim()) {
+        itens.push({ pergunta, resposta: valor.trim(), origem: "escrito" });
+      }
+    }
+  }
+
+  const nomesProibidos = [
+    ...cliente.produtos.map((p) => txt(p.nome, idioma)),
+    // Nome de nível de uma palavra só ("Ajuste") também é vocabulário comum;
+    // o gate confere só os compostos, e o prompt proíbe todos.
+    ...cliente.vertentes.flatMap((v) => v.niveis.map((n) => txt(n, idioma))).filter((n) => /[\s-]/.test(n)),
+  ];
+
+  return {
+    sistema: V2.montarSistemaDiagnostico({ voz: cliente.voz, vozVertente, idioma }),
+    entrada: V2.montarEntradaDiagnostico({ primeiroNome, itens }),
+    contexto: {
+      idioma,
+      primeiroNome,
+      escritoPorEla: itens.filter((i) => i.origem === "escrito").map((i) => i.resposta),
+      proibidosDaVertente: vozVertente ? vozVertente.proibido.map((t) => t[idioma]) : [],
+      leituraNeutra,
+      nomesProibidos,
+      contarFrases: true,
+    },
+    versaoVoz: createHash("sha256")
+      .update(JSON.stringify({ cliente: cliente.voz, vertente: vozVertente }))
+      .digest("hex")
+      .slice(0, 12),
+    leituraNeutra,
+  };
+}
+
+/**
+ * O modelo escreve; o gate confere. Uma segunda tentativa quando a primeira
+ * falha no gate, e a reserva quando as duas falham — nunca um texto que
+ * quebra regra verificável chega à proposta.
+ */
+async function escreverDiagnosticoVerificado(
+  preparo: PreparoDoDiagnostico,
+  reserva: () => string
+): Promise<{ texto: string; degradado: boolean }> {
+  if (!llmDisponivel()) return { texto: reserva(), degradado: true };
+  for (let tentativa = 1; tentativa <= 2; tentativa++) {
+    try {
+      const { texto, recusado } = await escreverTexto({
+        sistema: preparo.sistema,
+        entrada: preparo.entrada,
+        maxTokens: 700,
+      });
+      if (recusado || !texto) continue;
+      const problemas = verificarDiagnostico(texto, preparo.contexto);
+      if (!problemas.length) return { texto, degradado: false };
+      console.warn(`[tailor] diagnóstico reprovado no gate (tentativa ${tentativa}): ${problemas.join("; ")}`);
+    } catch (erro) {
+      console.error("[tailor] falha ao gerar diagnóstico", erro);
+    }
+  }
+  return { texto: reserva(), degradado: true };
+}
+
+/**
+ * Reserva sem modelo, na língua da proposta e sob a mesma política do gate:
+ * só cita o que ela escreveu (nunca opção de cena como fala dela) e, na
+ * leitura neutra, não devolve o texto livre — pode ser íntimo, e a Renilza
+ * lê à mão.
+ */
+export function reservaDaHolding(
+  cliente: Cliente,
+  r: RespostasHolding,
+  idioma: Idioma,
+  analise: Analise,
+  preparo: PreparoDoDiagnostico
+): string {
+  const guardei = txt(cliente.textos.reserva.guardei, idioma);
+  if (preparo.leituraNeutra) return guardei;
+
+  const dela = preparo.contexto.escritoPorEla;
+  const verbatim = analise.verbatimQ3.replace(/…$/u, "").trim();
+  const trecho = verbatim && dela.some((d) => d.includes(verbatim)) ? verbatim : (dela[0] ?? "");
+  const partes: string[] = [];
+  if (trecho) {
+    partes.push(
+      txt(cliente.textos.reserva.frase, idioma, {
+        nome: preparo.contexto.primeiroNome,
+        // A frase dela já costuma terminar em ponto; o texto fecha a citação
+        // com outro. Sem isto sai `escuras.".`.
+        frase: trecho.replace(/[.!?…\s]+$/u, ""),
+      })
+    );
+  }
+  partes.push(guardei);
+  const vertente = vertenteDaCena(cliente, r.cena);
+  const perguntaPalavras = vertente?.perguntas.find(
+    (p): p is Pergunta & { tipo: "palavras" } => p.tipo === "palavras"
+  );
+  const ids = perguntaPalavras ? r.ramo[perguntaPalavras.id] : undefined;
+  const palavras = perguntaPalavras && Array.isArray(ids) ? palavrasDaHolding(perguntaPalavras, ids, idioma) : [];
+  if (palavras.length) partes.push(txt(cliente.textos.reserva.palavras, idioma, { palavras: palavras.join(", ") }));
+  return partes.join(" ");
 }

@@ -35,6 +35,10 @@ export type Entrada = "cena" | "direta";
     só os campos que ela de fato mexeu. */
 export type ValorResposta = string | string[] | Record<string, number>;
 
+/** Como o texto de um campo aberto chegou: "misto" é digitado + transcrito. */
+export type Via = "texto" | "audio" | "misto";
+const VIAS = ["texto", "audio", "misto"] as const;
+
 export interface RespostasHolding {
   nome: string;
   entrada: Entrada;
@@ -42,10 +46,15 @@ export interface RespostasHolding {
   cena: string | null;
   /** Texto de "Nenhuma dessas". */
   livre: string;
+  viaLivre: Via | null;
   /** Respostas do ramo atual, por id de pergunta. Trocar de vertente zera. */
   ramo: Record<string, ValorResposta>;
-  viaAberta: "texto" | "audio" | null;
-  /** Timestamp do "Pode gravar" — a evidência de consentimento de áudio. */
+  viaAberta: Via | null;
+  /**
+   * Timestamp do primeiro "Pode gravar" — a evidência de consentimento de
+   * áudio. Vale para todos os campos deste diagnóstico e nunca é regravado;
+   * só um diagnóstico novo (respostas vazias) pede de novo.
+   */
   consentimentoAudioEm: string | null;
   prazo: string | null;
   whatsapp: string;
@@ -57,6 +66,7 @@ export const RESPOSTAS_VAZIAS: RespostasHolding = {
   entrada: "cena",
   cena: null,
   livre: "",
+  viaLivre: null,
   ramo: {},
   viaAberta: null,
   consentimentoAudioEm: null,
@@ -186,7 +196,7 @@ export function valorValido(p: Pergunta, valor: unknown, moeda: Moeda): boolean 
     case "faixa":
       return typeof valor === "string" && opcoesDaFaixa(p, moeda).some((o) => o.id === valor);
     case "aberta":
-      return typeof valor === "string" && valor.length <= 4000;
+      return typeof valor === "string" && valor.length <= LIMITE_ABERTA;
     case "palavras":
       return (
         Array.isArray(valor) &&
@@ -281,6 +291,7 @@ export function escolherCena(cliente: Cliente, r: RespostasHolding, cena: string
     ...r,
     cena,
     livre: cena === CENA_LIVRE ? r.livre : "",
+    viaLivre: cena === CENA_LIVRE ? r.viaLivre : null,
     ramo: antes === depois ? r.ramo : {},
     viaAberta: antes === depois ? r.viaAberta : null,
   };
@@ -343,13 +354,20 @@ export function esquemaRespostas(cliente: Cliente, moeda: Moeda) {
       nome: z.string().max(120),
       entrada: z.enum(["cena", "direta"]),
       cena: z.string().max(40).nullable(),
-      livre: z.string().max(2000),
+      livre: z.string().max(LIMITE_LIVRE),
+      viaLivre: z.enum(VIAS).nullable().default(null),
       ramo: z.record(z.string().max(40), ValorBruto),
-      viaAberta: z.enum(["texto", "audio"]).nullable(),
-      consentimentoAudioEm: z.string().max(40).nullable(),
+      viaAberta: z.enum(VIAS).nullable(),
+      consentimentoAudioEm: z.iso.datetime().nullable(),
       prazo: z.string().max(40).nullable(),
     })
     .superRefine((r, ctx) => {
+      // Áudio só passa pela transcrição depois do "Pode gravar": via de áudio
+      // sem o carimbo é resposta que não pode existir (LGPD, A24).
+      const usouAudio = [r.viaAberta, r.viaLivre].some((v) => v === "audio" || v === "misto");
+      if (usouAudio && !r.consentimentoAudioEm) {
+        ctx.addIssue({ code: "custom", path: ["consentimentoAudioEm"], message: "áudio sem consentimento" });
+      }
       if (r.cena !== null && !vertenteDaCena(cliente, r.cena)) {
         ctx.addIssue({ code: "custom", path: ["cena"], message: "cena desconhecida" });
         return;
@@ -371,6 +389,45 @@ export function esquemaRespostas(cliente: Cliente, moeda: Moeda) {
 }
 
 export type RespostasEnviadas = Omit<RespostasHolding, "whatsapp" | "email">;
+
+function viaOuNulo(v: unknown): Via | null {
+  return (VIAS as readonly unknown[]).includes(v) ? (v as Via) : null;
+}
+
+/* ==========================================================================
+   Áudio num campo aberto
+   ========================================================================= */
+
+export const LIMITE_ABERTA = 4000;
+export const LIMITE_LIVRE = 2000;
+
+/**
+ * A transcrição se soma ao que ela já tinha digitado, nunca o substitui (A25).
+ * Passando do limite do campo, corta o fim da transcrição, não o texto dela.
+ */
+export function juntarTranscricao(atual: string, transcrito: string, limite: number): string {
+  const antes = atual.trimEnd();
+  const junto = antes ? `${antes} ${transcrito.trim()}` : transcrito.trim();
+  return junto.slice(0, limite);
+}
+
+/** A via depois de uma transcrição: com texto antes, vira "misto". */
+export function viaDepoisDoAudio(atual: string, via: Via | null): Via {
+  if (via === "misto") return "misto";
+  if (!atual.trim()) return "audio";
+  return via === "audio" ? "audio" : "misto";
+}
+
+/** A via depois de ela digitar: quem já gravou continua marcado. */
+export function viaDepoisDoTexto(via: Via | null): Via {
+  return via ?? "texto";
+}
+
+/** A coluna `*_via` do banco só conhece texto e áudio: misto passou por áudio. */
+export function viaDaColuna(via: Via | null): "texto" | "audio" | null {
+  if (via === null) return null;
+  return via === "texto" ? "texto" : "audio";
+}
 
 /**
  * Leitura tolerante para o que veio do aparelho dela: o que não passa volta
@@ -402,10 +459,14 @@ export function sanearRespostas(cliente: Cliente, bruto: unknown, moeda: Moeda):
     nome: texto(b.nome, 120),
     entrada,
     cena,
-    livre: cena === CENA_LIVRE ? texto(b.livre, 2000) : "",
+    livre: cena === CENA_LIVRE ? texto(b.livre, LIMITE_LIVRE) : "",
+    viaLivre: cena === CENA_LIVRE ? viaOuNulo(b.viaLivre) : null,
     ramo,
-    viaAberta: b.viaAberta === "texto" || b.viaAberta === "audio" ? b.viaAberta : null,
-    consentimentoAudioEm: typeof b.consentimentoAudioEm === "string" ? b.consentimentoAudioEm.slice(0, 40) : null,
+    viaAberta: viaOuNulo(b.viaAberta),
+    consentimentoAudioEm:
+      typeof b.consentimentoAudioEm === "string" && z.iso.datetime().safeParse(b.consentimentoAudioEm).success
+        ? b.consentimentoAudioEm
+        : null,
     prazo,
     whatsapp: texto(b.whatsapp, 40),
     email: texto(b.email, 200),
@@ -452,6 +513,24 @@ export function escolherOferta(
   });
   if (!cabem.length) return null;
   return cabem.reduce((maior, p) => ((p.preco[moeda] ?? 0) > (maior.preco[moeda] ?? 0) ? p : maior));
+}
+
+/* ==========================================================================
+   Link da proposta
+   ========================================================================= */
+
+/**
+ * O `host` vem da requisição e quem chama pode escrevê-lo: só vale se for um
+ * domínio do próprio cliente; fora disso, o domínio principal. Sem isso, um
+ * Host forjado poria um link de outro site na mensagem ou no aviso à dona.
+ */
+export function linkDaProposta(cliente: Cliente, host: string | null, token: string): string {
+  const pedido = host?.trim().toLowerCase() ?? "";
+  const semPorta = pedido.replace(/:\d+$/, "");
+  const conhecido = [cliente.dominio, ...cliente.dominiosExtra].includes(semPorta);
+  const alvo = conhecido ? pedido : cliente.dominio;
+  const protocolo = conhecido && semPorta === "localhost" ? "http" : "https";
+  return `${protocolo}://${alvo}/p/${token}`;
 }
 
 /* ==========================================================================

@@ -129,7 +129,10 @@ dourado. Desvio pendente do §10 (ver "Pendências").
 
 **Alerta.** `--color-alerta #C4674E` (4,87:1 sobre o escuro): erro de
 validação é voz do sistema, fora dos acentos de persona. No tema claro,
-`#B91C1C`.
+`#B91C1C`. Na holding, o alerta é do mundo (`Mundo.alerta` → `--v-alerta`,
+24/09): `#D2785E` na casa (5,95:1), em Imagem (5,64:1) e em Posicionamento
+(5,84:1); `#A4492F` em Estética (5,14:1 no marfim). O mesmo valor preenche
+`--color-alerta` dentro do mundo.
 
 **Acento por persona** — extensão de produto registrada no BRAND-VISUAL §10.1
 em 14/08 (falta propagar ao Notion): `--patricia #C17B83` (rosa-argila),

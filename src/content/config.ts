@@ -133,8 +133,5 @@ export const FAIXAS_POR_MOEDA: Record<Moeda, Faixas> = {
   },
 };
 
-/** Atalho para o caminho canônico (pt-BR). */
-export const FAIXAS = FAIXAS_POR_MOEDA.BRL;
-
 /** C4 — teto da fita ≈ 2–3× o preço atual. 2,5 é o meio da faixa aprovada. */
 export const FATOR_TETO_FITA = 2.5;

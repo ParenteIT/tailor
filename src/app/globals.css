@@ -392,6 +392,25 @@ textarea {
   }
 }
 
+/* Botão de pagar da proposta sem vertente (fluxo legado): tinta cheia, canto
+   do molde. Na holding, `.cta-mundo` (holding.css) troca pelo botão do mundo. */
+.cta-oferta {
+  color: var(--surface);
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  border-radius: 2px;
+  min-height: 56px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.cta-oferta:disabled {
+  color: var(--ink-3);
+  background: transparent;
+  border-color: var(--rule-2);
+  cursor: progress;
+}
+
 /* O filete de abertura — 36×1px em ouro. Gesto-assinatura do sistema (§4).
    Aqui ele não é enfeite: marca o início da peça, como no molde impresso. */
 .filete {

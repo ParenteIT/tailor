@@ -20,15 +20,19 @@ export interface Analise {
  * — é o que segura o custo em centavos por lead.
  */
 export async function analisarRespostas(
-  dados: Record<string, unknown>
+  dados: Record<string, unknown>,
+  prompt: { sistema: string; schema: Record<string, unknown>; entrada?: string } = {
+    sistema: PROMPT_ANALISE,
+    schema: SCHEMA_ANALISE,
+  }
 ): Promise<Analise> {
   if (!llmDisponivel()) return degradar(dados);
 
   try {
     const { texto, recusado } = await extrairEstruturado({
-      sistema: PROMPT_ANALISE,
-      schema: SCHEMA_ANALISE,
-      entrada: montarEntradaAnalise(dados),
+      sistema: prompt.sistema,
+      schema: prompt.schema,
+      entrada: prompt.entrada ?? montarEntradaAnalise(dados),
       maxTokens: 800,
     });
 

@@ -31,6 +31,31 @@ export function carregarCliente(bruto: unknown): Cliente {
   throw new Error(`[tailor] configuração de cliente inválida:\n${linhas.join("\n")}`);
 }
 
+/**
+ * Migração de `voz` (24/09/2026): uma linha de `tenants` publicada antes de a
+ * voz existir recebe a voz do arquivo do mesmo cliente, até o próximo
+ * `sync:tenant`. Só para cliente que existe no registro — um tenant novo sem
+ * voz continua falhando na validação, sem voz genérica silenciosa. Some
+ * quando todas as linhas do banco tiverem a voz.
+ */
+export function completarVozDoRegistro(bruto: unknown): unknown {
+  if (typeof bruto !== "object" || bruto === null) return bruto;
+  const b = bruto as Record<string, unknown>;
+  const registrado = typeof b.id === "string" ? REGISTRO[b.id as IdCliente] : undefined;
+  if (!registrado) return bruto;
+  const vozesDaVertente = new Map(registrado.vertentes.map((v) => [v.id, v.voz]));
+  const vertentes = Array.isArray(b.vertentes)
+    ? b.vertentes.map((v) => {
+        if (typeof v !== "object" || v === null || "voz" in v) return v;
+        const voz = vozesDaVertente.get((v as { id?: string }).id ?? "");
+        return voz ? { ...v, voz } : v;
+      })
+    : b.vertentes;
+  const faltava = !("voz" in b) || vertentes !== b.vertentes;
+  if (faltava) console.warn(`[tailor] tenant '${b.id}' sem voz no banco; usando a do arquivo até o sync:tenant`);
+  return { ...b, voz: b.voz ?? registrado.voz, vertentes };
+}
+
 const base = carregarCliente(REGISTRO[idAtivo()]);
 
 /** O WhatsApp de teste sobrepõe o oficial sem tocar na configuração. */

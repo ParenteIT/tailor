@@ -1,9 +1,16 @@
 "use client";
 
-import { useId, useState, type KeyboardEvent } from "react";
+import { useCallback, useId, useRef, useState, type KeyboardEvent } from "react";
 import type { Idioma, Moeda, NomeIcone, Pergunta } from "@/content/clientes/esquema";
 import { txt } from "@/content/clientes";
-import { ajustarMedida, contaDaMedida, faixaDoCampo, opcoesDaFaixa, type ValorResposta } from "@/lib/fluxo";
+import {
+  LIMITE_ABERTA,
+  ajustarMedida,
+  contaDaMedida,
+  faixaDoCampo,
+  opcoesDaFaixa,
+  type ValorResposta,
+} from "@/lib/fluxo";
 import { dinheiro } from "@/lib/gap";
 import { BotaoAudio } from "@/components/molde";
 import { useGravador } from "@/lib/gravador";
@@ -33,6 +40,11 @@ export function Rico({ texto }: { texto: string }) {
       )}
     </>
   );
+}
+
+/** O título sem a marcação de `Rico`, para rotular um grupo (A48). */
+export function textoPlano(texto: string): string {
+  return texto.replace(/\*+/g, "");
 }
 
 export interface OpcaoExibida {
@@ -122,44 +134,70 @@ export function opcoesExibidas(
 }
 
 /* ==========================================================================
-   Aberta — texto e áudio, uma porta a mais para a mesma pergunta
+   Campo aberto — texto e áudio, uma porta a mais para a mesma pergunta
    ========================================================================= */
 
-export function Aberta({
+/**
+ * Serve à pergunta `aberta` e ao "Nenhuma dessas" da cena: toda resposta
+ * aberta aceita texto ou áudio (PRODUCT.md; A47). A transcrição chega por
+ * `onTranscrito` e quem guarda o estado a soma ao texto (`juntarTranscricao`).
+ */
+export function CampoAberto({
   cliente,
-  pergunta,
   idioma,
+  id,
+  rotulo,
+  placeholder,
   valor,
+  limite,
+  curta = false,
+  audio,
+  jaConsentiu,
   onChange,
   onTranscrito,
   onConsentimento,
 }: {
   cliente: Cliente;
-  pergunta: Pergunta & { tipo: "aberta" };
   idioma: Idioma;
+  id?: string;
+  rotulo: string;
+  placeholder: string;
   valor: string;
+  limite: number;
+  curta?: boolean;
+  audio: boolean;
+  jaConsentiu: boolean;
   onChange: (v: string) => void;
   onTranscrito: (texto: string) => void;
   onConsentimento: (emISO: string) => void;
 }) {
-  const id = useId();
-  const gravador = useGravador(onTranscrito, onConsentimento);
+  const gerado = useId();
+  const idCampo = id ?? gerado;
+  const campo = useRef<HTMLTextAreaElement>(null);
+  const gravador = useGravador(onTranscrito, onConsentimento, jaConsentiu);
   const a = cliente.textos.aberta.audio;
+  const voltarAoCampo = useCallback(() => {
+    const el = campo.current;
+    if (!el) return;
+    el.focus({ preventScroll: true });
+    el.setSelectionRange(el.value.length, el.value.length);
+  }, []);
   return (
     <div className="h-aberta">
-      <label htmlFor={id} className="sr-only">
-        {txt(cliente.textos.aberta.rotulo, idioma)}
+      <label htmlFor={idCampo} className="sr-only">
+        {rotulo}
       </label>
       <textarea
-        id={id}
-        className="h-campo h-textarea"
-        rows={4}
-        maxLength={4000}
-        placeholder={txt(pergunta.placeholder, idioma)}
+        ref={campo}
+        id={idCampo}
+        className={curta ? "h-campo h-textarea h-textarea-curta" : "h-campo h-textarea"}
+        rows={curta ? 2 : 4}
+        maxLength={limite}
+        placeholder={placeholder}
         value={valor}
         onChange={(e) => onChange(e.target.value)}
       />
-      {pergunta.audio ? (
+      {audio ? (
         <BotaoAudio
           estado={gravador.estado}
           suportado={gravador.suportado}
@@ -177,6 +215,7 @@ export function Aberta({
           onConsentir={gravador.consentir}
           onRecusar={gravador.recusarConsentimento}
           onParar={gravador.parar}
+          aoVoltarAoCampo={voltarAoCampo}
         />
       ) : null}
     </div>
@@ -325,6 +364,7 @@ export function CorpoDaPergunta({
   moeda,
   valor,
   comIcone,
+  jaConsentiu,
   onResponder,
   onTranscrito,
   onConsentimento,
@@ -335,6 +375,7 @@ export function CorpoDaPergunta({
   moeda: Moeda;
   valor: ValorResposta | undefined;
   comIcone: boolean;
+  jaConsentiu: boolean;
   onResponder: (v: ValorResposta) => void;
   onTranscrito: (texto: string) => void;
   onConsentimento: (emISO: string) => void;
@@ -343,7 +384,7 @@ export function CorpoDaPergunta({
     case "escolha":
       return (
         <Opcoes
-          rotulo={txt(pergunta.kicker, idioma)}
+          rotulo={textoPlano(txt(pergunta.titulo, idioma))}
           opcoes={opcoesExibidas(pergunta.opcoes, idioma)}
           selecionada={typeof valor === "string" ? valor : null}
           onEscolher={onResponder}
@@ -353,7 +394,7 @@ export function CorpoDaPergunta({
     case "faixa":
       return (
         <Opcoes
-          rotulo={txt(pergunta.kicker, idioma)}
+          rotulo={textoPlano(txt(pergunta.titulo, idioma))}
           opcoes={opcoesExibidas(opcoesDaFaixa(pergunta, moeda), idioma)}
           selecionada={typeof valor === "string" ? valor : null}
           onEscolher={onResponder}
@@ -362,11 +403,15 @@ export function CorpoDaPergunta({
       );
     case "aberta":
       return (
-        <Aberta
+        <CampoAberto
           cliente={cliente}
-          pergunta={pergunta}
           idioma={idioma}
+          rotulo={txt(cliente.textos.aberta.rotulo, idioma)}
+          placeholder={txt(pergunta.placeholder, idioma)}
           valor={typeof valor === "string" ? valor : ""}
+          limite={LIMITE_ABERTA}
+          audio={pergunta.audio}
+          jaConsentiu={jaConsentiu}
           onChange={onResponder}
           onTranscrito={onTranscrito}
           onConsentimento={onConsentimento}

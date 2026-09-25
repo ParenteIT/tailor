@@ -16,10 +16,10 @@ import type { Cliente } from "./esquema";
  * e o produto não exibe número que ninguém declarou. Enquanto forem null, o
  * diagnóstico não abre em inglês.
  *
- * Preços: só entram os decididos em 20–22/09 (negrito em
- * `planejamento-holding-3-vertentes.md` §5), como referência da regra de
- * oferta. Os pendentes (Alta-Costura, Dossiê Digital) ficam null e nunca são
- * ofertados. O valor exibido na proposta continua vindo da env de checkout.
+ * Preços: só entram os decididos em 20–22/09 (a esteira está no HANDOFF
+ * §7.1). Os pendentes (Alta-Costura, Dossiê Digital) ficam null e nunca são
+ * ofertados. Desde 23/09 o preço daqui é o que a proposta exibe e cobra,
+ * sem env de checkout.
  */
 
 const APOIO_ABERTA = {
@@ -66,7 +66,7 @@ export const renilza: z.input<typeof Cliente> = {
     nome: "Renilza Miranda",
     fraseMestra: {
       pt: "Do valor invisível ao valor percebido",
-      en: "From invisible value to perceived value",
+      en: "From invisible worth to perceived worth",
     },
     logo: {
       degrade: ["#9C7A30", "#D8B563", "#F1DFA6", "#D8B563", "#B08A3A"],
@@ -76,6 +76,22 @@ export const renilza: z.input<typeof Cliente> = {
   },
 
   contato: { whatsapp: "5511950291364" },
+
+  // Voz do texto gerado (prompts/v2). Sai do "COMO ELA ESCREVE" do v1, sem a
+  // tese "não está sendo percebida", que presumia o problema antes de ler as
+  // respostas (auditoria da voz, 24/09/2026). Passa pela leitura em voz alta
+  // com a Renilza antes de valer como definitiva.
+  voz: {
+    autora: "Renilza Miranda",
+    quemE:
+      "Ela parte do que a pessoa já faz e traduz o que aparece nas respostas, sem presumir falta de valor, sem prometer transformação e sem inventar causas.",
+    comoEscreve: [
+      "Primeira pessoa, direta, sem preâmbulo: \"eu vi\", \"eu li\", \"o que eu vejo aqui\".",
+      "Frases curtas. Nada de jargão de coach, nada de \"jornada de autoconhecimento\", nada de \"empoderamento\".",
+      "Nomeia a coisa pelo nome, com as palavras que a própria pessoa usou.",
+      "Calor sem infantilização: fala com uma adulta que já entende do próprio ofício.",
+    ],
+  },
 
   // Telas 1 e 2: o noir oficial do BRAND-VISUAL §2.1, sem cor de vertente.
   casa: {
@@ -88,6 +104,7 @@ export const renilza: z.input<typeof Cliente> = {
     trilho: "#736A60",
     acento: "#F6EFE1",
     acentoSuave: "rgba(246,239,225,.08)",
+    alerta: "#D2785E",
     ouro: "#C9A24C",
     botaoFundo: "#F6EFE1",
     botaoTinta: "#141009",
@@ -111,6 +128,20 @@ export const renilza: z.input<typeof Cliente> = {
   vertentes: [
     {
       id: "imagem",
+      voz: {
+        papel:
+          "Lê a relação dela com o armário e a roupa: peça, cor, forma, ajuste. Mede o que já existe e traduz antes de qualquer compra.",
+        tom: [
+          "Concreto, com as palavras do armário: peça, cor, forma, ajuste, medir, traduzir.",
+          "Nunca \"transformar\" nem \"nova você\": ela não vira outra pessoa.",
+        ],
+        proibido: [
+          { pt: "transformação", en: "transformation" },
+          { pt: "transformar", en: "transform" },
+          { pt: "nova você", en: "new you" },
+          { pt: "melhor versão", en: "best version" },
+        ],
+      },
       cena: {
         texto: {
           pt: "Tenho o armário cheio, mas não me reconheço em quase nada dele.",
@@ -128,6 +159,7 @@ export const renilza: z.input<typeof Cliente> = {
         trilho: "#806C86",
         acento: "#C17B83",
         acentoSuave: "rgba(193,123,131,.12)",
+        alerta: "#D2785E",
         ouro: "#C9A24C",
         botaoFundo: "#EADBC8",
         botaoTinta: "#1C1229",
@@ -147,8 +179,7 @@ export const renilza: z.input<typeof Cliente> = {
         { pt: "Ajuste", en: "Fitting" },
         { pt: "Alta-Costura", en: "Haute Couture" },
       ],
-      // O texto do copy deck, escrito para a consultoria de imagem. Posicionamento
-      // e Estética ficam sem o bloco até existir texto aprovado para elas.
+      // O texto do copy deck, escrito para a consultoria de imagem.
       metodo: {
         titulo: { pt: "Tradução, não transformação.", en: "Translation, not transformation." },
         corpo: [
@@ -286,6 +317,45 @@ export const renilza: z.input<typeof Cliente> = {
     },
     {
       id: "posicionamento",
+      // HANDOFF §11: sóbrio, de igual para igual, e nada de roupa ou
+      // aparência — a contaminação por Imagem foi o que motivou o v2.
+      voz: {
+        papel: "Lê como o trabalho dela é dito, apresentado e entendido: proposta, reunião, narrativa, a forma de explicar o que faz.",
+        tom: [
+          "Sóbrio e exato, de igual para igual, com verbos de leitura; nunca o de uma mentora que promete.",
+          "Não fala de roupa, estilo, corpo, aparência, cor nem peça. \"Presença\" só no sentido de apresentação profissional, nunca de aparência física.",
+          "Um desejo que ela declarou pode ser descrito como desejo presente (\"você escreveu que quer...\"), nunca como previsão.",
+        ],
+        proibido: [
+          { pt: "lapidar", en: "polish" },
+          { pt: "bruto", en: "rough" },
+          { pt: "diamante", en: "diamond" },
+          { pt: "brilhar", en: "shine" },
+          { pt: "joia", en: "jewel" },
+          { pt: "folheado", en: "gold-plated" },
+          { pt: "falso", en: "fake" },
+          { pt: "genuíno", en: "genuine" },
+          { pt: "fogo", en: "fire" },
+          { pt: "forja", en: "forge" },
+          { pt: "destaque", en: "stand out" },
+          { pt: "referência", en: "go-to" },
+          { pt: "ser convidada", en: "be invited" },
+          { pt: "ser lembrada", en: "be remembered" },
+          { pt: "sucesso", en: "success" },
+          { pt: "melhor versão", en: "best version" },
+          { pt: "valor comprovado", en: "proven value" },
+          { pt: "falta pouco", en: "almost there" },
+          { pt: "roupa", en: "clothes" },
+          { pt: "estilo", en: "style" },
+          { pt: "aparência", en: "appearance" },
+          { pt: "armário", en: "wardrobe" },
+          { pt: "peça", en: "garment" },
+          // A proposta real de 23/09 fechou com "a sua imagem finalmente dizer" (F03).
+          { pt: "imagem", en: "image" },
+          { pt: "corpo", en: "body" },
+          { pt: "cor", en: "color" },
+        ],
+      },
       cena: {
         texto: {
           pt: "Entrego mais do que muita gente que aparece mais — e continuo sendo a última lembrada.",
@@ -305,6 +375,7 @@ export const renilza: z.input<typeof Cliente> = {
         trilho: "#3A3834",
         acento: "#C8935E",
         acentoSuave: "rgba(200,147,94,.16)",
+        alerta: "#D2785E",
         ouro: "#C8935E",
         // Degradê cobre e pílula: exceção assinada pelo Willian, só nesta
         // vertente (handoff §6 — registrar no BRAND-VISUAL §10).
@@ -326,6 +397,19 @@ export const renilza: z.input<typeof Cliente> = {
         { pt: "Estrutura", en: "Structure" },
         { pt: "Cúpula", en: "Dome" },
       ],
+      metodo: {
+        titulo: { pt: "Tradução, não transformação.", en: "Translation, not transformation." },
+        corpo: [
+          {
+            pt: "Posicionamento costuma ser vendido como visibilidade: aparecer mais, falar mais alto, vestir uma persona. O Método Valor Percebido faz o contrário. Ele não ensina a aparecer mais. Ensina a ser lida certo quando você aparece. Nada aqui inventa quem você não é.",
+            en: "Positioning is usually sold as visibility: show up more, speak louder, put on a persona. The Perceived Worth Method does the opposite. It doesn't teach you to show up more. It teaches you to be read right when you do. Nothing here invents who you're not.",
+          },
+          {
+            pt: "Por isso o trabalho começa pelo que você já entrega, não pelo que falta mostrar. Primeiro o critério, depois a frase, e só então a vitrine.",
+            en: "That's why the work starts with what you already deliver, not with what's missing from view. First the criteria, then the sentence, and only then the showcase.",
+          },
+        ],
+      },
       perguntas: [
         {
           id: "dito",
@@ -450,6 +534,35 @@ export const renilza: z.input<typeof Cliente> = {
     },
     {
       id: "estetica",
+      // HANDOFF §11: colega sênior de atendimento. Pele, corpo e saúde
+      // nunca são matéria da leitura (dado sensível; auditoria da voz).
+      voz: {
+        papel: "Lê o trabalho de atendimento: como ela prepara, organiza, apresenta, cobra e revê; ficha, cliente, preço, agenda e local.",
+        tom: [
+          "Colega sênior de atendimento: frases curtas, segunda pessoa, verbos de trabalho (preparar, organizar, apresentar, cobrar, rever).",
+          "Não interpreta pele, corpo, saúde nem condição física, nem quando ela mencionar. Não pressupõe ficha formal nem trabalho com pele.",
+          "O que a cliente já sabe antes de chegar é informação do atendimento, não indicação.",
+          "Onde ela atende é fato, nunca degrau: não contraste com um espaço próprio nem o sugira como falta ou próximo passo.",
+        ],
+        proibido: [
+          { pt: "transforme", en: "transform" },
+          { pt: "fature", en: "earn more" },
+          { pt: "lote a agenda", en: "fill your schedule" },
+          { pt: "referência", en: "go-to" },
+          { pt: "insubstituível", en: "irreplaceable" },
+          { pt: "brilhe", en: "shine" },
+          { pt: "sua clínica", en: "your clinic" },
+          { pt: "alto padrão garantido", en: "guaranteed high standard" },
+          { pt: "anamnese", en: "anamnesis" },
+          { pt: "consulta", en: "consultation" },
+          { pt: "tempo de pausa", en: "downtime" },
+          { pt: "indicação", en: "referral" },
+          { pt: "indicou", en: "referred" },
+          { pt: "pele", en: "skin" },
+          { pt: "corpo", en: "body" },
+          { pt: "saúde", en: "health" },
+        ],
+      },
       cena: {
         texto: {
           pt: "Atendo o dia inteiro, mas ainda parece que estou só trabalhando — não construindo um negócio.",
@@ -467,6 +580,8 @@ export const renilza: z.input<typeof Cliente> = {
         trilho: "#6B7A72",
         acento: "#4A6D5B",
         acentoSuave: "rgba(111,155,133,.18)",
+        // Terra mais fundo: o #D2785E dos mundos escuros dá 2,79:1 no marfim.
+        alerta: "#A4492F",
         ouro: "#856828",
         botaoFundo: "#2E4A3B",
         botaoTinta: "#F6EFE1",
@@ -475,7 +590,8 @@ export const renilza: z.input<typeof Cliente> = {
         tintaSobrePreenchimento: "#F6EFE1",
         painel: "#2E4A3B",
         painelTinta: "#F6EFE1",
-        painelApoio: "rgba(246,239,225,.62)",
+        // .62 dá 4,38:1 sobre a sálvia do painel; .72 dá 5,30:1 (textos de 10–11px).
+        painelApoio: "rgba(246,239,225,.72)",
         painelAcento: "#A8C4B4",
         gesto: "onda",
         iconesNasOpcoes: false,
@@ -487,6 +603,19 @@ export const renilza: z.input<typeof Cliente> = {
         { pt: "Autônoma", en: "Independent" },
         { pt: "Empresária", en: "Business owner" },
       ],
+      metodo: {
+        titulo: { pt: "Tradução, não transformação.", en: "Translation, not transformation." },
+        corpo: [
+          {
+            pt: "Quando a conversa começa pelo preço, o conselho de sempre é postar mais, atender mais, prometer mais. Mas esforço não é o que falta. O Método Valor Percebido lê o que o seu atendimento já entrega e traduz isso em sinais que a cliente percebe antes de perguntar quanto custa.",
+            en: "When the conversation starts with price, the usual advice is to post more, book more, promise more. But effort isn't what's missing. The Perceived Worth Method reads what your service already delivers and translates it into signals your client notices before she asks how much it costs.",
+          },
+          {
+            pt: "Por isso o preço vem por último. Primeiro o que você defende, depois o que a cliente vê, ouve e vive. Preço à altura é consequência, não coragem.",
+            en: "That's why price comes last. First what you stand for, then what your client sees, hears and lives. Pricing at your level is a consequence, not an act of courage.",
+          },
+        ],
+      },
       perguntas: [
         {
           id: "preco",
@@ -633,7 +762,7 @@ export const renilza: z.input<typeof Cliente> = {
     { id: "dossieImagem", vertente: "imagem", nivel: 1, nome: { pt: "Dossiê de Imagem", en: "Image Dossier" }, preco: { BRL: 3500, USD: null }, publicado: true, recorrencia: "unica", canal: "conversa", gate: false },
     { id: "consultoriaInternacional", vertente: "imagem", nivel: 1, nome: { pt: "Consultoria de Imagem · Dubai & Europa", en: "Image Consulting · Dubai & Europe" }, preco: { BRL: null, USD: 1800 }, publicado: true, recorrencia: "unica", canal: "conversa", gate: false },
     { id: "altaCostura", vertente: "imagem", nivel: 2, nome: { pt: "Alta-Costura", en: "Haute Couture" }, preco: { BRL: null, USD: null }, publicado: false, recorrencia: "unica", canal: "conversa", gate: true },
-    { id: "jornada", vertente: "posicionamento", nivel: 1, nome: { pt: "Jornada Valor Percebido", en: "Perceived Value Journey" }, preco: { BRL: 97.9, USD: null }, publicado: true, recorrencia: "mensal", canal: "checkout", gate: false, linkHotmart: null },
+    { id: "jornada", vertente: "posicionamento", nivel: 1, nome: { pt: "Jornada Valor Percebido", en: "Perceived Worth Journey" }, preco: { BRL: 97.9, USD: null }, publicado: true, recorrencia: "mensal", canal: "checkout", gate: false, linkHotmart: null },
     { id: "posicionamento1a1", vertente: "posicionamento", nivel: 2, nome: { pt: "1:1 de Posicionamento", en: "1:1 Positioning" }, preco: { BRL: 9997, USD: 8500 }, publicado: true, recorrencia: "unica", canal: "conversa", gate: true },
     { id: "daMaca", vertente: "estetica", nivel: 1, nome: { pt: "Da Maca ao Alto Padrão", en: "From the Treatment Bed to High End" }, preco: { BRL: 497, USD: null }, publicado: true, recorrencia: "unica", canal: "checkout", gate: false },
     { id: "turmaEstetica", vertente: "estetica", nivel: 2, nome: { pt: "Turma de Estética", en: "Aesthetics Cohort" }, preco: { BRL: 4997, USD: 2200 }, publicado: true, recorrencia: "unica", canal: "conversa", gate: true },
@@ -782,9 +911,10 @@ export const renilza: z.input<typeof Cliente> = {
         pt: "A proposta completa chega por lá, feita com o que você me contou.",
         en: "The full proposal arrives there, made from what you told me.",
       },
+      // Sem nome, relato ou número: o texto viaja na URL do wa.me (A35).
       mensagemWhatsapp: {
-        pt: "Oi, Renilza! Sou {nome} e acabei o diagnóstico. A minha leitura: {link}",
-        en: "Hi Renilza! I'm {nome} and I just finished the diagnosis. My reading: {link}",
+        pt: "Oi, Renilza! Acabei o diagnóstico e quero conversar sobre o próximo passo. A minha leitura: {link}",
+        en: "Hi Renilza! I just finished the diagnosis and I'd like to talk about the next step. My reading: {link}",
       },
     },
     painel: {
@@ -813,12 +943,12 @@ export const renilza: z.input<typeof Cliente> = {
     idioma: { pt: "Idioma", en: "Language" },
     reserva: {
       frase: {
-        pt: "{nome}, você me disse isto: \"{frase}\".",
-        en: "{nome}, you told me this: \"{frase}\".",
+        pt: "{nome}, você me escreveu isto: \"{frase}\".",
+        en: "{nome}, you wrote me this: \"{frase}\".",
       },
       guardei: {
-        pt: "Guardei essa frase porque ela é o começo do trabalho, não o fim.",
-        en: "I kept that line because it's where the work begins, not where it ends.",
+        pt: "O que você escreveu também entra nesta leitura.",
+        en: "What you wrote is part of this reading too.",
       },
       palavras: {
         pt: "E escolheu ser lida como {palavras} — é dali que a gente parte.",
@@ -834,8 +964,8 @@ export const renilza: z.input<typeof Cliente> = {
       semOfertaCta: { pt: "Conversar no WhatsApp", en: "Talk on WhatsApp" },
       porMes: { pt: "{preco}/mês", en: "{preco}/month" },
       mensagemWhatsapp: {
-        pt: "Oi, Renilza! Li a minha proposta e quero conversar sobre o próximo passo.",
-        en: "Hi Renilza! I read my proposal and I'd like to talk about the next step.",
+        pt: "Oi, Renilza! Li a minha proposta e quero conversar sobre o próximo passo. A proposta: {link}",
+        en: "Hi Renilza! I read my proposal and I'd like to talk about the next step. The proposal: {link}",
       },
     },
     meta: {

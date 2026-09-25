@@ -15,6 +15,7 @@ import { ESTACOES_FITA, type EstacaoFita } from "@/lib/gap";
 import { cobrancaDaOferta, expirou, type ConteudoProposta } from "@/lib/proposta";
 import { getStore } from "@/lib/store";
 import { tokenPlausivel } from "@/lib/token";
+import { linkDaProposta } from "@/lib/fluxo";
 import { idiomaValido, txt, type Cliente } from "@/content/clientes";
 import { resolverCliente } from "@/lib/tenants";
 import { EstiloDosMundos } from "@/components/holding/estilo-mundos";
@@ -73,12 +74,16 @@ export default async function PaginaProposta({
   // dele. Se o token migrar de domínio um dia (não hoje), isto lê errado; a
   // alternativa (gravar o cliente junto com o conteúdo) fica para quando
   // existir esse caso de verdade.
-  const cliente = await resolverCliente((await headers()).get("host"));
+  const host = (await headers()).get("host");
+  const cliente = await resolverCliente(host);
   // Proposta da holding: o mundo da vertente em vez do ivory, a marca e a
   // oferta da configuração do cliente. A estrutura dos blocos é a mesma — o
   // desenho da proposta por vertente ainda não foi feito (handoff §9.7).
   const vertente = c.vertente ? cliente.vertentes.find((v) => v.id === c.vertente) : undefined;
   const idiomaCliente = idiomaValido(locale) ? locale : cliente.idiomaPadrao;
+  const mensagemHolding = txt(cliente.textos.proposta.mensagemWhatsapp, idiomaCliente, {
+    link: linkDaProposta(cliente, host, token),
+  });
   const cobranca = vertente ? cobrancaDaOferta(c, cliente) : null;
   // ◆ é o marcador de "preço não decidido", nunca um valor para a tela.
   // Assinatura mostra o período: R$ 97,90 sozinho leria como pagamento único.
@@ -289,10 +294,8 @@ export default async function PaginaProposta({
                 {txt(cliente.textos.proposta.semOferta, idiomaCliente)}
               </p>
               <a
-                className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
-                href={`https://wa.me/${cliente.contato.whatsapp}?text=${encodeURIComponent(
-                  txt(cliente.textos.proposta.mensagemWhatsapp, idiomaCliente)
-                )}`}
+                className="notacao cta-mundo inline-flex items-center gap-p2 px-p4 py-p3"
+                href={`https://wa.me/${cliente.contato.whatsapp}?text=${encodeURIComponent(mensagemHolding)}`}
                 target="_blank"
                 rel="noreferrer"
                 style={{
@@ -330,9 +333,7 @@ export default async function PaginaProposta({
               ctaSecundario: t("proposta.b7.ctaSecundario"),
               seguranca: t("proposta.b7.seguranca"),
               mockAviso: t("proposta.b7.mockAviso"),
-              mensagemWhatsapp: vertente
-                ? txt(cliente.textos.proposta.mensagemWhatsapp, idiomaCliente)
-                : t("whatsapp.mensagem"),
+              mensagemWhatsapp: vertente ? mensagemHolding : t("whatsapp.mensagem"),
             }}
           />
           )}
