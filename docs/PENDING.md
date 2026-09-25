@@ -227,9 +227,8 @@ trabalho está no §9):
 - ~~**Cor de alerta por mundo (D10).**~~ — **feito em 24/09/2026**: campo
   `alerta` no `Mundo`, token `--v-alerta`, `#D2785E` na casa, em Imagem e em
   Posicionamento e `#A4492F` em Estética, travado em `mundos-css.test.ts`
-  (≥ 4,5:1 sobre fundo e cartão). Falta rodar `npm run sync:tenant --
-  renilza` depois do merge: até lá a linha do banco não tem o campo e o
-  domínio cai no `CLIENTE` estático.
+  (≥ 4,5:1 sobre fundo e cartão). Publicado no banco em 25/09 (versão 2
+  da linha, alerta nos quatro mundos).
 - **Sobras da Fase 0 de 22/09, só no fluxo antigo** (modo confirmação; a
   holding já usa o `prompts/v2`, com idioma pelo locale e reserva
   localizada): o modelo recebe a chave da persona em vez da frase, não
@@ -240,19 +239,13 @@ trabalho está no §9):
   - Leitura em voz alta, com a Renilza, da voz em `renilza.ts` (`voz` do
     cliente e das três vertentes) e das frases de reserva; ela aprova a
     autenticidade, o Willian a conformidade (C2/C3, fontes).
-  - Rodar os fixtures F01–F12 contra o modelo real (3 execuções cada), com o
-    checklist manual da auditoria: autorizado em 24/09 e pronto em
-    `scripts/avaliar-voz.ts`, mas **falta a chave local** (item abaixo).
-  - **A chave de modelo não sai do Netlify para a máquina** (diagnóstico
-    corrigido em 24/09): `ANTHROPIC_API_KEY` e `GEMINI_API_KEY` são
-    variáveis *secretas* e estão vazias no contexto `dev`. O CLI não
-    devolve valor secreto: `netlify env:get` entrega a frase "No value
-    set…", e foi essa frase que a rodada anterior mandou como chave — daí
-    o `401`. Não é chave revogada: produção tem valor nos contextos
-    production, deploy-preview e branch-deploy, e a proposta de 23/09 saiu
-    do modelo. Para rodar a avaliação, o Willian põe a chave num
-    `.env.local` (credencial: só ele) e roda
-    `npx tsx --conditions=react-server scripts/avaliar-voz.ts <saida.json> 3`.
+  - ~~Rodar os fixtures F01–F12 contra o modelo real~~ — feito: rodada 1
+    em 24/09 e rodada 2 em 25/09 (27/36; 34/36 no rescore com o gate
+    afinado), com a chave num `.env.local` posto pelo Willian. As
+    variáveis de modelo são *secretas* no Netlify e o CLI não as devolve
+    (`env:get` entrega "No value set…"); nova rodada segue o mesmo
+    caminho: `npx tsx --conditions=react-server scripts/avaliar-voz.ts
+    <saida.json> 3`.
   - ~~**F03**~~ — feita em 24/09: `posicionamento23set()` em
     `src/lib/voz-fixtures.ts`, com as respostas exatas da proposta 0aca5878
     (sem nome nem contato); o gate reprova o diagnóstico que o v1 gravou
@@ -264,8 +257,10 @@ trabalho está no §9):
     (`renilza.ts`) e no PRODUCT.md como assinatura. A auditoria da voz não
     a trata como fato documentado (o que se sustenta é a formação em escola
     francesa); a formulação pública final é da Renilza. Fora do prompt v2.
-  - `npm run sync:tenant -- renilza` depois do merge: até lá, o loader
-    completa a voz a partir do arquivo (`completarVozDoRegistro`).
+  - ~~`npm run sync:tenant -- renilza` depois do merge~~ — a voz está no
+    banco desde 25/09 (versão 2). Os proibidos novos de Estética da rodada
+    2 pedem outro sync depois do merge; até lá, a linha do banco ainda não
+    os tem.
 
 ## 6. Higiene do repo e merge da branch da holding
 

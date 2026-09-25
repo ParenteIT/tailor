@@ -22,7 +22,7 @@ import {
 import { createHash } from "node:crypto";
 import { PROMPT_DIAGNOSTICO, VERSAO_PROMPT } from "../../prompts/v1";
 import * as V2 from "../../prompts/v2";
-import { verificarDiagnostico, type ContextoDaVerificacao } from "@/lib/verificar-diagnostico";
+import { tirarAspasDeOpcao, verificarDiagnostico, type ContextoDaVerificacao } from "@/lib/verificar-diagnostico";
 import mensagensPt from "../../messages/pt.json";
 import { moedaDe, txt, type Cliente, type Idioma, type Pergunta } from "@/content/clientes";
 import {
@@ -462,6 +462,7 @@ export function prepararDiagnosticoHolding(
       idioma,
       primeiroNome,
       escritoPorEla: itens.filter((i) => i.origem === "escrito").map((i) => i.resposta),
+      opcoesMarcadas: itens.filter((i) => i.origem === "opcao").map((i) => i.resposta),
       proibidosDaVertente: vozVertente ? vozVertente.proibido.map((t) => t[idioma]) : [],
       leituraNeutra,
       nomesProibidos,
@@ -487,12 +488,13 @@ async function escreverDiagnosticoVerificado(
   if (!llmDisponivel()) return { texto: reserva(), degradado: true };
   for (let tentativa = 1; tentativa <= 2; tentativa++) {
     try {
-      const { texto, recusado } = await escreverTexto({
+      const { texto: bruto, recusado } = await escreverTexto({
         sistema: preparo.sistema,
         entrada: preparo.entrada,
         maxTokens: 700,
       });
-      if (recusado || !texto) continue;
+      if (recusado || !bruto) continue;
+      const texto = tirarAspasDeOpcao(bruto, preparo.contexto);
       const problemas = verificarDiagnostico(texto, preparo.contexto);
       if (!problemas.length) return { texto, degradado: false };
       console.warn(`[tailor] diagnóstico reprovado no gate (tentativa ${tentativa}): ${problemas.join("; ")}`);
