@@ -37,10 +37,15 @@ function mimeSuportado(): string | undefined {
  * `onConsentimento` recebe o timestamp do clique em "Pode gravar" — é essa
  * marca de tempo que vira `consentimento_audio_em` no banco, a evidência que
  * o LGPD by design do produto exige.
+ *
+ * `jaConsentiu`: o consentimento é de quem responde, não de cada campo. Com
+ * ele, o convite grava direto, sem perguntar de novo nem carimbar outra vez
+ * (A24; antes cada instância do hook guardava o seu).
  */
 export function useGravador(
   onTranscrito: (texto: string) => void,
-  onConsentimento?: (emISO: string) => void
+  onConsentimento?: (emISO: string) => void,
+  jaConsentiu = false
 ): Gravador {
   const [estado, setEstado] = useState<EstadoGravador>("ocioso");
   const suportado =
@@ -55,10 +60,6 @@ export function useGravador(
   const encerrarStream = useCallback(() => {
     trilhasRef.current.forEach((trilha) => trilha.stop());
     trilhasRef.current = [];
-  }, []);
-
-  const pedirConsentimento = useCallback(() => {
-    setEstado("consentindo");
   }, []);
 
   const recusarConsentimento = useCallback(() => {
@@ -87,9 +88,7 @@ export function useGravador(
     [onTranscrito]
   );
 
-  const consentir = useCallback(() => {
-    onConsentimento?.(new Date().toISOString());
-
+  const gravar = useCallback(() => {
     if (!suportado) {
       setEstado("erro");
       return;
@@ -122,7 +121,17 @@ export function useGravador(
       .catch(() => {
         setEstado("erro");
       });
-  }, [suportado, onConsentimento, encerrarStream, transcreverEEnviar]);
+  }, [suportado, encerrarStream, transcreverEEnviar]);
+
+  const consentir = useCallback(() => {
+    onConsentimento?.(new Date().toISOString());
+    gravar();
+  }, [onConsentimento, gravar]);
+
+  const pedirConsentimento = useCallback(() => {
+    if (jaConsentiu) gravar();
+    else setEstado("consentindo");
+  }, [jaConsentiu, gravar]);
 
   const parar = useCallback(() => {
     gravadorRef.current?.stop();

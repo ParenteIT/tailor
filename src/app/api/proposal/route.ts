@@ -10,7 +10,8 @@ import {
 import { calcularExpiracao, montarProposta, montarPropostaHolding } from "@/lib/proposta";
 import { moedaDe, type Cliente } from "@/content/clientes";
 import { resolverCliente } from "@/lib/tenants";
-import { emailValido as emailValidoHolding, ramoCompleto } from "@/lib/fluxo";
+import { emailValido as emailValidoHolding, linkDaProposta, ramoCompleto } from "@/lib/fluxo";
+import { avisarLead, corpoDoAviso } from "@/lib/aviso-lead";
 import {
   CorpoPropostaHolding,
   dadosDasRespostas,
@@ -83,8 +84,8 @@ export async function POST(req: Request) {
   }
 
   if (ehCorpoDaHolding(bruto)) {
-    const cliente = await resolverCliente(req.headers.get("host"));
-    return propostaDaHolding(bruto, cliente);
+    const host = req.headers.get("host");
+    return propostaDaHolding(bruto, await resolverCliente(host), host);
   }
 
   const analise = Corpo.safeParse(bruto);
@@ -176,7 +177,7 @@ export async function POST(req: Request) {
  * forma das respostas contra a configuração, ramo inteiro respondido, nome,
  * WhatsApp e e-mail. Só então grava e monta a proposta.
  */
-async function propostaDaHolding(bruto: unknown, cliente: Cliente) {
+async function propostaDaHolding(bruto: unknown, cliente: Cliente, host: string | null) {
   const corpo = CorpoPropostaHolding.safeParse(bruto);
   if (!corpo.success) {
     return NextResponse.json({ erro: "corpo_invalido", detalhes: corpo.error.issues }, { status: 400 });
@@ -215,6 +216,10 @@ async function propostaDaHolding(bruto: unknown, cliente: Cliente) {
       token,
       conteudo as unknown as Record<string, unknown>,
       calcularExpiracao()
+    );
+
+    await avisarLead(
+      corpoDoAviso(cliente, respostas, idioma, linkDaProposta(cliente, host, proposta.token), new Date())
     );
 
     return NextResponse.json({

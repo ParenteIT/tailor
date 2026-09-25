@@ -150,15 +150,7 @@ export function Oferta({
             href={externo}
             rel="noopener"
             onClick={() => void registrar(token, "cta_primario_click")}
-            className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
-            style={{
-              background: "var(--ink)",
-              color: "var(--surface)",
-              border: "1px solid var(--ink)",
-              borderRadius: 2,
-              minHeight: 56,
-              textDecoration: "none",
-            }}
+            className="notacao cta-oferta cta-mundo inline-flex items-center gap-p2 px-p4 py-p3"
           >
             {textos.ctaPrimario} <Seta />
           </a>
@@ -167,15 +159,7 @@ export function Oferta({
             type="button"
             onClick={() => void pagar()}
             disabled={estado === "abrindo"}
-            className="notacao inline-flex items-center gap-p2 px-p4 py-p3"
-            style={{
-              background: estado === "abrindo" ? "transparent" : "var(--ink)",
-              color: estado === "abrindo" ? "var(--ink-3)" : "var(--surface)",
-              border: `1px solid ${estado === "abrindo" ? "var(--rule-2)" : "var(--ink)"}`,
-              borderRadius: 2,
-              minHeight: 56,
-              cursor: estado === "abrindo" ? "progress" : "pointer",
-            }}
+            className="notacao cta-oferta cta-mundo inline-flex items-center gap-p2 px-p4 py-p3"
           >
             {estado === "abrindo" ? textos.ctaAbrindo : textos.ctaPrimario}
             {estado === "abrindo" ? null : <Seta />}
@@ -187,15 +171,12 @@ export function Oferta({
           target="_blank"
           rel="noreferrer"
           onClick={() => void registrar(token, "cta_secundario_click")}
-          className="notacao"
-          style={{
-            color: "var(--ink-3)",
-            borderBottom: "1px solid var(--rule-2)",
-            paddingBottom: 2,
-            textDecoration: "none",
-          }}
+          className="notacao inline-flex items-center"
+          style={{ minHeight: 44, color: "var(--ink-3)", textDecoration: "none" }}
         >
-          {textos.ctaSecundario}
+          <span style={{ borderBottom: "1px solid var(--rule-2)", paddingBottom: 2 }}>
+            {textos.ctaSecundario}
+          </span>
         </a>
       </div>
 

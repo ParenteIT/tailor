@@ -54,6 +54,7 @@ import {
 } from "@/lib/retomada";
 import { PainelDesktop } from "@/components/painel-desktop";
 import { useGravador } from "@/lib/gravador";
+import { LIMITE_ABERTA, juntarTranscricao } from "@/lib/fluxo";
 import { Comparador } from "@/components/comparador";
 import { indiceOpcao } from "@/lib/cenas";
 import {
@@ -457,13 +458,17 @@ export function Quiz({ confirmacao }: { confirmacao?: Preenchimento } = {}) {
                 placeholder={t("q3.placeholder")}
                 recibo={t("q3.recibo")}
                 valor={r.q3}
-                onChange={(v) => atualizar({ q3: v, q3Via: "texto" })}
+                // A24/A25 (auditoria 19/09): a transcrição se soma ao texto,
+                // quem gravou continua marcada como áudio ao editar, e o
+                // carimbo de consentimento é o do primeiro "Pode gravar".
+                onChange={(v) => setR((a) => ({ ...a, q3: v, q3Via: a.q3Via ?? "texto" }))}
                 onTranscrito={(texto) =>
-                  atualizar({ q3: texto, q3Via: "audio" })
+                  setR((a) => ({ ...a, q3: juntarTranscricao(a.q3, texto, LIMITE_ABERTA), q3Via: "audio" }))
                 }
                 onConsentimento={(em) =>
-                  atualizar({ consentimentoAudioEm: em })
+                  setR((a) => ({ ...a, consentimentoAudioEm: a.consentimentoAudioEm ?? em }))
                 }
+                jaConsentiu={r.consentimentoAudioEm !== null}
                 audioTextos={{
                   convite: t("audio.convite"),
                   consentimento: t("audio.consentimento"),
@@ -819,6 +824,7 @@ function PerguntaAberta({
   onChange,
   onTranscrito,
   onConsentimento,
+  jaConsentiu = false,
   audioTextos,
 }: {
   titulo: string;
@@ -833,6 +839,7 @@ function PerguntaAberta({
   /** F6 — o mic é outra porta pra mesma pergunta, nunca uma segunda. */
   onTranscrito?: (texto: string) => void;
   onConsentimento?: (emISO: string) => void;
+  jaConsentiu?: boolean;
   audioTextos?: {
     convite: string;
     consentimento: string;
@@ -847,7 +854,8 @@ function PerguntaAberta({
   const [guardou, setGuardou] = useState(false);
   const gravador = useGravador(
     (texto) => onTranscrito?.(texto),
-    onConsentimento
+    onConsentimento,
+    jaConsentiu
   );
 
   useEffect(() => {
@@ -1646,22 +1654,16 @@ function Pico({
   // cruzando noir → ivory antes da navegação real. `/p/[token]` é uma rota
   // fora do `[locale]`, então o link é sempre um <a> de navegação de
   // verdade (recarrega a página) — não dá pra fazer crossfade DENTRO da
-  // troca de página. A saída encontrada: tocar a animação aqui, no lado
-  // noir, e só navegar depois que ela terminar — o "salto" físico de página
-  // acontece atrás do véu já fechado, nunca visível.
+  // troca de página. O véu começa no toque, junto com a navegação, e cobre
+  // o tempo em que a página seguinte carrega.
+  // A16 (auditoria 19/09): a navegação esperava 1,3 s pelo véu e sequestrava
+  // ctrl/cmd-clique e clique do meio. Agora o link navega no próprio toque e
+  // o véu cobre só a espera real do carregamento; com tecla modificadora,
+  // nem véu — a aba atual fica onde está.
   const [saindo, setSaindo] = useState(false);
   function irParaProposta(e: React.MouseEvent<HTMLAnchorElement>) {
-    if (!url) return;
-    e.preventDefault();
-    const reduzido =
-      typeof matchMedia !== "undefined" &&
-      matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!url || e.button !== 0 || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     setSaindo(true);
-    // Sem motion: não faz sentido prender ela numa espera de 1,3s por uma
-    // animação que ela pediu pro sistema não mostrar.
-    window.setTimeout(() => {
-      window.location.href = url;
-    }, reduzido ? 60 : 1300);
   }
 
   /**

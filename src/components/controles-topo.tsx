@@ -96,7 +96,7 @@ export function SeletorIdioma({ rotulo }: { rotulo: string }) {
         style={{
           ...pilula,
           gap: 8,
-          height: 40,
+          height: 44,
           padding: "0 12px 0 12px",
           color: "var(--ink)",
         }}
@@ -150,7 +150,7 @@ export function SeletorIdioma({ rotulo }: { rotulo: string }) {
                   className="inline-flex w-full cursor-pointer items-center"
                   style={{
                     gap: 10,
-                    minHeight: 40,
+                    minHeight: 44,
                     padding: "0 12px",
                     borderRadius: 12,
                     textAlign: "left",
@@ -207,8 +207,8 @@ function SeletorTema({ textos }: { textos: TextosControles }) {
   }
 
   const segmento = (ativo: boolean): CSSProperties => ({
-    width: 32,
-    height: 32,
+    width: 36,
+    height: 36,
     borderRadius: 999,
     color: ativo ? "var(--color-cta-ink)" : "var(--ink-3)",
     background: ativo ? "var(--color-cta)" : "transparent",

@@ -13,10 +13,6 @@
 import dynamic from "next/dynamic";
 import { Reservado } from "./base";
 
-export const CenaArmario = dynamic(() => import("./armario"), {
-  loading: () => <Reservado altura={72} />,
-});
-
 /** Protótipo em avaliação (07/09/2026) — ver armario-cartoon.tsx. */
 export const CenaArmarioCartoon = dynamic(() => import("./armario-cartoon"), {
   loading: () => <Reservado altura={168} />,

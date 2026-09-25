@@ -4,11 +4,14 @@ import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } fro
 import { moedaDe, txt, type Cliente, type Idioma, type Texto } from "@/content/clientes";
 import {
   CENA_LIVRE,
+  LIMITE_ABERTA,
+  LIMITE_LIVRE,
   RESPOSTAS_VAZIAS,
   cenaLivreDisponivel,
   contaDaMedida,
   emailValido,
   escolherCena,
+  juntarTranscricao,
   mundoDaTela,
   posicaoNoContador,
   telaCompleta,
@@ -17,6 +20,8 @@ import {
   vertenteDaCena,
   vertenteDisponivel,
   vertentesDisponiveis,
+  viaDepoisDoAudio,
+  viaDepoisDoTexto,
   whatsappValido,
   type RespostasEnviadas,
   type RespostasHolding,
@@ -31,7 +36,7 @@ import { SeletorIdioma } from "@/components/controles-topo";
 import { BarraDaFaixa, FiguraDaFaixa, FiguraDoPainel, Templo, prefereMenosMovimento } from "./figuras";
 import { Icone, SetaAvancar } from "./icones";
 import { Logo } from "./logo";
-import { CorpoDaPergunta, Opcoes, Rico, opcoesExibidas } from "./perguntas";
+import { CampoAberto, CorpoDaPergunta, Opcoes, Rico, opcoesExibidas } from "./perguntas";
 
 type EstadoProposta = "ociosa" | "gerando" | "pronta" | "erro";
 
@@ -42,6 +47,7 @@ function enviaveis(r: RespostasHolding): RespostasEnviadas {
     entrada: r.entrada,
     cena: r.cena,
     livre: r.livre,
+    viaLivre: r.viaLivre,
     ramo: r.ramo,
     viaAberta: r.viaAberta,
     consentimentoAudioEm: r.consentimentoAudioEm,
@@ -148,11 +154,42 @@ export function QuizHolding({
     });
   }, [restaurado, cliente, indice, r, moeda, urlProposta]);
 
+  // A26 (auditoria 19/09): na troca de tela o foco vai para o título da tela
+  // nova (tabIndex=-1; sem título, o miolo). A região viva fora do miolo
+  // anuncia a posição, porque o miolo remonta a cada tela.
   useEffect(() => {
     if (!restaurado) return;
     window.scrollTo({ top: 0, behavior: prefereMenosMovimento() ? "auto" : "smooth" });
-    topo.current?.focus({ preventScroll: true });
+    const alvo = topo.current?.querySelector<HTMLElement>("h1") ?? topo.current;
+    alvo?.focus({ preventScroll: true });
   }, [indice, restaurado]);
+
+  /**
+   * A22 (auditoria 19/09), trazido do quiz.tsx antigo: com o teclado do
+   * celular aberto sob um campo aberto, o Continuar ficava fora do alcance.
+   * Só `visualViewport` diz quanto o teclado cobre — o viewport de layout não
+   * muda. Ainda pede confirmação num aparelho real (iOS in-app inclusive).
+   */
+  const [pisoTeclado, setPisoTeclado] = useState<number | null>(null);
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+    const medir = () => {
+      const emCampoAberto = document.activeElement instanceof HTMLTextAreaElement;
+      const coberto = window.innerHeight - vv.height - vv.offsetTop;
+      setPisoTeclado(emCampoAberto && coberto > 120 ? coberto : null);
+    };
+    vv.addEventListener("resize", medir);
+    vv.addEventListener("scroll", medir);
+    document.addEventListener("focusin", medir, true);
+    document.addEventListener("focusout", medir, true);
+    return () => {
+      vv.removeEventListener("resize", medir);
+      vv.removeEventListener("scroll", medir);
+      document.removeEventListener("focusin", medir, true);
+      document.removeEventListener("focusout", medir, true);
+    };
+  }, []);
 
   /* ---------------------------------------------------------------- servidor */
 
@@ -269,6 +306,30 @@ export function QuizHolding({
     setR((x) => ({ ...x, ramo: { ...x.ramo, [id]: valor } }));
   }
 
+  function transcreverNaAberta(id: string, texto: string) {
+    setR((x) => {
+      const atual = typeof x.ramo[id] === "string" ? (x.ramo[id] as string) : "";
+      return {
+        ...x,
+        viaAberta: viaDepoisDoAudio(atual, x.viaAberta),
+        ramo: { ...x.ramo, [id]: juntarTranscricao(atual, texto, LIMITE_ABERTA) },
+      };
+    });
+  }
+
+  function transcreverNoLivre(texto: string) {
+    setR((x) => ({
+      ...x,
+      viaLivre: viaDepoisDoAudio(x.livre, x.viaLivre),
+      livre: juntarTranscricao(x.livre, texto, LIMITE_LIVRE),
+    }));
+  }
+
+  /** O primeiro "Pode gravar" vale para o diagnóstico inteiro e não é regravado. */
+  function consentirAudio(em: string) {
+    setR((x) => ({ ...x, consentimentoAudioEm: x.consentimentoAudioEm ?? em }));
+  }
+
   /* ---------------------------------------------------------------- telas */
 
   if (!abertos.length || (vertente && !vertenteDisponivel(vertente, moeda))) {
@@ -345,6 +406,10 @@ export function QuizHolding({
             </>
           ) : null}
 
+          <p className="sr-only" role="status">
+            {tela.tipo !== "nome" ? contador : ""}
+          </p>
+
           <div ref={topo} tabIndex={-1} key={indice} className="h-miolo h-vira" style={{ outline: "none" }}>
             {recibo ? (
               <p key={recibo.chave} className="h-recibo" role="status">
@@ -381,7 +446,9 @@ export function QuizHolding({
                     : []),
                 ]}
                 onCena={(cena) => setR((x) => escolherCena(cliente, x, cena))}
-                onLivre={(livre) => setR((x) => ({ ...x, livre }))}
+                onLivre={(livre) => setR((x) => ({ ...x, livre, viaLivre: viaDepoisDoTexto(x.viaLivre) }))}
+                onTranscritoLivre={transcreverNoLivre}
+                onConsentimento={consentirAudio}
               />
             ) : null}
 
@@ -389,7 +456,7 @@ export function QuizHolding({
               <>
                 {meta ? <p className="h-meta">{meta}</p> : null}
                 <p className="h-kicker">{txt(tela.pergunta.kicker, idioma)}</p>
-                <h1 className="h-titulo">
+                <h1 className="h-titulo" tabIndex={-1}>
                   <Rico texto={txt(tela.pergunta.titulo, idioma)} />
                 </h1>
                 {tela.pergunta.apoio ? <p className="h-apoio">{txt(tela.pergunta.apoio, idioma)}</p> : null}
@@ -400,14 +467,13 @@ export function QuizHolding({
                   moeda={moeda}
                   valor={r.ramo[tela.pergunta.id]}
                   comIcone={comIcone}
+                  jaConsentiu={r.consentimentoAudioEm !== null}
                   onResponder={(v) => {
                     responder(tela.pergunta.id, v);
-                    if (tela.pergunta.tipo === "aberta") setR((x) => ({ ...x, viaAberta: x.viaAberta ?? "texto" }));
+                    if (tela.pergunta.tipo === "aberta") setR((x) => ({ ...x, viaAberta: viaDepoisDoTexto(x.viaAberta) }));
                   }}
-                  onTranscrito={(texto) =>
-                    setR((x) => ({ ...x, viaAberta: "audio", ramo: { ...x.ramo, [tela.pergunta.id]: texto } }))
-                  }
-                  onConsentimento={(em) => setR((x) => ({ ...x, consentimentoAudioEm: x.consentimentoAudioEm ?? em }))}
+                  onTranscrito={(texto) => transcreverNaAberta(tela.pergunta.id, texto)}
+                  onConsentimento={consentirAudio}
                 />
               </>
             ) : null}
@@ -430,7 +496,7 @@ export function QuizHolding({
             {tela.tipo === "prazo" ? (
               <>
                 <p className="h-kicker">{txt(t.prazo.kicker, idioma)}</p>
-                <h1 className="h-titulo">{txt(t.prazo.titulo, idioma)}</h1>
+                <h1 className="h-titulo" tabIndex={-1}>{txt(t.prazo.titulo, idioma)}</h1>
                 <p className="h-apoio">{txt(t.prazo.apoio, idioma)}</p>
                 <Opcoes
                   rotulo={txt(t.prazo.titulo, idioma)}
@@ -467,7 +533,14 @@ export function QuizHolding({
             ) : null}
 
             {tela.tipo !== "montando" && tela.tipo !== "fim" ? (
-              <div className="h-acoes">
+              <div
+                className="h-acoes"
+                data-ancorado={pisoTeclado !== null ? "sim" : undefined}
+                style={pisoTeclado !== null ? { bottom: pisoTeclado } : undefined}
+                // Ancorado, o toque não pode tirar o foco do campo: o blur
+                // desancoraria o botão antes do click chegar.
+                onMouseDown={pisoTeclado !== null ? (e) => e.preventDefault() : undefined}
+              >
                 <button
                   type="button"
                   className="h-cta"
@@ -516,7 +589,7 @@ function TelaNome({
   return (
     <>
       <Logo idioma={idioma} cliente={cliente} />
-      <h1 className="h-titulo h-titulo-abertura">{txt(a.titulo, idioma)}</h1>
+      <h1 className="h-titulo h-titulo-abertura" tabIndex={-1}>{txt(a.titulo, idioma)}</h1>
       <p className="h-apoio">{txt(a.apoio, idioma)}</p>
       <div className="h-campo-grupo">
         <label htmlFor="h-nome">{txt(a.rotuloNome, idioma)}</label>
@@ -547,6 +620,8 @@ function TelaCena({
   cenas,
   onCena,
   onLivre,
+  onTranscritoLivre,
+  onConsentimento,
 }: {
   idioma: Idioma;
   cliente: Cliente;
@@ -555,32 +630,34 @@ function TelaCena({
   cenas: { id: string; texto: Texto; icone: Parameters<typeof Icone>[0]["nome"] }[];
   onCena: (id: string) => void;
   onLivre: (v: string) => void;
+  onTranscritoLivre: (texto: string) => void;
+  onConsentimento: (emISO: string) => void;
 }) {
   const c = cliente.textos.cena;
+  const titulo = nome ? txt(c.titulo, idioma, { nome }) : txt(c.tituloSemNome, idioma);
   return (
     <>
       <p className="h-kicker">{txt(c.kicker, idioma)}</p>
-      <h1 className="h-titulo">{nome ? txt(c.titulo, idioma, { nome }) : txt(c.tituloSemNome, idioma)}</h1>
-      <Opcoes
-        rotulo={txt(c.kicker, idioma)}
-        opcoes={opcoesExibidas(cenas, idioma)}
-        selecionada={r.cena}
-        onEscolher={onCena}
-        comIcone
-      />
+      <h1 className="h-titulo" tabIndex={-1}>
+        {titulo}
+      </h1>
+      <Opcoes rotulo={titulo} opcoes={opcoesExibidas(cenas, idioma)} selecionada={r.cena} onEscolher={onCena} comIcone />
       {r.cena === CENA_LIVRE ? (
         <div className="h-campo-grupo">
-          <label htmlFor="h-livre" className="sr-only">
-            {txt(c.rotuloLivre, idioma)}
-          </label>
-          <textarea
+          <CampoAberto
+            cliente={cliente}
+            idioma={idioma}
             id="h-livre"
-            className="h-campo h-textarea h-textarea-curta"
-            rows={2}
-            maxLength={2000}
+            rotulo={txt(c.rotuloLivre, idioma)}
             placeholder={txt(c.placeholderLivre, idioma)}
-            value={r.livre}
-            onChange={(e) => onLivre(e.target.value)}
+            valor={r.livre}
+            limite={LIMITE_LIVRE}
+            curta
+            audio
+            jaConsentiu={r.consentimentoAudioEm !== null}
+            onChange={onLivre}
+            onTranscrito={onTranscritoLivre}
+            onConsentimento={onConsentimento}
           />
         </div>
       ) : null}
@@ -609,7 +686,7 @@ function TelaGate({
   return (
     <>
       <p className="h-kicker">{txt(g.kicker, idioma)}</p>
-      <h1 className="h-titulo">{nome ? txt(g.titulo, idioma, { nome }) : txt(g.tituloSemNome, idioma)}</h1>
+      <h1 className="h-titulo" tabIndex={-1}>{nome ? txt(g.titulo, idioma, { nome }) : txt(g.tituloSemNome, idioma)}</h1>
       <blockquote className="h-teaser">“{frase}”</blockquote>
       <p className="h-apoio">{txt(g.apoio, idioma)}</p>
       <div className="h-campo-grupo">
@@ -769,7 +846,7 @@ function TelaFim({
   return (
     <>
       <p className="h-kicker">{txt(f.kicker, idioma)}</p>
-      <h1 className="h-titulo">{txt(f.titulo, idioma, { nome })}</h1>
+      <h1 className="h-titulo" tabIndex={-1}>{txt(f.titulo, idioma, { nome })}</h1>
       <div className="h-espelho">
         {cena ? (
           <p>

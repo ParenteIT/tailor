@@ -643,6 +643,11 @@ proposta e as mensagens.
   falso, genuíno; fogo, forja; destaque, virar referência, ser convidada, ser
   lembrada (como promessa), sucesso, sua melhor versão, valor comprovado,
   falta pouco.
+- **No texto gerado (`prompts/v2`, decisão do Willian em 24/09/2026):** uma
+  palavra proibida que ela mesma digitou num campo livre pode voltar só
+  como citação literal, nunca como afirmação ou promessa da autora. Opção
+  do quiz, pergunta e texto do sistema não contam como fala dela. O gate
+  pós-saída (`src/lib/verificar-diagnostico.ts`) confere as duas coisas.
 
 **Estética**
 - Tom de colega sênior de atendimento: frases curtas, segunda pessoa, verbos

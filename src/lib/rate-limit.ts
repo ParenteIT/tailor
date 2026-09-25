@@ -18,6 +18,7 @@ interface Balde {
 }
 
 const baldes = new Map<string, Balde>();
+const MAXIMO_DE_BALDES = 1000;
 
 export interface ResultadoLimite {
   permitido: boolean;
@@ -32,6 +33,7 @@ export function verificarLimite(
 ): ResultadoLimite {
   const agora = Date.now();
   const janelaMs = janelaSegundos * 1000;
+  if (baldes.size > MAXIMO_DE_BALDES) limparBaldesVencidos();
   const balde = baldes.get(chave);
 
   if (!balde || agora >= balde.reiniciaEm) {
@@ -98,8 +100,12 @@ export function identificarChamador(req: Request): string {
   return "sem-origem";
 }
 
-/** Limpa baldes vencidos para o Map não crescer sem limite num processo longo. */
-export function limparBaldesVencidos(): void {
+/**
+ * Limpa baldes vencidos para o Map não crescer sem limite num processo longo.
+ * Até 24/09 nada chamava isto; agora `verificarLimite` varre quando o Map
+ * passa do teto.
+ */
+function limparBaldesVencidos(): void {
   const agora = Date.now();
   for (const [chave, balde] of baldes) {
     if (agora >= balde.reiniciaEm) baldes.delete(chave);

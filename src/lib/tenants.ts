@@ -1,7 +1,7 @@
 import "server-only";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import { Redis } from "@upstash/redis";
-import { CLIENTE, carregarCliente, type Cliente } from "@/content/clientes";
+import { CLIENTE, carregarCliente, completarVozDoRegistro, type Cliente } from "@/content/clientes";
 
 /**
  * Multi-tenant por domínio (23/09/2026).
@@ -68,7 +68,7 @@ export async function resolverCliente(host: string | null | undefined): Promise<
       // Revalida: uma versão guardada antes de o esquema ganhar campo novo
       // (canal e gate, 24/09) passaria sem eles, e `!p.gate` deixaria o alto
       // ticket virar oferta até o cache expirar. Inválida, cai no banco.
-      if (guardado) return carregarCliente(guardado);
+      if (guardado) return carregarCliente(completarVozDoRegistro(guardado));
     } catch (erro) {
       console.error("[tailor] falha ao ler tenant do cache", erro);
     }
@@ -93,7 +93,7 @@ export async function resolverCliente(host: string | null | undefined): Promise<
 
   let resolvido: Cliente;
   try {
-    resolvido = carregarCliente(data.config);
+    resolvido = carregarCliente(completarVozDoRegistro(data.config));
   } catch (erro) {
     // Config inválida no banco não derruba a tela: fica registrado e ela
     // recebe o cliente do build enquanto alguém corrige a linha.

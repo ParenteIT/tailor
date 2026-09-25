@@ -128,21 +128,24 @@ abertura: os itens 3, 5 e 6 acima, a validação do §3 e o idioma do §4.
     ("precificação de clínica") e o roteirista de reels
     (`roteirista-reels-renilza`).
 - **Integridade (engenharia):**
-  - **Aviso à Renilza quando chega um lead (A35:** hoje a mensagem de
-    WhatsApp sai sem o link da proposta e ela não é avisada). Regra única da
-    mensagem pré-preenchida: código ou link da proposta e a próxima etapa,
-    **sem o nome** — o texto viaja na URL.
-  - **Áudio:** estado anunciado, foco preservado, consentimento pedido uma
-    vez só e timestamp de LGPD não sobrescrito (A24); a transcrição não
-    apaga o que ela já tinha digitado (A25).
-  - **O véu que segura a navegação por 1,3 s** entre telas (A16).
-  - **Autosave:** o nome nunca é autosalvo (lead abandonado chega anônimo)
-    e `utm_*` é sobrescrito com `null` a cada autosave (resto do A34).
-  - Outros achados ainda abertos no código atual, a conferir nos componentes
-    novos: escolha única feita de botões `aria-pressed`, sem grupo de rádio
-    (A48); progressbar que anuncia progresso fictício (A66); "Foi outra
-    coisa"/"Outro" sem áudio (A47); só o gate é revalidado no servidor
-    (A64).
+  - **Ligar o aviso de lead (A35).** O código existe desde 24/09
+    (`src/lib/aviso-lead.ts`, chamado no gate): falta criar o webhook
+    (Make/n8n/Zapier) que leva ao canal da Renilza, gravar a URL em
+    `AVISO_LEAD_URL` no Netlify e acrescentar a env ao `.env.example` (a
+    sessão de 24/09 não tinha permissão de ler esse arquivo). O corpo não
+    leva nome nem contato, mas leva o link da proposta, que abre tudo: com o
+    webhook ligado, o texto de privacidade (item 6) precisa contar esse
+    serviço também.
+  - **Resíduos de a11y que pedem copy** (sem texto no deck, não inventado):
+    o Continuar desabilitado não diz o que falta ao ser tocado (A26);
+    "microfone negado" e "falha na transcrição" usam a mesma frase, e não há
+    "texto pronto para revisar" depois da transcrição (A24). Também em
+    aberto no A24: registrar a versão do aviso de consentimento junto com o
+    carimbo. No A25, não há "desfazer" da transcrição (o texto dela nunca é
+    apagado, só acrescentado).
+  - **Fluxo antigo (modo confirmação, `quiz.tsx`).** Ainda regrava
+    `consentimentoAudioEm` e substitui a q3 pela transcrição (A24/A25);
+    some quando o modo confirmação migrar para a holding.
 
 ---
 
@@ -177,12 +180,12 @@ O deck vive em
   no CTA não prova reconhecimento):
   `90-arquivo/tailor-docs-2026-09-22/jornada/feedback-v2-em-validacao.md`.
 - **A22 — o Continuar ancorado por `visualViewport` com o teclado do
-  celular aberto** — implementado em `quiz.tsx` (22/09), mas só dá pra
-  confirmar em aparelho real (iOS in-app browser inclusive); não dá pra
-  simular teclado de software neste ambiente de dev. Em 23/09 a branch da
-  holding ainda não tinha levado esse código para o componente `aberta`:
-  reaplicar A22, A23 (alvo de 44px do botão de áudio) e A26 (foco e anúncio
-  na troca de tela) nos componentes genéricos.
+  celular aberto** — no `quiz.tsx` antigo (22/09) e no quiz da holding
+  (24/09), mas só dá pra confirmar em aparelho real (iOS in-app browser
+  inclusive); não dá pra simular teclado de software neste ambiente de dev.
+- **Atraso decorativo da proposta (resto do A16).** Os blocos de `p/[token]`
+  entram com `700 + i×140 ms`; a base de 700 ms existia para esperar o véu,
+  que não existe na holding. Rever no desenho da proposta por vertente (§5).
 - **`/favicon.ico` responde 404** — pré-existente, o webview do Instagram
   pede esse arquivo; não existe `public/` nem `src/app/icon`.
 - **`atmosfera.tsx` no lado ivory da proposta** (`p/[token]`) nunca foi visto
@@ -193,10 +196,6 @@ O deck vive em
 
 ## 4. Idioma e moeda
 
-- **Francês removido e EN como padrão**, com detecção por `Accept-Language`
-  (o link do Instagram brasileiro continua caindo em pt-BR): feitos na
-  branch da implementação da holding (worktree `brave-hermann-42e1da`;
-  `messages/fr.json` apagado, `routing` com `en`/`pt`) — falta o merge.
 - **Faixas por moeda na configuração do cliente.** O protótipo só tem faixas
   em BRL; faltam faixas e réguas em USD e telefone internacional para o EN,
   que é o idioma principal. Os valores em USD são decisão de negócio (vault);
@@ -225,16 +224,48 @@ trabalho está no §9):
   30/11). O status por vertente na configuração está no HANDOFF §1 e §2; o
   desenho da tela não foi feito (HANDOFF §10). A abertura escalonada foi
   decidida na consolidação e falta a assinatura da Renilza.
-- **Cor de alerta por mundo (D10).** O alerta `#C4674E` reprova sobre o
-  ameixa (4,47:1) e sobre o verde (4,32:1); a proposta era `#D2785E` nos
-  fundos escuros e `#A4492F` no marfim. O protótipo não define cor de erro
-  por mundo; reconferir contra `#1C1229`, `#111315` e `#F6EFE1`.
-- **Sobras da Fase 0 de 22/09** (fluxo antigo; conferir se o roteiro novo as
-  torna obsoletas): o modelo recebe a chave da persona em vez da frase, não
-  recebe q7/q8, e lead EN pode receber diagnóstico em português (A51, já na
-  ordem de trabalho: HANDOFF §9, passo 7); o `q7Outro` não chega à proposta
-  (A50, HANDOFF §2); "Nunca tentei nada estruturado" aparece no Pico como
-  "você já tinha tentado" (A28, fora do HANDOFF: some se o Pico não voltar).
+- ~~**Cor de alerta por mundo (D10).**~~ — **feito em 24/09/2026**: campo
+  `alerta` no `Mundo`, token `--v-alerta`, `#D2785E` na casa, em Imagem e em
+  Posicionamento e `#A4492F` em Estética, travado em `mundos-css.test.ts`
+  (≥ 4,5:1 sobre fundo e cartão). Falta rodar `npm run sync:tenant --
+  renilza` depois do merge: até lá a linha do banco não tem o campo e o
+  domínio cai no `CLIENTE` estático.
+- **Sobras da Fase 0 de 22/09, só no fluxo antigo** (modo confirmação; a
+  holding já usa o `prompts/v2`, com idioma pelo locale e reserva
+  localizada): o modelo recebe a chave da persona em vez da frase, não
+  recebe q7/q8 (A51); o `q7Outro` não chega à proposta (A50); "Nunca tentei
+  nada estruturado" aparece no Pico como "você já tinha tentado" (A28: some
+  se o Pico não voltar).
+- **Voz do diagnóstico (`prompts/v2`, 24/09) — o que falta antes de valer:**
+  - Leitura em voz alta, com a Renilza, da voz em `renilza.ts` (`voz` do
+    cliente e das três vertentes) e das frases de reserva; ela aprova a
+    autenticidade, o Willian a conformidade (C2/C3, fontes).
+  - Rodar os fixtures F01–F12 contra o modelo real (3 execuções cada), com o
+    checklist manual da auditoria: autorizado em 24/09 e pronto em
+    `scripts/avaliar-voz.ts`, mas **falta a chave local** (item abaixo).
+  - **A chave de modelo não sai do Netlify para a máquina** (diagnóstico
+    corrigido em 24/09): `ANTHROPIC_API_KEY` e `GEMINI_API_KEY` são
+    variáveis *secretas* e estão vazias no contexto `dev`. O CLI não
+    devolve valor secreto: `netlify env:get` entrega a frase "No value
+    set…", e foi essa frase que a rodada anterior mandou como chave — daí
+    o `401`. Não é chave revogada: produção tem valor nos contextos
+    production, deploy-preview e branch-deploy, e a proposta de 23/09 saiu
+    do modelo. Para rodar a avaliação, o Willian põe a chave num
+    `.env.local` (credencial: só ele) e roda
+    `npx tsx --conditions=react-server scripts/avaliar-voz.ts <saida.json> 3`.
+  - ~~**F03**~~ — feita em 24/09: `posicionamento23set()` em
+    `src/lib/voz-fixtures.ts`, com as respostas exatas da proposta 0aca5878
+    (sem nome nem contato); o gate reprova o diagnóstico que o v1 gravou
+    ("finalmente", "imagem"). "imagem", "corpo" e "cor" entraram nos
+    proibidos de Posicionamento.
+  - Antes de liberar o EN: fixture em inglês lida por humano, teste de
+    naturalidade e de calque, e revisão dos equivalentes EN dos proibidos.
+  - "Metodologia francesa" continua no bloco "O método" de Imagem
+    (`renilza.ts`) e no PRODUCT.md como assinatura. A auditoria da voz não
+    a trata como fato documentado (o que se sustenta é a formação em escola
+    francesa); a formulação pública final é da Renilza. Fora do prompt v2.
+  - `npm run sync:tenant -- renilza` depois do merge: até lá, o loader
+    completa a voz a partir do arquivo (`completarVozDoRegistro`).
 
 ## 6. Higiene do repo e merge da branch da holding
 
@@ -261,14 +292,6 @@ trabalho está no §9):
   existindo, mas só para o fluxo legado de personas, que a holding não usa
   mais. O preço agora é `produto.preco` + `produto.publicado` em
   `src/content/clientes/renilza.ts`, sem env no Netlify.
-- **`docs/` staged no worktree da branch.** A branch tem cópia staged de
-  todo o `docs/`, inclusive o que saiu deste repo em 23/09 (`docs/jornada/`,
-  `docs/oferta/`, `docs/renilza-conhecimento.md`, o planejamento, a
-  identidade e o prompt de layout da holding). Limpar o índice da branch
-  antes do merge, senão os arquivos voltam. O comentário de `renilza.ts`
-  (l.8–20 e l.603) cita `planejamento-holding-3-vertentes.md §5`: a tabela
-  da esteira já está no HANDOFF §7.1 (23/09), então o comentário passa a
-  apontar para ela.
 - **Citações do vault para `docs/` do repo, antes da remoção.** As fichas
   de `20-renilza-planejamento/holding/` (o `produto.md` da H1, de Imagem
   01–06 e de Posicionamento 01–04, e alguns materiais, como páginas de
@@ -283,19 +306,14 @@ trabalho está no §9):
   MCP `threejs-devtools-mcp`, sem uso — o projeto não depende de three.js e
   o painel desktop foi feito em SVG. Manter, pôr no `.gitignore` ou remover;
   mudar configuração pede autorização dele.
-- **Código morto, para depois do merge** (a branch reescreve o quiz;
-  conferir cada um de novo antes de apagar):
-  - `src/components/cenas/armario.tsx` inteiro e o export `CenaArmario` em
-    `cenas/index.tsx` (substituídos por `armario-cartoon.tsx` em 07/09);
-  - `ALTURA_CENA_DESKTOP` e `TRANSICAO_TRACO_LONGA` (`cenas/base.tsx`),
-    `FAIXAS` (`content/config.ts`), `type Locale` (`i18n/routing.ts`);
-  - `limparBaldesVencidos()` (`lib/rate-limit.ts`) nunca é chamado: o `Map`
-    de fallback, sem Upstash, não tem varredura;
+- **Código morto que depende de decisão** (o resto da lista saiu em 24/09):
   - `/api/analyze` não tem chamador no repo e é endpoint público que gasta
     com geração de texto — decidir se fica;
   - tokens de `globals.css` que nada lê: `--color-line-gold`,
-    `--color-noir-3`, `--text-display`, `--text-lead`, `--spacing-p7`,
-    `--radius-sheet`, `--container-vitrine`.
+    `--color-noir-3`, `--text-display`, `--text-lead`, `--radius-sheet`,
+    `--container-vitrine`. Mapeiam escalas do BRAND-VISUAL (§3.2 e §4),
+    então apagar é decisão de design; `--spacing-p7` fica, porque a escala
+    `p1..p7` é convenção do repo.
 - **Branches locais sem trabalho próprio:** `master` (commit inicial),
   `design-retencao-e-f6` e `whatsapp-direto` (já mergeadas) e
   `feature/dark-light-mode` (o código foi resgatado em `1756e60`). Antes de

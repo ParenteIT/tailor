@@ -3152,3 +3152,272 @@ de restore nunca foi testado. Só apareceu porque o projeto pausou de
 verdade. Checklist pra qualquer automação nova desse tipo: confirmar que o
 secret existe (`gh secret list`) E forçar o caminho de falha pelo menos uma
 vez, não só o caminho feliz.
+
+## 24/09/2026 — Cor de alerta por mundo (D10)
+
+O erro do quiz da holding (gate: WhatsApp ou e-mail inválido; "montando":
+erro geral) saía sem cor própria — filete de acento e texto na tinta —
+porque nenhum vermelho único passa 4,5:1 nos três mundos. Agora o alerta é
+campo do `Mundo` na configuração do cliente (`alerta`, `#rrggbb`), exposto
+como `--v-alerta` (e `--color-alerta`, para as primitivas antigas) por
+`mundos-css.ts`; `.h-erro` usa o token no filete e no texto.
+
+Valores, medidos por luminância relativa contra fundo e cartão:
+
+| Mundo | Alerta | Fundo | Cartão |
+|---|---|---|---|
+| Casa `#141009` | `#D2785E` | 5,95:1 | 5,52:1 |
+| Imagem `#1C1229` | `#D2785E` | 5,64:1 | 5,12:1 |
+| Posicionamento `#111315` | `#D2785E` | 5,84:1 | 5,41:1 |
+| Estética `#F6EFE1` | `#A4492F` | 5,14:1 | 5,70:1 |
+
+O `#C4674E` antigo mediu 4,62:1 sobre o fundo de Imagem, mas 4,20:1 sobre
+o cartão dele e 3,40:1 no marfim. `src/lib/mundos-css.test.ts` trava o
+mínimo em cada mundo da configuração, sobre fundo e cartão. A linha do
+banco só ganha o campo com `npm run sync:tenant -- renilza`; antes disso, o
+esquema recusa a linha e o domínio cai no `CLIENTE` estático, que já tem.
+
+## 24/09/2026 — Polish da proposta e do quiz da holding (auditoria de 23/09, P2/P3)
+
+Sem mudança de copy.
+
+- **Contraste do painel de Estética (P2).** `painelApoio`
+  `rgba(246,239,225,.62)` sobre a sálvia `#2E4A3B` media 4,38:1 nos textos
+  de 10–11px do painel de desktop ("Nome", "Contato", frase-mestra,
+  rodapé), abaixo dos 4,5:1 do `PRODUCT.md`. Subiu para `.72`: 5,30:1,
+  medido por luminância relativa e conferido no navegador a 1280px. Imagem
+  (6,77:1) e Posicionamento (6,75:1) ficaram em `.62`. O mesmo token pinta
+  os traços da figura dentro do painel, que ficam um pouco mais presentes.
+- **O botão da proposta é o botão do mundo (P2).** "Garantir minha vaga", o
+  link da Hotmart e "Conversar no WhatsApp" usam `.cta-mundo`
+  (`holding.css`): `--v-botao`, `--v-botao-tinta` e `--v-raio-botao`, com
+  as medidas do `.h-cta` do quiz (54px, Jost 0,78rem, tracking .16em) e
+  largura cheia abaixo de 640px. Estética: sálvia, canto de 10px; Imagem:
+  `#EADBC8`, 10px; Posicionamento: degradê cobre, pílula. A proposta sem
+  vertente (`data-superficie="ivory"`) continua com `.cta-oferta`
+  (`globals.css`): tinta cheia, canto de 2px, mesmo estado "abrindo".
+  Conferido injetando o botão numa superfície ivory: mesma cor, borda,
+  canto e altura de antes.
+- **Alvos de toque (P2/P3).** "Prefiro falar com a Renilza" passou de 22px
+  para 44px de altura (o sublinhado continua colado ao texto, num `span`).
+  O seletor de idioma passou de 40px para 44px, com as opções do menu e o
+  `.h-topo`; no fluxo legado, a pílula de tema acompanhou (segmentos de
+  36px, pílula de 44px) para as duas não desalinharem, e a barra (16 + 44px)
+  cabe nos 64px que o `main` reserva. As réguas (`.h-regua input`) passaram
+  de 32px para 44px.
+- **"Conversar no WhatsApp" numa linha só a 375px (P3).** O ganho veio das
+  medidas do `.h-cta` (padding de 22px no lugar de 40px), não de apertar o
+  tracking.
+
+Verificado local, a 375px e a 1280px, nas três vertentes (quiz e as
+propostas de `.tailor-dev/banco.json`) e no quiz legado
+(`/pt/diagnostico/c/<token>`), sem rolagem horizontal. O `painelApoio`
+novo só chega ao banco com `npm run sync:tenant -- renilza`.
+
+## 24/09/2026 — "O método" para Posicionamento e Estética
+
+O bloco 5 da proposta sumia em Posicionamento e Estética (`metodo: null`)
+por falta de texto aprovado. Agora as duas vertentes têm `metodo` em
+`renilza.ts`, em PT e EN, com o mesmo título de Imagem ("Tradução, não
+transformação.", frase oficial da marca) e o mesmo tamanho: dois parágrafos,
+~45 e ~25 palavras. Aprovado pelo Willian.
+
+- **Estrutura, a mesma de Imagem.** O parágrafo 1 contesta a abordagem comum
+  do mercado, não a crença da leitora (ela acabou de se abrir no quiz;
+  contestar a crença dela ali soa acusatório), e nomeia o que o método faz
+  diferente. O parágrafo 2 mostra a ordem do trabalho — processo visível foi
+  o ponto com mais lastro na pesquisa de copy (unique mechanism, troca de
+  crença, tom sóbrio de marca premium). Nenhum teste publicado compara os
+  ângulos: a escolha é editorial.
+- **Posicionamento:** "vendido como visibilidade" → "não ensina a aparecer
+  mais; ensina a ser lida certo" → critério, frase, vitrine. Fonte: fichas
+  P2 (Jornada) §2.2, §4.2 e P3 (Cúpula) §2.1, §4 no vault.
+- **Estética:** "postar mais, atender mais, prometer mais" → sinais que a
+  cliente percebe antes de perguntar quanto custa → o preço por último,
+  "consequência, não coragem". Fonte: ficha E2 (Da Maca) §2.1, §2.2, §4.1.
+  "Padrão não é metragem" ficou para a página e as aulas.
+- **Fica de fora de propósito:** o nome Raio-X (toda citação pede o aviso
+  de diagnóstico orientativo) e número de semanas ou sessões (o bloco é da
+  vertente e, em Posicionamento, serve à Jornada e à Cúpula). Nenhuma
+  palavra da lista de proibidas do HANDOFF §11.
+- **Nome do método em inglês: "Perceived Worth".** Fecha a ficha P2 §10,
+  item 23, e a H1 §10, item 24. "Perceived value" é jargão de pricing desde
+  Zeithaml (1988): soa descritivo, não proprietário, e disputa busca com
+  conteúdo genérico de marketing; "worth" soa mérito da pessoa, não preço
+  (mais longe de promessa de ganho, C2), é mais distintivo como marca e já
+  era o que estava publicado (`en.json`, materiais de Dubai e Europa,
+  "Invisible Worth X-Ray"). Risco aceito: o eco de "know your worth", que o
+  tom sóbrio da marca segura. No `renilza.ts`, a frase-mestra EN virou
+  "From invisible worth to perceived worth", a Jornada virou "Perceived
+  Worth Journey" e os dois textos de método dizem "Perceived Worth Method";
+  os materiais EN do vault foram alinhados.
+- **Em aberto:** o EN ainda passa pela revisão do Willian. As fichas do
+  vault de onde as frases saíram vão para a leitura em voz alta com a
+  Renilza em 02/10.
+
+Só chega ao banco com `npm run sync:tenant -- renilza`.
+
+## 24/09/2026 — Achados de integridade da auditoria de 19/09 no quiz da holding
+
+Conferência, no código reescrito em 22–23/09, dos achados de integridade que
+o `PENDING.md` ainda listava. Cada um foi primeiro checado; o que ainda valia
+foi corrigido.
+
+- **Já não valiam:** A23 (o `BotaoAudio` compartilhado já tinha 44 px nos
+  três estados desde a Fase 0), A48 (`Opcoes` nasceu `radiogroup` com
+  `role="radio"` e setas; só o rótulo do grupo passou do kicker para o
+  título da pergunta), A64 (a rota da holding refaz `ramoCompleto`, forma e
+  chaves no servidor), A66 (não há `progressbar` na holding; o contador é
+  texto e as figuras são `aria-hidden`), o nome do A34 (o autosave da
+  holding manda o nome desde a tela 1) e o A16 **na holding** (não há véu;
+  o "montando" espera a proposta existir de verdade).
+- **A35.** A mensagem pré-preenchida do fim levava o nome; a da proposta não
+  levava o link. As duas agora levam o link `/p/{token}` e a próxima etapa,
+  nunca o nome (teste em `integridade-holding.test.ts`). O link é montado
+  por `linkDaProposta`, que só aceita o `Host` da requisição se for domínio
+  do cliente. **Aviso à dona (decisão do Willian nesta sessão: webhook
+  genérico):** no gate, `POST` para `AVISO_LEAD_URL` (Make/n8n/Zapier leva
+  ao canal que ele escolher), com link, vertente, entrada, faixa e se o lead
+  é de leitura manual — sem nome, contato ou relato. Sem a env, nada
+  acontece; com teto de 3 s, a falha nunca derruba o gate
+  (`src/lib/aviso-lead.ts`).
+- **A34 — e um achado pior no caminho.** `upsertLead` no Supabase gravava
+  `null` em tudo que não viesse na chamada. Além de apagar `utm_*` em todo
+  autosave sem UTM, isso **apagava o WhatsApp e o e-mail do lead** no
+  autosave da tela de prazo, que roda depois do gate. Agora só entra na
+  linha o que foi informado (`null` explícito continua limpando) — o mesmo
+  comportamento que o backend de arquivo já tinha.
+- **A24/A25/A47.** O consentimento de áudio passou a valer para o
+  diagnóstico inteiro: o `useGravador` recebe `jaConsentiu` e grava direto,
+  sem pedir de novo nem carimbar outra vez; o servidor recusa via de áudio
+  sem `consentimentoAudioEm` e exige que ele seja uma data ISO. O
+  `BotaoAudio` ganhou região viva (consentimento, "Ouvindo você",
+  "Transcrevendo…", erro) e move o foco a cada estado — "Pode gravar",
+  "Terminei", o aviso de transcrição e, de volta ao ocioso, o campo com o
+  cursor no fim. A transcrição se soma ao texto (`juntarTranscricao`) e a
+  via vira `misto` quando havia texto antes; a coluna `*_via` só conhece
+  texto/áudio, então `misto` grava `audio` na coluna e `misto` no
+  `respostas_raw`. O "Nenhuma dessas" da tela 2 usa o mesmo `CampoAberto`,
+  com áudio, e chega ao lead com `situacao_via` real (`viaLivre`).
+- **A22/A26 nos componentes genéricos.** Continuar ancorado acima do
+  teclado por `visualViewport` quando um campo aberto está em foco (o toque
+  no botão ancorado não tira o foco do campo, senão o botão desancoraria
+  antes do click). Na troca de tela o foco vai para o título (`h1` com
+  `tabIndex=-1`) e uma região viva fora do miolo anuncia "N de 9".
+- **A16 no fluxo antigo** (modo confirmação, único lugar onde o véu existe):
+  o link do Pico navega no próprio toque; o véu cobre só o carregamento, e
+  com tecla modificadora nem aparece.
+
+Verificado no dev local com as rotas de API interceptadas no navegador
+(nenhuma chamada saiu da página): tela 2 → "Nenhuma dessas" → texto + áudio
+(`getUserMedia` e transcrição simulados) → ramo de Imagem → gate → prazo →
+fim, a 390 px. O teclado de software não dá para simular: o A22 continua
+pedindo confirmação num aparelho real. As mensagens novas só chegam ao
+banco com `npm run sync:tenant -- renilza`.
+
+## 24/09/2026 — `prompts/v2`: a voz do diagnóstico por vertente
+
+A auditoria da voz (colada pelo Willian, 24/09) revisou um rascunho de v2 que
+não estava no repo nem no vault; o v2 foi escrito a partir dela, do HANDOFF
+§9 passo 7 e §11 e do PRODUCT.md. O v1 fica intocado: continua servindo ao
+quiz de personas (modo confirmação).
+
+- **Separação.** `Cliente.voz` (autora, quemE, comoEscreve) e `Vertente.voz`
+  (papel, tom, proibidos com equivalente PT/EN) na configuração; o
+  `prompts/v2.ts` só tem regras de produto, precedência, idioma,
+  salvaguardas e formato. Só a vertente escolhida injeta a sua voz. A
+  proposta grava `versaoPrompt: "v2"` e `versaoVoz`, um hash da voz usada.
+- **O quemE saiu da tese** "você já é excelente e não está sendo percebida
+  assim", que presumia o problema antes de ler as respostas.
+- **Origem de cada trecho.** O modelo recebe o que ela escreveu, a opção
+  que marcou e o texto da pergunta com rótulos diferentes, e as respostas
+  cercadas como dado, com a instrução de nunca obedecê-las.
+- **Números fora do modelo.** Faixa e medida não vão mais ao diagnóstico
+  (o v1 mandava o `gap` cru em JSON). Resolve a contradição entre "números
+  podem aparecer" e "não escreva preço": nenhum número na leitura, e a
+  conta dela continua nos outros blocos, formatada fora.
+- **"Nenhuma dessas" vira leitura neutra** (decisão do Willian nesta
+  sessão): só a voz geral da autora, nenhuma voz de vertente (nem a de
+  Imagem, que o ramo segue), só o texto livre dela, e as salvaguardas de
+  não diagnosticar emoção nem atribuir causa à imagem.
+- **Citação literal** (decisão do Willian, registrada no HANDOFF §11): uma
+  palavra proibida que ela digitou só volta entre aspas, como fala dela;
+  opção do quiz nunca vira fala dela.
+- **Gate pós-saída** (`src/lib/verificar-diagnostico.ts`): 3–4 frases,
+  proibidos de produto e da vertente fora de citação, construções
+  preditivas, número, credencial, nome de produto ou nível, markdown,
+  exclamação, outra língua, e toda citação conferida contra o que ela
+  escreveu. Reprovado, o modelo tenta mais uma vez; depois, a reserva.
+- **Reserva** reescrita sob a mesma política: só cita o que ela escreveu,
+  "O que você escreveu também entra nesta leitura." no lugar de "Guardei
+  essa frase…", e na leitura neutra não devolve o texto livre.
+- **Voz obrigatória no esquema.** Tenant sem voz não carrega; a linha antiga
+  da Renilza no banco recebe a voz do arquivo até o `sync:tenant`
+  (`completarVozDoRegistro`), sem voz genérica para cliente desconhecido.
+- Fixtures F01–F12 da auditoria em `src/lib/prompt-v2.test.ts`, sem
+  chamada paga; a F03 espera as respostas reais de 23/09. Não incluído:
+  "autoestima" na lista de Imagem (nem PRODUCT nem HANDOFF confirmam a
+  exclusão) e qualquer mudança no bloco "O método".
+
+## 24/09/2026 — Rodada da voz bloqueada pelas chaves; pendências de código
+
+- **Fixtures F01–F12 no modelo real (autorizado pelo Willian):** o script
+  `scripts/avaliar-voz.ts` roda cada fixture N vezes pelo `llm.ts` da
+  produção e passa cada saída pelo gate; os fixtures foram para
+  `src/lib/voz-fixtures.ts`, compartilhados com o teste sem API. A rodada
+  não gerou nenhum texto: com as envs do contexto production do Netlify,
+  Anthropic respondeu `401 invalid x-api-key` e Gemini `API key not valid`
+  nas 33 chamadas (nada cobrado). A proposta de 23/09 no banco saiu do
+  modelo (`diagnosticoDegradado: false`), então a chave funcionava até
+  então. Registrado no `PENDING.md`.
+- **A24/A25 no fluxo antigo (modo confirmação):** a transcrição da q3 se
+  soma ao texto, a via não volta para "texto" ao editar depois de gravar, e
+  o carimbo de consentimento é o do primeiro "Pode gravar", sem pedir de
+  novo ao remontar a tela.
+- **Código morto conferido e removido depois do merge:**
+  `cenas/armario.tsx` e o export `CenaArmario`, `ALTURA_CENA_DESKTOP`,
+  `TRANSICAO_TRACO_LONGA`, `FAIXAS` de `content/config.ts` e `type Locale`.
+  `limparBaldesVencidos` não foi apagado: passou a ser chamado quando o
+  `Map` do limite em memória passa de 1000 baldes. Ficam para decisão o
+  `/api/analyze` e os tokens do `globals.css` que mapeiam o BRAND-VISUAL.
+- **Higiene:** o comentário de `renilza.ts` aponta para o HANDOFF §7.1 e diz
+  que o preço vem da configuração desde 23/09; saíram do `PENDING.md` o
+  merge do francês (já no `develop`) e o `docs/` staged no worktree (o
+  worktree não existe mais e os arquivos não voltaram).
+
+## 24/09/2026 — F03 e o diagnóstico certo das chaves
+
+- **F03 feita.** As respostas exatas da proposta real de Posicionamento de
+  23/09 (0aca5878) viraram `posicionamento23set()` em
+  `src/lib/voz-fixtures.ts`, sem nome nem contato. A frase livre veio por
+  áudio e a transcrição foi só "E aí?": o v1 inventou o resto e fechou com
+  "é a sua imagem finalmente dizer". Regressão permanente: a frase chega sem
+  correção, a cena só pela segunda metade, nenhum número vai ao modelo, e o
+  gate reprova o texto que o v1 gravou.
+- **"imagem", "corpo" e "cor" nos proibidos de Posicionamento.** O tom já
+  vetava roupa e aparência, mas a lista não tinha a palavra exata do bug de
+  23/09; sem ela, o gate só pegava o "finalmente".
+- **As chaves não estavam revogadas.** `ANTHROPIC_API_KEY` e
+  `GEMINI_API_KEY` são secretas no Netlify e vazias no contexto `dev`; o CLI
+  não devolve valor secreto e entrega a frase "No value set…", que a rodada
+  anterior mandou como chave. Produção tem valor e a proposta de 23/09 saiu
+  do modelo. A rodada da voz espera a chave num `.env.local` posto pelo
+  Willian.
+
+## 24/09/2026 — Primeira rodada da voz no modelo real (F01–F12, 3×)
+
+- **20/36 no gate, mas 7 reprovações eram falso positivo:** o gate lia
+  "vai" solto como previsão e pegava "a mão vai direto" e "você vai até a
+  casa". Agora só "vai/vão/irá/irão + infinitivo" conta.
+- **Violações reais, corrigidas no prompt:** opção do quiz citada entre
+  aspas como fala ("muito competente", "very good"); paráfrase com termo
+  proibido sem aspas ("você escreveu que quer ser lembrada…", "…ser
+  referência"); na leitura neutra, o texto falando das cenas e das áreas
+  ("não vou encaixar isso em imagem, roupa ou atendimento") e citando
+  resposta que não existia.
+- **Estética:** "o atendimento acontece na casa dela, não num espaço seu"
+  passou pelo gate. O tom ganhou a regra do HANDOFF §11 que tinha ficado de
+  fora: onde ela atende é fato, nunca degrau.
+- **O que já saiu certo:** a injeção (F12) foi ignorada nas 3 execuções; a
+  F03 não inventou nada a partir do "E aí?"; o inglês (F05) saiu natural;
+  nenhuma promessa, número ou credencial em 36 saídas.

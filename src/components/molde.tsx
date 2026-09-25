@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 
 /* ==========================================================================
    A FOLHA DE MOLDE — primitivas
@@ -598,6 +598,7 @@ export function BotaoAudio({
   onConsentir,
   onRecusar,
   onParar,
+  aoVoltarAoCampo,
 }: {
   estado: "ocioso" | "consentindo" | "gravando" | "transcrevendo" | "erro";
   suportado: boolean;
@@ -615,11 +616,39 @@ export function BotaoAudio({
   onConsentir: () => void;
   onRecusar: () => void;
   onParar: () => void;
+  /** Foco de volta ao campo, com o cursor no fim, ao recusar ou concluir. */
+  aoVoltarAoCampo?: () => void;
 }) {
+  // A24 (auditoria 19/09): cada estado desmonta o botão que tinha o foco, e
+  // o foco caía no body. A cada troca, ele vai para o controle do estado
+  // novo; de volta ao ocioso, para o campo. O anúncio fica numa região viva
+  // que existe antes da troca — montada junto com o texto, não seria lida.
+  const caixa = useRef<HTMLDivElement>(null);
+  const anterior = useRef(estado);
+  useEffect(() => {
+    const de = anterior.current;
+    anterior.current = estado;
+    if (de === estado) return;
+    if (estado === "ocioso" && aoVoltarAoCampo) return aoVoltarAoCampo();
+    caixa.current?.querySelector<HTMLElement>("button, [tabindex='-1']")?.focus();
+  }, [estado, aoVoltarAoCampo]);
+
   if (!suportado) return null;
 
+  const anuncio =
+    estado === "consentindo"
+      ? textos.consentimento
+      : estado === "gravando"
+        ? textos.gravando
+        : estado === "transcrevendo"
+          ? textos.transcrevendo
+          : estado === "erro"
+            ? textos.erro
+            : "";
+
+  let visual: ReactNode;
   if (estado === "consentindo") {
-    return (
+    visual = (
       <div className="mt-p2">
         <p className="notacao mb-p2" style={{ color: "var(--ink-2)" }}>
           {textos.consentimento}
@@ -630,10 +659,8 @@ export function BotaoAudio({
         </div>
       </div>
     );
-  }
-
-  if (estado === "gravando") {
-    return (
+  } else if (estado === "gravando") {
+    visual = (
       <button
         type="button"
         onClick={onParar}
@@ -644,18 +671,18 @@ export function BotaoAudio({
         {textos.gravando} · {textos.parar}
       </button>
     );
-  }
-
-  if (estado === "transcrevendo") {
-    return (
-      <p className="notacao mt-p2" style={{ color: "var(--ink-3)" }}>
+  } else if (estado === "transcrevendo") {
+    visual = (
+      <p
+        tabIndex={-1}
+        className="notacao mt-p2 flex items-center"
+        style={{ color: "var(--ink-3)", minHeight: 44, outline: "none" }}
+      >
         {textos.transcrevendo}
       </p>
     );
-  }
-
-  if (estado === "erro") {
-    return (
+  } else if (estado === "erro") {
+    visual = (
       <button
         type="button"
         onClick={onIniciar}
@@ -665,18 +692,27 @@ export function BotaoAudio({
         {textos.erro}
       </button>
     );
+  } else {
+    visual = (
+      <button
+        type="button"
+        onClick={onIniciar}
+        className="notacao mt-p2 inline-flex cursor-pointer items-center gap-p2"
+        style={{ color: "var(--ink-3)", minHeight: 44 }}
+      >
+        <IconeMic />
+        {textos.convite}
+      </button>
+    );
   }
 
   return (
-    <button
-      type="button"
-      onClick={onIniciar}
-      className="notacao mt-p2 inline-flex cursor-pointer items-center gap-p2"
-      style={{ color: "var(--ink-3)", minHeight: 44 }}
-    >
-      <IconeMic />
-      {textos.convite}
-    </button>
+    <div ref={caixa}>
+      {visual}
+      <span className="sr-only" role="status">
+        {anuncio}
+      </span>
+    </div>
   );
 }
 
