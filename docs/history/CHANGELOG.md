@@ -389,11 +389,17 @@ preço só da configuração (regra do `CLAUDE.md`).
 | 23/09 | Este histórico é completado: cinco entradas de agosto e três eventos reconstituídos do git, mais esta linha do tempo | vigente | este arquivo |
 | 23/09 | O protótipo publicado não é editado; onde ele diverge do decidido vira "Errata do protótipo" no HANDOFF | vigente | HANDOFF |
 | 23/09 | Mensagem pré-preenchida do WhatsApp: código ou link da proposta e a próxima etapa, sem o nome (o texto viaja na URL) | vigente (regra única; substitui a versão com nome do A35) | HANDOFF |
-| 23/09 | Produto com gate nunca vai ao checkout; a frase do gate aparece na proposta (Alta-Costura, Cúpula, Turma, Signature) | vigente pela ficha H1 do vault; falta no motor de proposta | vault `holding/00-holding/`, HANDOFF |
-| 23/09 | Texto-base do diagnóstico com voz por vertente e instrução de idioma num `prompts/v2`, sem editar `prompts/v1.ts` | pendente | HANDOFF |
-| 23/09 | Regra "nenhum preço fora de `src/content/config.ts`" × preços reais na configuração de cliente da branch da holding | pendente (decisão do Willian antes do merge; a regra não mudou) | `CLAUDE.md`, `docs/PENDING.md` |
+| 23/09 | Produto com gate nunca vai ao checkout; a frase do gate aparece na proposta (Alta-Costura, Cúpula, Turma, Signature) | vigente no motor desde 24/09 (`gate` no produto; nunca oferta principal nem checkout); a frase do gate na proposta ainda não existe | vault `holding/00-holding/`, HANDOFF, `fluxo.ts` |
+| 23/09 | Texto-base do diagnóstico com voz por vertente e instrução de idioma num `prompts/v2`, sem editar `prompts/v1.ts` | vigente desde 24/09 (em produção em 25/09); falta a leitura com a Renilza | `prompts/v2.ts`, HANDOFF |
+| 23/09 | Regra "nenhum preço fora de `src/content/config.ts`" × preços reais na configuração de cliente da branch da holding | resolvida em 23/09: preço só na configuração de cliente | `CLAUDE.md`, `docs/PENDING.md` |
 | 23/09 | Fichas de produto da holding no vault (H1, Imagem 01–06, Posicionamento 01–04) | vigente como proposta de produto; os preços novos dependem da assinatura da Renilza | vault `holding/` |
 | 23/09 | D18: o `PRODUCT.md` deixa de ligar a persona de Estética à clínica e passa a descrever as usuárias por cena e vertente | vigente no `PRODUCT.md`; copy deck, BRAND-VISUAL §10.1 e roteirista de reels pendentes (A31/A52) | `PRODUCT.md`, `docs/PENDING.md` |
+| 24/09 | A proposta congela o preço em centavos e o checkout cobra esse número; canal e gate por produto decidem Asaas, Hotmart ou conversa | vigente (PR #10) | `proposta.ts`, `checkout.ts`, entrada de 24/09 |
+| 24/09 | Assinatura mensal vende pela Hotmart, um link por produto (`linkHotmart`); sem link, a proposta leva à conversa | vigente; links da Jornada e da Consultora de Bolso ainda `null` | `renilza.ts`, `docs/PENDING.md` |
+| 24/09 | Aviso de lead por webhook genérico (`AVISO_LEAD_URL`), sem nome, contato ou relato | vigente no código; falta criar o webhook e a env | `aviso-lead.ts`, `docs/PENDING.md` |
+| 24/09 | "Nenhuma dessas" recebe leitura neutra, sem voz de vertente; palavra proibida que ela digitou só volta como citação literal | vigente (`prompts/v2`) | HANDOFF §11 |
+| 24/09 | Texto de "O método" para Posicionamento e Estética; nome do método em inglês: "Perceived Worth" | vigente; passa pela leitura com a Renilza em 02/10 | `renilza.ts` |
+| 25/09 | `next` 16.3.3, `vitest` 4.1.11 e overrides em `sharp` e `js-yaml` contra os alertas do Dependabot | vigente (PR #12); os alertas ainda não reescaneados | `package.json`, entrada de 25/09 |
 
 ---
 
@@ -3153,6 +3159,48 @@ verdade. Checklist pra qualquer automação nova desse tipo: confirmar que o
 secret existe (`gh secret list`) E forçar o caminho de falha pelo menos uma
 vez, não só o caminho feliz.
 
+## 24/09/2026 — Oferta por canal e gate, preço congelado, Hotmart por produto (PR #10)
+
+Correções da auditoria de front-end de 23/09 (skill impeccable, Playwright,
+as 3 vertentes a 375 e 1280 px, e a proposta real de Posicionamento em
+produção). Commit `f5eea3c`, no ar em 24/09.
+
+- **Cartão "Hoje e depois" virava pílula em Posicionamento (P0).** O
+  comparador usava `--radius-cta`, que `mundos-css.ts` redefine com o
+  `raioBotao` do mundo (999px em Posicionamento). A 375px o cartão virava
+  círculo e cortava "HOJE" e "R$ 2.700". Agora usa um token próprio,
+  `--radius-cartao: 10px` (`globals.css`).
+- **Preço exibido ≠ preço cobrado (P0).** Desde `9932293` a proposta
+  mostrava o preço da configuração do cliente, mas `abrirCheckout` cobrava
+  pela env `PRECO_<ID>_CENTAVOS`; o id `jornada` existe nos dois catálogos e
+  cobraria o preço da Jornada antiga. Agora a proposta congela o preço em
+  centavos (`oferta.centavos`, com `canal` e `recorrencia`), e o checkout
+  cobra esse número. A env fica só para o fluxo legado de personas.
+- **Canal e gate por produto.** `canal` (`checkout` · `conversa` ·
+  `convite`) e `gate` no esquema, preenchidos pela tabela do HANDOFF §7.1.
+  `escolherOferta` exclui gate e convite da oferta principal (HANDOFF
+  §7.2): Posicionamento "Acima de R$ 12.000" passa a oferecer a Jornada;
+  Estética "R$ 5.000 a 10.000" e "Acima de R$ 10.000", o Da Maca.
+- **Uma regra só para o botão e para a rota.** `cobrancaDaOferta`
+  (`proposta.ts`) decide Asaas (pagamento único), Hotmart (assinatura com
+  `linkHotmart`, decisão do Willian nesta sessão) ou conversa (gate,
+  `conversa`, dólar, assinatura sem link, proposta anterior ao preço
+  congelado). A página pergunta a ela antes de mostrar o botão de pagar, e
+  `/api/proposta/[token]/checkout` recusa o resto com 409.
+- **R$ 97,90 aparecia como R$ 98.** `dinheiro()` arredonda de propósito os
+  números das réguas; preço de produto passou a usar `precoDeProduto`
+  (`gap.ts`), com centavos quando a tabela tem. Assinatura mostra "/mês"
+  (`textos.proposta.porMes`).
+- **Cache do tenant revalidado.** `resolverCliente` devolvia a config do
+  Redis sem passar pelo esquema; com campo novo obrigatório, uma versão
+  antiga em cache deixaria o alto ticket virar oferta por até 5 min. Cache
+  inválido agora cai no banco (`tenants.ts`).
+- **Nenhum "◆" na tela da proposta** ("outras ◆ mulheres", "◆ de bônus"), e
+  "O método" passou a vir de `vertente.metodo` (null esconde o bloco).
+
+Verificado com três propostas locais (uma por vertente) e a rota de
+checkout respondendo 409 para Dossiê e Jornada.
+
 ## 24/09/2026 — Cor de alerta por mundo (D10)
 
 O erro do quiz da holding (gate: WhatsApp ou e-mail inválido; "montando":
@@ -3442,3 +3490,54 @@ quiz de personas (modo confirmação).
 - Rescore das 36 saídas da rodada 2 com o gate novo: 34/36; as duas que
   sobram são violações reais ("quem indicou", "seu espaço"), que na
   proposta disparam a segunda tentativa.
+
+## 25/09/2026 — Rodada 3 da voz (34/36), com o gate afinado já em produção
+
+- Merge na `main` (PR #12) e `sync:tenant` (versão 4) feitos pelo Willian.
+- As 2 reprovações são reais e cobertas pela segunda tentativa: "a amiga
+  que indicou" parafraseado (F10) e o texto da pergunta ("como queria ser
+  lembrada") retomado ao redor do "E aí?" (F03).
+- Para a leitura com a Renilza, o que o gate não mede: as 36 saídas fecham
+  com "O próximo ponto a olhar aqui é…" (o exemplo do prompt virou
+  fórmula); "não é X, é Y" se repete; a última frase às vezes sugere
+  ("poderia aparecer antes", F07) em vez de só observar; na leitura neutra
+  (F06), o fecho às vezes pede o que ela não informou ("o que já existe no
+  seu trabalho").
+
+## 25/09/2026 — PR #11 e PR #12 no ar; dependências vulneráveis corrigidas
+
+- **PR #11** (`cb64871`, merge `e89a14a`) publicado às 06:35 UTC, com o
+  build de produção validado localmente antes. O `sync:tenant` levou a linha
+  da Renilza à versão 2 no mesmo minuto: canal, gate, `linkHotmart`, método
+  nas três vertentes, alerta por mundo, painel de Estética em `.72` e a voz.
+  Conferido em produção sem passar da tela de nome: proposta de
+  Posicionamento com "O método", cartão de 10px, nenhum "◆", botão do mundo
+  e a mensagem do WhatsApp com o link da proposta.
+- **`sync:tenant` sem credencial.** Rodado direto, falha com "faltam
+  SUPABASE_URL / SUPABASE_SERVICE_ROLE": o `.env.local` não tem as duas (o
+  dev usa o banco de arquivo). Funciona trazendo os valores do Netlify para
+  a janela do PowerShell com `npx netlify env:get`, com uma guarda que não
+  publica se vier a frase "No value set".
+- **`node_modules` sem executáveis.** Em 24–25/09, 16 pacotes perderam os
+  arquivos de `bin` (`next`, `tsc`, `eslint`, `esbuild`, `vite`, entre
+  outros), e `npm run dev`, `npx tsc` e `npx eslint` falhavam. Causa não
+  identificada; `npm ci` resolveu. O `npm ci` avisa (`EBADENGINE`) que o
+  `eslint-visitor-keys` pede Node 20.19+, e a máquina está no 20.17.
+- **Dependabot (PR #12, `f1048f1`, merge `a121bca`, no ar às 08:58 UTC).**
+  Dois alertas críticos no `next` 16.3.0, os dois de execução remota de
+  código sem autenticação: em servidor Windows (GHSA-p293-qw3h-jr36) e na
+  API de otimização de imagem com AVIF (GHSA-2xp9-vwfh-vxw4). O código não
+  usa `next/image`, mas a rota `/_next/image` existe por padrão, e o dev
+  server local roda em Windows aberto na rede. `next` e `eslint-config-next`
+  foram para 16.3.3, `vitest` para 4.1.11, e `overrides` fixam `sharp`
+  0.35.4 e `js-yaml` 4.3.2. O lock da `main` tem todas as versões
+  corrigidas, mas às 16:07 UTC os 7 alertas continuavam abertos, sem
+  reavaliação desde 11–13/09 (a API do grafo de dependências responde 404
+  neste repo): é o reescaneamento do GitHub, não falta de correção.
+- **Validação no fim do dia:** 266 testes, `tsc` sem erro; o lint só acusa
+  os 7 erros de linhas antigas (4 `set-state-in-effect` e 3
+  `no-html-link-for-pages` na tela "não encontrada" da proposta).
+- **Em produção, ainda do achado de 23/09 (P1/P2):** a proposta em
+  português sai com `lang="en"` e título em inglês, e o `theme-color` é fixo.
+  Uma sessão de 24/09 criou `src/app/documento.tsx` para dois root layouts
+  e parou antes de ligá-lo; o arquivo está fora do git.

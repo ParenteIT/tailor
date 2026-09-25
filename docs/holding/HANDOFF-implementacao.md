@@ -72,7 +72,9 @@ O que isso significa na prática:
 - **Níveis, produtos e gate também são dados** (§7). Um nível pode não ter
   produto. Cada produto declara o nível, o canal (`checkout` · `conversa` ·
   `convite`), se tem gate, se conta como nível anterior e o preço por moeda.
-  A vertente declara a frase do gate em cada idioma.
+  A vertente declara a frase do gate em cada idioma. (Em 24/09 entraram
+  `canal`, `gate` e `linkHotmart`; "conta como nível anterior" e a frase do
+  gate ainda não estão no esquema.)
 - **Mundo visual por vertente via tokens.** Cada vertente declara seus
   tokens (fundo, cartão, tinta, apoio, linha, acento, preenchimento,
   botão, raio do botão, painel), a figura que anda (`agulha` | `templo` |
@@ -353,8 +355,12 @@ vault, em `00-holding/sistema-de-selos-e-gate/` (material 08).
   parâmetro de URL ou rota de campanha. Na proposta ele aparece só como "o
   que vem depois", com a frase do gate e um link de texto para o WhatsApp; o
   CTA principal é sempre um produto sem gate que caiba no piso da faixa.
-  Hoje `src/lib/checkout.ts` gera link Asaas para qualquer proposta: isso
-  muda.
+  **Implementado em 24/09/2026 (PR #10):** `canal` e `gate` no produto
+  (`src/content/clientes/esquema.ts`), preenchidos pela tabela do §7.1;
+  `escolherOferta` nunca devolve produto com gate ou por convite, e
+  `cobrancaDaOferta` (`src/lib/proposta.ts`) só abre checkout para canal
+  `checkout`, sem gate e em BRL. Falta mostrar o produto com gate como "o
+  que vem depois", com a frase do gate.
 - **Nada se chama "Certificação".** Nenhum produto, selo ou texto usa
   "certificação", "certificado", "credencial", "desbloquear", "subir de
   nível" ou "conquista". O selo só sai depois da entrega medida (Raio-X →

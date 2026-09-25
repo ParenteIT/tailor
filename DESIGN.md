@@ -127,6 +127,15 @@ fundo, não o mais brilhante.
 (7,76:1) e `--radius-cta 10px`, no quiz inteiro e no Pico. Preenchido, nunca
 dourado. Desvio pendente do §10 (ver "Pendências").
 
+**Raio de botão × raio de cartão (24/09).** `--radius-cta` é só de botão: o
+mundo da vertente o redefine pelo `raioBotao` (999px, pílula, em
+Posicionamento). Cartão com texto dentro usa `--radius-cartao` (10px), que o
+mundo não toca — o comparador "Hoje e depois" herdava o raio do botão e
+virava círculo a 375px, cortando o texto. Na proposta da holding, os botões
+("Garantir minha vaga", o link da Hotmart, "Conversar no WhatsApp") usam
+`.cta-mundo` (`holding.css`), o mesmo botão do quiz daquele mundo; a proposta
+sem vertente mantém `.cta-oferta` (tinta cheia, canto de 2px).
+
 **Alerta.** `--color-alerta #C4674E` (4,87:1 sobre o escuro): erro de
 validação é voz do sistema, fora dos acentos de persona. No tema claro,
 `#B91C1C`. Na holding, o alerta é do mundo (`Mundo.alerta` → `--v-alerta`,
