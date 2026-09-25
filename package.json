@@ -18,7 +18,7 @@
     "@supabase/supabase-js": "^2.109.0",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.2",
-    "next": "16.3.0",
+    "next": "16.3.3",
     "next-intl": "^4.13.6",
     "react": "19.2.8",
     "react-dom": "19.2.8",
@@ -32,10 +32,14 @@
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
-    "eslint-config-next": "16.3.0",
+    "eslint-config-next": "16.3.3",
     "tailwindcss": "^4",
     "tsx": "^4.23.15",
     "typescript": "^5",
-    "vitest": "^4.1.10"
+    "vitest": "^4.1.11"
+  },
+  "overrides": {
+    "sharp": "^0.35.4",
+    "js-yaml": "^4.3.2"
   }
 }
