@@ -4,7 +4,7 @@ import { renilza } from "@/content/clientes/renilza";
 import { type RespostasHolding } from "@/lib/fluxo";
 import { DIAGNOSTICO_V1_23SET, fixture, ramo } from "@/lib/voz-fixtures";
 import { prepararDiagnosticoHolding, reservaDaHolding } from "@/lib/proposta";
-import { verificarDiagnostico, type ContextoDaVerificacao } from "@/lib/verificar-diagnostico";
+import { tirarAspasDeOpcao, verificarDiagnostico, type ContextoDaVerificacao } from "@/lib/verificar-diagnostico";
 import { NOME_DO_IDIOMA, VERSAO_PROMPT } from "../../prompts/v2";
 import * as V1 from "../../prompts/v1";
 
@@ -169,6 +169,37 @@ describe("gate pós-saída", () => {
   it("o prompt proíbe opção entre aspas, paráfrase com proibido e falar do questionário na leitura neutra", () => {
     expect(prepararDiagnosticoHolding(CLIENTE, F.f02, "pt").sistema).toMatch(/nunca em paráfrase/);
     expect(prepararDiagnosticoHolding(CLIENTE, F.f06, "pt").sistema).toMatch(/Não fale do questionário, das cenas/);
+  });
+
+  it("rodada 2: aspas em opção marcada saem, e o desejo dela relatado passa (F02 #1, F11 #1)", () => {
+    const f02 =
+      'Ana, eu li que quando alguém fala do seu trabalho, o que sai é "muito competente" — sem dizer em quê. Isso combina com o que você marcou sobre as propostas e orçamentos: é ali que o espaço se perde, porque falta a frase que explica o que você faz antes de explicar como você faz bem. Você escreveu que queria ser lembrada como a pessoa que "resolve o problema sem complicar" — isso é um ponto de partida claro, mas ele ainda não aparece formulado na sua apresentação. O próximo ponto a olhar aqui é como essa apresentação começa, já que você mesma disse que não sabe o que dizer primeiro.';
+    const c02 = ctx(F.f02);
+    expect(verificarDiagnostico(f02, c02)).toContain('citação que não é texto dela: "muito competente"');
+    const ajustado = tirarAspasDeOpcao(f02, c02);
+    expect(ajustado).toContain("o que sai é muito competente —");
+    expect(ajustado).toContain('"resolve o problema sem complicar"');
+    expect(verificarDiagnostico(ajustado, c02)).toEqual([]);
+
+    const f11 =
+      'Ana, eu li que quando alguém fala do seu trabalho, o que sai é "muito competente" — sem dizer em quê. Isso combina com o que você marcou sobre perder espaço nas propostas e nos orçamentos, e com a dificuldade de saber o que dizer primeiro quando precisa se apresentar. Você mesma escreveu que seu trabalho "is very good, mas eu não consigo explain it direito" — e é exatamente esse ponto, o de nomear o que você faz, que aparece repetido nas suas respostas. O próximo ponto a olhar aqui é como essa dificuldade de nomear se traduz na forma como sua proposta está estruturada hoje.';
+    expect(verificarDiagnostico(tirarAspasDeOpcao(f11, ctx(F.f11)), ctx(F.f11))).toEqual([]);
+  });
+
+  it("o relato não vira rota de fuga: fora dele, ou virando previsão, continua reprovado", () => {
+    const c = ctx(F.f09);
+    const relato = "Ana, eu li o que você marcou. Você escreveu que quer ser referência no que faz. Isso mostra o que você busca. O próximo ponto a olhar aqui é a sua proposta.";
+    expect(verificarDiagnostico(relato, c)).toEqual([]);
+    const promessa = relato.replace("Isso mostra o que você busca.", "Você vai ser referência.");
+    expect(verificarDiagnostico(promessa, c)).toEqual(expect.arrayContaining(["proibido: referência", "previsão: vai"]));
+    const semRelato = relato.replace("Você escreveu que quer ser referência no que faz.", "Você é referência no que faz.");
+    expect(verificarDiagnostico(semRelato, c)).toContain("proibido: referência");
+  });
+
+  it("Estética: espaço próprio como falta é reprovado (F10 #3 da rodada 2)", () => {
+    const f10 =
+      "Ana, eu li que você atende o dia inteiro e ainda assim sente que está só trabalhando. Quando chega a pergunta do preço, você primeiro explica tudo o que está incluído. O atendimento acontece na casa das clientes, não no seu espaço. O próximo ponto a olhar aqui é como esse preço é apresentado antes mesmo de ser dito.";
+    expect(verificarDiagnostico(f10, ctx(F.f10))).toContain("proibido: seu espaço");
   });
 
   it("F02 — Posicionamento não fala de roupa", () => {

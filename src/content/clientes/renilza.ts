@@ -561,6 +561,10 @@ export const renilza: z.input<typeof Cliente> = {
           { pt: "pele", en: "skin" },
           { pt: "corpo", en: "body" },
           { pt: "saúde", en: "health" },
+          // "Espaço só meu" nunca é meta (HANDOFF §11): "não no seu espaço" passou na rodada 2.
+          { pt: "seu espaço", en: "your own space" },
+          { pt: "espaço próprio", en: "space of your own" },
+          { pt: "espaço só seu", en: "a place of your own" },
         ],
       },
       cena: {

@@ -3421,3 +3421,24 @@ quiz de personas (modo confirmação).
 - **O que já saiu certo:** a injeção (F12) foi ignorada nas 3 execuções; a
   F03 não inventou nada a partir do "E aí?"; o inglês (F05) saiu natural;
   nenhuma promessa, número ou credencial em 36 saídas.
+
+## 25/09/2026 — Rodada 2 da voz (27/36) e o gate afinado
+
+- **O que a rodada 1 corrigiu se confirmou:** "Nenhuma dessas" sem falar
+  do quiz, inglês, injeção e Estética sem número passaram 3/3.
+- **Aspas em opção marcada saem antes do gate** (`tirarAspasDeOpcao`): o
+  modelo seguiu citando "muito competente", que é opção descrevendo o que
+  os outros dizem, mesmo com a regra no prompt (6 de 36). Trecho entre
+  aspas que não é dela mas sai de uma opção marcada perde só as aspas e
+  vira paráfrase; a proposta e `scripts/avaliar-voz.ts` fazem o mesmo.
+- **Desejo dela relatado passa** ("você escreveu que queria ser lembrada
+  como…", ajuste 12): termo proibido que ela escreveu é aceito só dentro
+  da oração de relato, ocorrência por ocorrência — relatar numa frase e
+  prometer na seguinte continua reprovado, e previsão e número nunca têm
+  isenção.
+- **Estética:** "seu espaço", "espaço próprio" e "espaço só seu" nos
+  proibidos ("o atendimento acontece na casa das clientes, não no seu
+  espaço" passou na rodada 2).
+- Rescore das 36 saídas da rodada 2 com o gate novo: 34/36; as duas que
+  sobram são violações reais ("quem indicou", "seu espaço"), que na
+  proposta disparam a segunda tentativa.

@@ -42,7 +42,7 @@ async function main() {
   const { CLIENTE } = await import("@/content/clientes");
   const { escreverTexto, llmDisponivel, provedorLLMEscolhido } = await import("@/lib/llm");
   const { prepararDiagnosticoHolding } = await import("@/lib/proposta");
-  const { verificarDiagnostico } = await import("@/lib/verificar-diagnostico");
+  const { tirarAspasDeOpcao, verificarDiagnostico } = await import("@/lib/verificar-diagnostico");
   const { FIXTURES } = await import("@/lib/voz-fixtures");
 
   if (!llmDisponivel()) throw new Error("nenhum provedor de texto configurado");
@@ -58,7 +58,8 @@ async function main() {
       let erro: string | null = null;
       try {
         const r = await escreverTexto({ sistema: preparo.sistema, entrada: preparo.entrada, maxTokens: 700 });
-        texto = r.recusado ? "" : r.texto;
+        // O mesmo ajuste que a proposta faz antes do gate.
+        texto = r.recusado ? "" : tirarAspasDeOpcao(r.texto, preparo.contexto);
         if (r.recusado) erro = "recusado";
       } catch (e) {
         erro = e instanceof Error ? e.message : String(e);

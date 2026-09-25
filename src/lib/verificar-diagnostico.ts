@@ -14,6 +14,8 @@ export interface ContextoDaVerificacao {
   primeiroNome: string;
   /** Os textos que ela digitou: única fonte legítima de citação. */
   escritoPorEla: string[];
+  /** Texto das opções que ela marcou: nunca citação, pode ser paráfrase. */
+  opcoesMarcadas: string[];
   /** Termos da vertente (já no idioma da proposta), além dos de produto. */
   proibidosDaVertente: string[];
   /** "Nenhuma dessas": nenhuma lente de vertente, nenhum estado emocional. */
@@ -85,6 +87,16 @@ const OUTRA_LINGUA: Record<Idioma, { marcadores: RegExp; limite: number }> = {
 
 const CITACAO = /“([^”]*)”|"([^"]*)"|«([^»]*)»/g;
 
+/**
+ * "Você escreveu que queria ser lembrada como…": desejo dela relatado como
+ * desejo presente (auditoria, ajuste 12). Um termo proibido que ela mesma
+ * escreveu passa dentro desta oração; previsão e número continuam barrados.
+ */
+const RELATO: Record<Idioma, RegExp> = {
+  pt: /(?<!\p{L})(?:escreveu|disse|contou)\s+que\s+([^.;:—–!?]+)/giu,
+  en: /(?<!\p{L})(?:wrote|said|told me)\s+(?:that\s+)?([^.;:—–!?]+)/giu,
+};
+
 function normalizar(texto: string): string {
   return texto
     .normalize("NFC")
@@ -100,6 +112,29 @@ function escapar(termo: string): string {
 function contem(texto: string, termo: string, sensivel = false): boolean {
   const flags = sensivel ? "u" : "iu";
   return new RegExp(`(?<!\\p{L})${escapar(termo)}(?!\\p{L})`, flags).test(texto);
+}
+
+/**
+ * O modelo insiste em pôr entre aspas a opção que descreve o que os outros
+ * dizem ("muito competente"; 6 de 36 na rodada 2 de 24/09). Trecho entre
+ * aspas que não é dela mas sai de uma opção marcada perde só as aspas: vira
+ * paráfrase, e o gate confere o resto normalmente.
+ */
+export function tirarAspasDeOpcao(texto: string, ctx: ContextoDaVerificacao): string {
+  const dela = ctx.escritoPorEla.map(normalizar).filter(Boolean);
+  const opcoes = ctx.opcoesMarcadas.map(normalizar).filter(Boolean);
+  return texto.replace(CITACAO, (inteiro, a?: string, b?: string, c?: string) => {
+    const alvo = normalizar(a ?? b ?? c ?? "");
+    if (!alvo || dela.some((d) => d.includes(alvo))) return inteiro;
+    return opcoes.some((o) => o.includes(alvo)) ? (a ?? b ?? c ?? "") : inteiro;
+  });
+}
+
+/** Toda ocorrência do termo está dentro de um relato, e o termo é dela. */
+function relatadoPorEla(fora: string, termo: string, ctx: ContextoDaVerificacao): boolean {
+  if (!ctx.escritoPorEla.some((d) => contem(d, termo))) return false;
+  const semRelato = fora.replace(RELATO[ctx.idioma], (inteiro, oracao: string) => inteiro.replace(oracao, " "));
+  return !contem(semRelato, termo);
 }
 
 export function verificarDiagnostico(texto: string, ctx: ContextoDaVerificacao): string[] {
@@ -135,7 +170,11 @@ export function verificarDiagnostico(texto: string, ctx: ContextoDaVerificacao):
     ...(ctx.leituraNeutra ? ([["leitura neutra", NEUTRA[ctx.idioma]]] as [string, string[]][]) : []),
   ];
   for (const [tipo, termos] of listas) {
-    for (const termo of termos) if (contem(fora, termo)) problemas.push(`${tipo}: ${termo}`);
+    for (const termo of termos) {
+      if (!contem(fora, termo)) continue;
+      if (tipo === "proibido" && relatadoPorEla(fora, termo, ctx)) continue;
+      problemas.push(`${tipo}: ${termo}`);
+    }
   }
   const auxiliar = AUXILIAR_DE_FUTURO[ctx.idioma];
   if (auxiliar) for (const m of fora.matchAll(auxiliar)) problemas.push(`previsão: ${m[1].toLowerCase()}`);
