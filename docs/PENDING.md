@@ -30,12 +30,17 @@ ponta primeiro.
    antes da conta nova (CNPJ da Renilza) ser aprovada faz o Asaas desligar a
    fila sozinho. Depende da conta de produção, que é pendência de negócio
    (última seção).
-2. **Ligar os preços reais.** Hoje `src/content/config.ts` lê
-   `PRECO_*_CENTAVOS` e mostra ◆ onde a env falta. A auditoria de 10/09 achou
-   três `PRECO_*_CENTAVOS` no Netlify; a do Dossiê foi gravada em 13/08, antes
-   de a esteira v4 (14/08) mudar o preço dele — conferir no painel. Com a
-   holding, os preços passam para a configuração do cliente (ver a regra de
-   preço no §6); os valores vêm do vault.
+2. **Links da Hotmart das assinaturas.** Na holding, o preço sai da
+   configuração do cliente e a proposta o congela; a assinatura mensal vende
+   pela Hotmart, um link por produto (decisão do Willian, 24/09). A Jornada e
+   a Consultora de Bolso estão com `linkHotmart: null` em
+   `src/content/clientes/renilza.ts`, e por isso a proposta delas leva à
+   conversa no WhatsApp. Colar os links e rodar o `sync:tenant` (não precisa
+   de deploy). Junto: como preço e link acompanham a Jornada quando ela subir
+   de R$ 97,90 para R$ 197 na T2 (a proposta congela o preço do dia em que foi
+   gerada). No fluxo legado de personas, `PRECO_*_CENTAVOS` continua valendo;
+   a env do Dossiê foi gravada em 13/08, antes de a esteira v4 mudar o preço
+   dele — conferir no painel se o legado ainda for usado.
 3. **Tabela faixa → oferta por vertente** (`OFERTA_POR_VERTENTE_E_FAIXA`, na
    configuração do cliente). Nenhum documento a define. O `OFERTA_POR_FAIXA`
    de `src/content/config.ts` (travado em `conselho.test.ts`) é do fluxo
@@ -89,10 +94,10 @@ ponta primeiro.
     válido; trocar a URL canônica (`APP_URL`) de
     `tailor-renilza.netlify.app` para ela é mudança em sistema em uso — cabe
     ao Willian confirmar quando quiser.
-11. **Deploy automático por branch.** Hoje o deploy é manual
-    (`npm run deploy`, sobe o código local de quem roda o comando). Ligar o
-    site ao GitHub no painel do Netlify depende do GitHub App ganhar acesso
-    ao repo na organização.
+11. ~~**Deploy automático por branch.**~~ — **feito em 23/09/2026**: o site
+    está ligado ao GitHub; merge na `main` publica em
+    `sobmedida.renilzamiranda.com` em cerca de 1 minuto, e o `develop` gera
+    só deploy de preview.
 12. **Tema claro/escuro diante dos mundos por vertente (D11 e A43).** O
     seletor claro/escuro (commit `c0ae34b`) não combina com mundos de esquema
     fixo — Estética só existe clara. E o tema claro atual usa o índigo padrão
@@ -101,8 +106,9 @@ ponta primeiro.
 
 ### Checklist de pré-lançamento
 
-O quiz **não está aberto ao público** (só roda local; os leads do banco são
-testes), e nada abre até estes itens fecharem. Veio do §17 de
+O quiz **não está aberto ao público**: está no ar em
+`sobmedida.renilzamiranda.com` desde 23/09, sem divulgação, e os leads do
+banco são testes. Nada abre até estes itens fecharem. Veio do §17 de
 `20-renilza-planejamento/holding/fontes/entrevista-renilza-rodada-1.md`, sem
 o que já foi resolvido ou superado pela holding. Também bloqueiam a
 abertura: os itens 3, 5 e 6 acima, a validação do §3 e o idioma do §4.
@@ -143,9 +149,6 @@ abertura: os itens 3, 5 e 6 acima, a validação do §3 e o idioma do §4.
     aberto no A24: registrar a versão do aviso de consentimento junto com o
     carimbo. No A25, não há "desfazer" da transcrição (o texto dela nunca é
     apagado, só acrescentado).
-  - **Fluxo antigo (modo confirmação, `quiz.tsx`).** Ainda regrava
-    `consentimentoAudioEm` e substitui a q3 pela transcrição (A24/A25);
-    some quando o modo confirmação migrar para a holding.
 
 ---
 
@@ -207,13 +210,12 @@ O deck vive em
 
 ## 5. Implementação da holding
 
-A implementação segue `docs/holding/HANDOFF-implementacao.md` numa sessão
-separada, na branch da implementação da holding (worktree
-`brave-hermann-42e1da`): configuração de cliente
+A holding segue `docs/holding/HANDOFF-implementacao.md` e está no `develop` e
+na `main` desde 23/09 (PRs #7 a #12): configuração de cliente
 (`src/content/clientes/renilza.ts`), vertentes como dado, C1 por vertente,
-`/v/[vertente]`, pós-gate, faixas por moeda, oferta por vertente e faixa. O
-que ainda não tem desenho ou decisão (espelha o HANDOFF §10; a ordem de
-trabalho está no §9):
+`/v/[vertente]`, pós-gate, faixas por moeda, oferta por vertente e faixa,
+canal e gate por produto. O que ainda não tem desenho ou decisão (espelha o
+HANDOFF §10; a ordem de trabalho está no §9):
 
 - **Desenho da proposta `p/[token]` por vertente** — não feito (HANDOFF §9,
   passo 7, e §10); hoje ela só recebe os tokens do mundo. Inclui a fita
@@ -258,11 +260,21 @@ trabalho está no §9):
     a trata como fato documentado (o que se sustenta é a formação em escola
     francesa); a formulação pública final é da Renilza. Fora do prompt v2.
   - ~~`npm run sync:tenant -- renilza` depois do merge~~ — a voz está no
-    banco desde 25/09 (versão 2). Os proibidos novos de Estética da rodada
-    2 pedem outro sync depois do merge; até lá, a linha do banco ainda não
-    os tem.
+    banco desde 25/09 (versão 2), e os proibidos novos de Estética da rodada
+    2 entraram com o sync depois do PR #12 (versão 4, 09:06 UTC).
+- **Proposta: idioma e cor do navegador (auditoria de 23/09, P1/P2).** A
+  proposta em português sai com `lang="en"` e título em inglês (WCAG 3.1.1):
+  `p/[token]` fica fora de `[locale]`, e o layout raiz usa o `idiomaPadrao`
+  do cliente; o idioma certo está em `conteudo.idioma`. O `theme-color` é
+  fixo (`#141009` no layout, `#f6efe1` na proposta) e o `body` fica ameixa
+  em todos os mundos, então no iOS a barra e o overscroll não acompanham o
+  grafite de Posicionamento nem o marfim de Estética. A tela "Expirada" usa o
+  WhatsApp do fluxo legado. Uma sessão de 24/09 começou
+  `src/app/documento.tsx` (dois root layouts, cada um com o seu `lang`) e
+  parou antes de ligá-lo; o arquivo está fora do git. Depende da decisão do
+  tema claro/escuro (§1, item 12).
 
-## 6. Higiene do repo e merge da branch da holding
+## 6. Higiene do repo
 
 - **Inglês da holding fechado até existirem números em USD** (decisão do Willian, 23/09): faixas de investimento e réguas por vertente ficam `null` em `src/content/clientes/renilza.ts`; enquanto forem, nenhum ramo abre em EN.
 - ~~Aplicar a migração `0004_tenants.sql` e publicar a Renilza no banco~~ —
@@ -314,6 +326,23 @@ trabalho está no §9):
   `feature/dark-light-mode` (o código foi resgatado em `1756e60`). Antes de
   apagar a última, confirmar que as entradas de 15/08, 23/08 e 24/08 do
   `CLAUDE.md` dela estão no CHANGELOG. Apagar é decisão do Willian.
+- **Lint com 7 erros antigos**, todos em linhas de antes de 24/09:
+  `react-hooks/set-state-in-effect` em `controles-topo.tsx` (tema),
+  `quiz-holding.tsx` (retomada) e `quiz.tsx` (moeda e "guardou"), e
+  `@next/next/no-html-link-for-pages` no `<a href="/pt/diagnostico">` da
+  tela "não encontrada" da proposta. Mais um aviso de variável sem uso
+  (`trilha`, `quiz.tsx`).
+- **A suíte de testes apaga o banco local.** Os testes de fluxo
+  (`webhook-asaas-fluxo.test.ts`, `webhook-whatsapp-fluxo.test.ts`) usam o
+  mesmo `.tailor-dev/banco.json` do dev server, e `npx vitest run` some com
+  as propostas locais de teste. Dar aos testes um arquivo próprio.
+- **Alertas do Dependabot.** A correção está na `main` desde 25/09 (PR #12:
+  `next` 16.3.3, `vitest` 4.1.11, overrides em `sharp` e `js-yaml`), mas os
+  7 alertas seguiam abertos no fim do dia, sem reavaliação desde 11–13/09.
+  Conferir com `gh api "repos/ParenteIT/tailor/dependabot/alerts?state=open"
+  --jq length`; tem de dar 0.
+- **Node 20.19+.** O `eslint-visitor-keys` avisa (`EBADENGINE`) que não
+  suporta o 20.17 da máquina; o `CLAUDE.md` pede 20.9+.
 - **`impeccable` em sessão remota.** Instalado só localmente (18/09), fora
   do git de propósito por causa do binário de 14,7 MB. Sessão remota instala
   com `npx impeccable@latest install` no início; lá o `detect` por URL falha
